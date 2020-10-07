@@ -33,7 +33,8 @@ jobs:
         username: $GITHUB_ACTOR
         password: ${{ secrets.GITHUB_TOKEN }}
         repository: bcgov/gwa-api/gwa-gateway-api
-        dockerfile: docker/Dockerfile
+        path: microservices/gatewayApi
+        dockerfile: microservices/gatewayApi/Dockerfile
         tag_with_ref: true
         tag_with_sha: false
         add_git_labels: true
