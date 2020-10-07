@@ -7,37 +7,38 @@ class DefaultConfig:
     data = None
     def __init__(self):
         _default_data_path = 'config/default.json'
-        with open(_default_data_path) as json_data_file:
-            self.data = json.load(json_data_file)
-
+        if (os.path.isfile(_default_data_path)):
+            with open(_default_data_path) as json_data_file:
+                self.data = json.load(json_data_file)
+        else:
+            self.data = {}
 
 class ProductionConfig(DefaultConfig):
     def __init__(self):
-        _prod_data_path = 'config/production.json'
+        super().__init__()
+        _prod_data_path = os.getenv('CONFIG_PATH', './config/production.json')
         if (os.path.isfile(_prod_data_path)):
             with open(_prod_data_path) as json_data_file:
                 prod_data = json.load(json_data_file)
                 self.data.update(prod_data)
 
-
 class DevelopmentConfig(DefaultConfig):
     def __init__(self):
         super().__init__()
-        _dev_data_path = 'config/development.json'
+        _dev_data_path = os.getenv('CONFIG_PATH', './config/development.json')
         if (os.path.isfile(_dev_data_path)):
             with open(_dev_data_path) as json_data_file:
                 dev_data = json.load(json_data_file)
                 self.data.update(dev_data)
 
-
 class TestingConfig(DefaultConfig):
     def __init__(self):
-        _test_data_path = 'config/test.json'
+        super().__init__()
+        _test_data_path = os.getenv('CONFIG_PATH', './config/test.json')
         if (os.path.isfile(_test_data_path)):
             with open(_test_data_path) as json_data_file:
                 test_data = json.load(json_data_file)
                 self.data.update(test_data)
-
 
 class Config:
     environment = os.getenv('ENVIRONMENT', os.getenv('ENV', 'development')).lower()

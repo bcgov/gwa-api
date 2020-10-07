@@ -2,7 +2,7 @@
 
 mkdir -p ./config
 
-cat > ./config/default.json <<EOF
+cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
 {
     "logLevel": "${LOG_LEVEL:-DEBUG}",
     "apiPort": ${PORT:-2000},
