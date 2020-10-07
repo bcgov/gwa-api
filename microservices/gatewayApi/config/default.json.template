@@ -1,0 +1,10 @@
+{
+    "logLevel": "DEBUG",
+    "apiPort": 2000,
+    "oidcBaseUrl": "https://auth.domain/auth/realms/myrealm",
+    "tokenMatch": {
+        "aud": "gwa"
+    },
+    "workingFolder": "/tmp"
+}
+

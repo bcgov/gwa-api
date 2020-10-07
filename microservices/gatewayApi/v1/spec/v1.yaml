@@ -1,0 +1,121 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: GWA Kong DecK API
+  license:
+    name: Apache 2.0
+  description: |-
+    # GWA Kong DecK API
+    This API is responsible for validating Kong Declarative Config and applying it to Kong
+servers:
+  - url: 'http://localhost:2000/v1'
+tags:
+  - name: Status
+    description: API status
+
+paths:
+  /gateway/{namespace}:
+    post:
+      operationId: v1.routes.rules.write_config
+      summary: Updates the gateway config
+      description: Returns the changes that were performed
+      tags:
+        - Gateway
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                dryRun:
+                  type: boolean
+                configFile:
+                  type: string
+                  format: binary          
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+  /status:
+    get:
+      operationId: v1.v1.get_status
+      summary: Return overall API status
+      description: Returns the overall API status
+      tags:
+        - Status
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+components:
+  responses:
+    401Unauthorized:
+      description: Unauthorized
+    404NotFound:
+      description: Not Found
+    500InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorResponse'
+  schemas:
+    errorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: Something exploded
+        code:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Error code
+          example: 42
+    status:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Human friendly response
+          example: Record updated
+        results:
+          type: string
+          description: Results from Change
+
+  securitySchemes:
+    oauth2:
+      type: oauth2       
+      x-tokenInfoUrl: "{{tokeninfo_url}}"
+      flows:
+        clientCredentials:
+          tokenUrl: "{{accesstoken_url}}"
+          authorizationUrl: "{{authorization_url}}"
+          scopes: {}
+security:
+  - oauth2: []
