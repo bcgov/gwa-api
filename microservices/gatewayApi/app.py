@@ -60,6 +60,7 @@ def create_app(test_config=None):
     t = Template(f.read())
     f = open(tmpFile, "w")
     f.write(t.render(
+        server_url = "/v1",
         tokeninfo_url = discovery["introspection_endpoint"],
         authorization_url = discovery["authorization_endpoint"],
         accesstoken_url = discovery["token_endpoint"]

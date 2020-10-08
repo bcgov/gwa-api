@@ -15,7 +15,7 @@ Create a default.json file from default.json.example under the config directory 
 Consider using `virtualenv` to isolate this Python environment from other Python programs.  
 Run `pip install -r requirements.txt` to install dependencies and `python3 wsgi.py` to start up the server.
 
-- *Windows Note: Other OCWA endpoints may not be able to resolve localhost and/or 127.0.0.1. You may change `wsgi.py` to listen from `0.0.0.0` to compensate, but DO NOT commit this to git!*
+- *Windows Note: Other endpoints may not be able to resolve localhost and/or 127.0.0.1. You may change `wsgi.py` to listen from `0.0.0.0` to compensate, but DO NOT commit this to git!*
 
 ### Docker Install
 
@@ -24,9 +24,9 @@ Run `docker build . -t gwa_kong_api` to build the docker container and the follo
 ``` sh
 hostip=$(ifconfig en0 | awk '$1 == "inet" {print $2}')
 
-oidcUrl="https://auth-qwzrwc-dev.pathfinder.gov.bc.ca/auth/realms/aps"
 docker run -ti --rm \
- -e OIDC_BASE_URL=$oidcUrl \
+ -e CONFIG_PATH=/tmp/production.json -e ENVIRONMENT=production \
+ -e OIDC_BASE_URL=https://auth-qwzrwc-dev.pathfinder.gov.bc.ca/auth/realms/aps \
  -e TOKEN_MATCH_AUD=account \
  -e WORKING_FOLDER=/tmp \
  -e KONG_ADMIN_URL=https://adminapi-qwzrwc-dev.pathfinder.gov.bc.ca  \
