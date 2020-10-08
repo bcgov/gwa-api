@@ -118,7 +118,7 @@ def create_app(test_config=None):
         Returns a list of valid API version endpoints
         :return: JSON of valid API version endpoints
         """
-        return jsonify([url_for(".v1.status", _external=True)])
+        return jsonify([url_for(".v1.get_status", _external=True)])
     
 
     @app.route('/version', methods=['GET'], strict_slashes=False)
