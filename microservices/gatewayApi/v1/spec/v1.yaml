@@ -75,6 +75,8 @@ paths:
     get:
       summary: Return key information about authenticated identity
       description: Authenticated identity details
+      tags:
+        - Who Am I
       responses:
         '200':
           description: Success
