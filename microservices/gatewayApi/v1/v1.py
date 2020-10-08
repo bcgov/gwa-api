@@ -1,11 +1,15 @@
 import os
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from functools import reduce
 from v1.routes.gateway import gw
 from v1.routes.whoami import whoami
 from v1.routes.docs import docs
 
 v1 = Blueprint('v1', 'v1')
+
+@v1.route('oauth2-redirect.html', methods=['GET'], strict_slashes=False)
+def swagger_oauth2_redirect():
+    accessToken = request.args.get('access_token')
 
 @v1.route('/status', methods=['GET'], strict_slashes=False)
 def get_status():

@@ -14,9 +14,13 @@ tags:
     description: API status
 
 paths:
+  # /namespaces (GET, POST)
+  # /namespaces/{namespace} (GET, PUT, DELETE)
+  # /namespaces/{namespace}/gateway (PUT)
+  # /namespaces/{namespace}/members (PUT)
+  # /namespaces/{namespace}/catalog/{api} (GET, PUT)
   /gateway/{namespace}:
     put:
-      operationId: v1.routes.rules.write_config
       summary: Updates the gateway config
       description: Returns the changes that were performed
       tags:
@@ -139,6 +143,20 @@ components:
       flows:
         clientCredentials:
           tokenUrl: "{{accesstoken_url}}"
+          authorizationUrl: "{{authorization_url}}"
+          scopes: {}
+    implicit:
+      type: oauth2       
+      x-tokenInfoUrl: "{{tokeninfo_url}}"
+      flows:
+        implicit:
+          authorizationUrl: "{{authorization_url}}"
+          scopes: {}
+    password:
+      type: oauth2       
+      x-tokenInfoUrl: "{{tokeninfo_url}}"
+      flows:
+        password:
           authorizationUrl: "{{authorization_url}}"
           scopes: {}
 security:

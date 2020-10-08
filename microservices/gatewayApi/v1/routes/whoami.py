@@ -27,7 +27,7 @@ def who_am_i() -> object:
         "authorized-party": g.principal['azp'],
         "scope": g.principal['scope'],
         "issuer": g.principal['iss'],
-        "audience": g.principal['aud'],
+        # "audience": g.principal['aud'],
         "namespace": g.principal['team'],
         "client-address": g.principal['clientAddress'],
     }
