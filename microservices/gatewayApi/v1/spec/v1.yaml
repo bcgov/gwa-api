@@ -71,6 +71,22 @@ paths:
           $ref: '#/components/responses/401Unauthorized'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+  /whoami:
+    get:
+      summary: Return key information about authenticated identity
+      description: Authenticated identity details
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profile'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
 components:
   responses:
     401Unauthorized:
@@ -107,6 +123,12 @@ components:
         results:
           type: string
           description: Results from Change
+    profile:
+      type: object
+      properties:
+        namespace:
+          type: string
+          description: Namespace the identity has permission to access
 
   securitySchemes:
     oauth2:
