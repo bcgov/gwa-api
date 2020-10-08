@@ -11,11 +11,6 @@ from v1.auth.auth import admin_jwt
 
 gw = Blueprint('gwa', 'gateway')
 
-# from authlib.integrations.flask_oauth2 import ResourceProtector
-# from auth.token import RemoteToken, OIDCTokenValidator
-# require_oauth = ResourceProtector()
-# require_oauth.register_token_validator(OIDCTokenValidator(RemoteToken))
-
 @gw.route('/<string:namespace>',
            methods=['PUT'], strict_slashes=False)
 @admin_jwt(None)
@@ -53,7 +48,7 @@ def write_config(namespace: str) -> object:
 
         # Validation #1
         # Validate that the every object is tagged with the namespace
-        validate_tags (gw_config, "ns:%s" % namespace)
+        validate_tags (gw_config, "ns.%s" % namespace)
 
         # Validation #3
         # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
@@ -116,7 +111,7 @@ def traverse (source, errors, yaml, required_tag):
                     if required_tag not in item['tags']:
                         errors.append("%s.%s.%s missing required tag %s" % (source, k, item['name'], required_tag))
                     for tag in item['tags']:
-                        if tag.startswith("ns:") and tag != required_tag:
+                        if tag.startswith("ns.") and tag != required_tag:
                             errors.append("%s.%s.%s invalid ns tag %s" % (source, k, item['name'], tag))
                 else:
                     errors.append("%s.%s.%s no tags found" % (source, k, item['name']))
