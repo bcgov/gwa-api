@@ -130,10 +130,11 @@ def create_app(test_config=None):
         hash = ""
         if environ.get('GITHASH') is not None:
             hash = environ.get("GITHASH")
-        
 
-        import pkg_resources  # part of setuptools
-        v = pkg_resources.require("gwa-kong")[0].version
+        # import pkg_resources  # part of setuptools
+        # print(pkg_resources)
+        # v = pkg_resources.get_distribution("gwa-kong").version
+        v = ""
         
         version = v
         if hash != "":

@@ -15,9 +15,8 @@ from auth.token import RemoteToken, OIDCTokenValidator
 require_oauth = ResourceProtector()
 require_oauth.register_token_validator(OIDCTokenValidator(RemoteToken))
 
-
 @gw.route('/<string:namespace>',
-           methods=['POST'], strict_slashes=False)
+           methods=['PUT'], strict_slashes=False)
 @require_oauth(None)
 def write_config(namespace: str) -> object:
     """
