@@ -4,7 +4,6 @@ except ImportError:
     from http import client as HTTPStatus
 import logging
 
-
 import os
 import config
 from authlib.jose.errors import JoseError, ExpiredTokenError

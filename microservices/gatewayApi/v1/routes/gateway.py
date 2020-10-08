@@ -3,6 +3,7 @@ import shutil
 from subprocess import Popen, PIPE
 import uuid
 import logging
+import yaml
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
 
@@ -10,14 +11,14 @@ from v1.auth.auth import admin_jwt
 
 gw = Blueprint('gwa', 'gateway')
 
-from authlib.integrations.flask_oauth2 import ResourceProtector
-from auth.token import RemoteToken, OIDCTokenValidator
-require_oauth = ResourceProtector()
-require_oauth.register_token_validator(OIDCTokenValidator(RemoteToken))
+# from authlib.integrations.flask_oauth2 import ResourceProtector
+# from auth.token import RemoteToken, OIDCTokenValidator
+# require_oauth = ResourceProtector()
+# require_oauth.register_token_validator(OIDCTokenValidator(RemoteToken))
 
 @gw.route('/<string:namespace>',
            methods=['PUT'], strict_slashes=False)
-@require_oauth(None)
+@admin_jwt(None)
 def write_config(namespace: str) -> object:
     """
     (Over)write
@@ -29,6 +30,8 @@ def write_config(namespace: str) -> object:
         abort(make_response(jsonify(error="Missing Claims."), 500))
 
     team = g.principal['team']
+    if team != namespace:
+        abort(make_response(jsonify(error="Not authorized to use %s namespace." % namespace), 500))
 
     selectTag = outFolder = team
 
@@ -45,15 +48,18 @@ def write_config(namespace: str) -> object:
         
         log.debug("Saved to %s" % tempFolder)
 
-        # Validation #1
-        # Validate that the principal has a claim for 'team' and ensure that the 'team'
-        # is part of all the tags
+        with open("%s/%s" % (tempFolder, 'config.yaml')) as file:
+            gw_config = yaml.load(file, Loader=yaml.FullLoader)
 
-        # Validation #2
-        # Validate that there are no reserved words in the tags
-        
+        # Validation #1
+        # Validate that the every object is tagged with the namespace
+        validate_tags (gw_config, "ns:%s" % namespace)
+
         # Validation #3
         # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
+
+        # Enrichment #1
+        # Enrich the rate-limiting plugin with the appropriate Redis details
 
         # Call the 'deck' command
         cmd = "sync"
@@ -96,4 +102,22 @@ def cleanup (dir_path):
 
 def validate_tags (yaml, required_tag):
     # throw an exception if there are invalid tags
-    abort(make_response(jsonify(error="Validation failed"), 500))
+    errors = []
+    traverse ("", errors, yaml, required_tag)
+    if len(errors) != 0:
+        raise Exception(','.join(errors))
+
+def traverse (source, errors, yaml, required_tag):
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
+    for k in yaml:
+        if k in traversables:
+            for item in yaml[k]:
+                if 'tags' in item:
+                    if required_tag not in item['tags']:
+                        errors.append("%s.%s.%s missing required tag %s" % (source, k, item['name'], required_tag))
+                    for tag in item['tags']:
+                        if tag.startswith("ns:") and tag != required_tag:
+                            errors.append("%s.%s.%s invalid ns tag %s" % (source, k, item['name'], tag))
+                else:
+                    errors.append("%s.%s.%s no tags found" % (source, k, item['name']))
+                traverse ("%s.%s.%s" % (source, k, item['name']), errors, item, required_tag)

@@ -15,7 +15,7 @@ tags:
 
 paths:
   /gateway/{namespace}:
-    post:
+    put:
       operationId: v1.routes.rules.write_config
       summary: Updates the gateway config
       description: Returns the changes that were performed

@@ -11,12 +11,12 @@ def admin_jwt(f):
         @return: decorator, return the wrapped function or abort json object.
         """
     require_oauth = ResourceProtector()
-    require_oauth.register_token_validator(OIDCTokenValidator(RemoteToken))
+    if Config.environment != "test":
+        require_oauth.register_token_validator(OIDCTokenValidator(RemoteToken))
 
     @wraps(f)
     def decorated(*args, **kwargs):
-
-        oauth = require_oauth(f, *args, **kwargs)
+        oauth = require_oauth(f)
         return oauth(*args, **kwargs)
 
     return decorated

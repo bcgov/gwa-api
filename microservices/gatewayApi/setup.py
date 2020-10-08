@@ -38,13 +38,16 @@ setup(
     include_package_data=True,
     install_requires=[
         'config',
+        'authlib',
         'flask',
+        'flask-cors',
         'flask-compress',
         'gevent',
         'pyyaml',
         'mongoengine',
         'pyhcl',
         'requests',
+        'swagger-ui-py==0.3.0',
         'flask-jwt-simple',
     ],
     setup_requires=[

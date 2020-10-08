@@ -52,7 +52,7 @@ helm upgrade --install gwa-kong-api --namespace ocwa bcgov/generic-api
 
 ``` sh
 pip install '.[test]'
-pytest --verbose
+ENVIRONMENT=test pytest --verbose
 ```
 
 Run with coverage support. The report will be generated in htmlcov/index.html.
