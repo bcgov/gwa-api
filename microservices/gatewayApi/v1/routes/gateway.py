@@ -1,6 +1,6 @@
 import os
 import shutil
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 import uuid
 import logging
 import yaml
@@ -48,7 +48,10 @@ def write_config(namespace: str) -> object:
 
         # Validation #1
         # Validate that the every object is tagged with the namespace
-        validate_tags (gw_config, "ns.%s" % namespace)
+        try:
+            validate_tags (gw_config, "ns.%s" % namespace)
+        except Exception as ex:
+            abort(make_response(jsonify(error="Validation Errors - %s" % ex), 500))
 
         # Validation #3
         # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
@@ -64,21 +67,20 @@ def write_config(namespace: str) -> object:
 
         log.info("%s for %s" % (cmd, team))
         args = [
-            "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+            "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", "ns.%s" % selectTag, "--state", tempFolder
         ]
-        deck_run = Popen(args, stdout=PIPE)
+        deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
         out, err = deck_run.communicate()
         if deck_run.returncode != 0:
-            print(out, err)
             cleanup (tempFolder)
-            abort(make_response(jsonify(error="Sync Failed."), 500))
+            log.warn("%s - %s" % (team, out.decode('utf-8')))
+            abort(make_response(jsonify(error="Sync Failed.", results=out.decode('utf-8')), 500))
 
         cleanup (tempFolder)
 
-        print(deck_run.returncode)
         log.debug("The exit code was: %d" % deck_run.returncode)
 
-        message = "Config Updated."
+        message = "Sync successful."
         if cmd == 'diff':
             message = "Dry-run.  No changes applied."
 
