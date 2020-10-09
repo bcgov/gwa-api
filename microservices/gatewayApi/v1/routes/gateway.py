@@ -31,6 +31,7 @@ def write_config(namespace: str) -> object:
     selectTag = outFolder = team
 
     log.debug(g.principal)
+    log.debug(request.files)
 
     if 'configFile' in request.files:
         log.debug(request.files['configFile'])
@@ -86,6 +87,9 @@ def write_config(namespace: str) -> object:
 
         return make_response(jsonify(message=message, results=out.decode('utf-8')))
     else:
+        log.error("Missing input")
+        log.error(request.files)
+
         abort(make_response(jsonify(error="Missing Input."), 500))
 
 
