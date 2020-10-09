@@ -93,11 +93,14 @@ def create_app(test_config=None):
 
     @app.errorhandler(HTTPStatus.INTERNAL_SERVER_ERROR)
     def internal_server_error(error):
+        log = app.logger
         log.error("Internal Error %s - %s" % (request.remote_addr, str(error)))
         content = jsonify({
             "error": "{error}",
             "code": HTTPStatus.INTERNAL_SERVER_ERROR
         })
+        log.error(request.headers)
+        log.error(request.get_data().decode('utf-8'))
         return make_response(content, HTTPStatus.INTERNAL_SERVER_ERROR)
 
     @app.errorhandler(JoseError)
