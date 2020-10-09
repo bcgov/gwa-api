@@ -23,11 +23,11 @@ def write_config(namespace: str) -> object:
     log = app.logger
 
     if 'team' not in g.principal:
-        abort(make_response(jsonify(error="Missing Claims."), 500))
+        abort(make_response(jsonify(error="Missing Claims."), 403))
 
     team = g.principal['team']
     if team != namespace:
-        abort(make_response(jsonify(error="Not authorized to use %s namespace." % namespace), 500))
+        abort(make_response(jsonify(error="Not authorized to use %s namespace." % namespace), 403))
 
     selectTag = outFolder = team
 
@@ -52,7 +52,7 @@ def write_config(namespace: str) -> object:
         try:
             validate_tags (gw_config, "ns.%s" % namespace)
         except Exception as ex:
-            abort(make_response(jsonify(error="Validation Errors - %s" % ex), 500))
+            abort(make_response(jsonify(error="Validation Errors - %s" % ex), 400))
 
         # Validation #3
         # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
@@ -75,7 +75,7 @@ def write_config(namespace: str) -> object:
         if deck_run.returncode != 0:
             cleanup (tempFolder)
             log.warn("%s - %s" % (team, out.decode('utf-8')))
-            abort(make_response(jsonify(error="Sync Failed.", results=out.decode('utf-8')), 500))
+            abort(make_response(jsonify(error="Sync Failed.", results=out.decode('utf-8')), 400))
 
         cleanup (tempFolder)
 
@@ -88,8 +88,10 @@ def write_config(namespace: str) -> object:
         return make_response(jsonify(message=message, results=out.decode('utf-8')))
     else:
         log.error("Missing input")
-        raise Exception("Missing Input.")
-
+        log.error(request.get_data())
+        log.error(request.form)
+        log.error(request.headers)
+        abort(make_response(jsonify(error="Missing input"), 400))
 
 def cleanup (dir_path):
     log = app.logger
