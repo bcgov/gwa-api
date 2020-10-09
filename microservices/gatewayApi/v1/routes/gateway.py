@@ -3,6 +3,7 @@ import shutil
 from subprocess import Popen, PIPE, STDOUT
 import uuid
 import logging
+import json
 import yaml
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
@@ -88,9 +89,7 @@ def write_config(namespace: str) -> object:
         return make_response(jsonify(message=message, results=out.decode('utf-8')))
     else:
         log.error("Missing input")
-        log.error(request.files)
-
-        abort(make_response(jsonify(error="Missing Input."), 500))
+        raise Exception("Missing Input.")
 
 
 def cleanup (dir_path):
