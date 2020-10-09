@@ -99,8 +99,9 @@ def create_app(test_config=None):
             "error": "{error}",
             "code": HTTPStatus.INTERNAL_SERVER_ERROR
         })
+        log.error(request.get_data())
+        log.error(request.form)
         log.error(request.headers)
-        log.error(request.get_data().decode('utf-8'))
         return make_response(content, HTTPStatus.INTERNAL_SERVER_ERROR)
 
     @app.errorhandler(JoseError)

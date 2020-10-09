@@ -32,7 +32,6 @@ def write_config(namespace: str) -> object:
     selectTag = outFolder = team
 
     log.debug(g.principal)
-    log.debug(request.files)
 
     if 'configFile' in request.files:
         log.debug(request.files['configFile'])
