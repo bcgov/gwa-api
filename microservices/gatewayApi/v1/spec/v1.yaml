@@ -1,12 +1,15 @@
 openapi: 3.0.0
 info:
   version: 1.0.0
-  title: GWA Kong DecK API
+  title: Gateway Administration (GWA) API
   license:
     name: Apache 2.0
   description: |-
-    # GWA Kong DecK API
-    This API is responsible for validating Kong Declarative Config and applying it to Kong
+    # Introduction
+    This set of APIs are responsible for:
+      * validating Kong Declarative Config and applying it to Kong
+      * managing namespaces to segment services
+      * managing membership to namespaces for access control
 servers:
   - url: {{server_url}}
 tags:
@@ -19,7 +22,152 @@ paths:
   # /namespaces/{namespace}/gateway (PUT)
   # /namespaces/{namespace}/members (PUT)
   # /namespaces/{namespace}/catalog/{api} (GET, PUT)
-  /gateway/{namespace}:
+  /namespaces/{namespace}/serviceaccounts:
+    post:
+      summary: Add a new service account
+      description: Add a new service account
+      tags:
+        - Service Accounts
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+  /namespaces/{namespace}/serviceaccounts/{accountId}:
+    put:
+      summary: Update service account credentials
+      description: Update service account credentials
+      tags:
+        - Service Accounts
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+  /namespaces/{namespace}:
+    delete:
+      summary: Delete a namespace
+      description: Delete a namespace
+      tags:
+        - Namespaces
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+  /namespaces:
+    post:
+      summary: Add a new namespace
+      description: Add a new namespace
+      tags:
+        - Namespaces
+      parameters: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+  /namespaces/{namespace}/membership:
+    put:
+      summary: Update full membership
+      description: Update the full membership
+      tags:
+        - ACL
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  username:
+                    type: string
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+  /namespaces/{namespace}/gateway:
     put:
       summary: Updates the gateway config
       description: Returns the changes that were performed
@@ -99,6 +247,12 @@ components:
       description: Unauthorized
     404NotFound:
       description: Not Found
+    400BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorResponse'
     500InternalServerError:
       description: Internal Server Error
       content:

@@ -12,7 +12,7 @@ from v1.auth.auth import admin_jwt
 
 gw = Blueprint('gwa', 'gateway')
 
-@gw.route('/<string:namespace>',
+@gw.route('',
            methods=['PUT'], strict_slashes=False)
 @admin_jwt(None)
 def write_config(namespace: str) -> object:

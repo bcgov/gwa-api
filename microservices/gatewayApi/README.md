@@ -30,6 +30,12 @@ docker run -ti --rm \
  -e TOKEN_MATCH_AUD=account \
  -e WORKING_FOLDER=/tmp \
  -e KONG_ADMIN_URL=https://adminapi-qwzrwc-dev.pathfinder.gov.bc.ca  \
+ -e KC_SERVER_URL=https://auth-qwzrwc-dev.pathfinder.gov.bc.ca/auth/ \
+ -e KC_REALM=aps \
+ -e KC_USERNAME=kcadmin \
+ -e KC_PASSWORD="SdufuSYnFAANnluWrAH0waHavE9YWdCu" \
+ -e KC_USER_REALM=master \
+ -e KC_CLIENT_ID=admin-cli \
  --add-host=docker:$hostip -p 2000:2000 gwa_kong_api
 ```
 

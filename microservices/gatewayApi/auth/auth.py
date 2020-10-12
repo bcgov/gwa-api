@@ -5,6 +5,7 @@ from config import Config
 from authlib.integrations.flask_oauth2 import ResourceProtector
 from auth.token import RemoteToken, OIDCTokenValidator
 
+
 def admin_jwt(f):
     """
         @param f: flask function
