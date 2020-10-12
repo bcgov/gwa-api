@@ -73,6 +73,9 @@ def delete_namespace(namespace: str) -> object:
            methods=['PUT'], strict_slashes=False)
 @admin_jwt(None)
 def update_membership(namespace: str) -> object:
+    # Sync the membership list provided with the group membership
+    # in Keycloak
+    #
     log = app.logger
 
     enforce_authorization(namespace)
@@ -101,17 +104,29 @@ def update_membership(namespace: str) -> object:
             desired_membership.remove(member['username'])
 
     # Add missing users to the membership
+    unregistered_users = []
     for username in desired_membership:
         user_id = keycloak_admin.get_user_id (username)
         if user_id is None:
             log.error("[%s] UNREGISTERED user %s" % (namespace, username))
             counts_missing = counts_missing + 1
+            unregistered_users.append(username)
         else:
             log.debug("[%s] ADDING user %s" % (namespace, username))
             keycloak_admin.group_user_add (user_id, group['id'])
             counts_added = counts_added + 1
 
-    # # Sync the membership list provided with the group membership
-    # # in Keycloak
+    update_pending_registrations (group, unregistered_users)
+
     return make_response(jsonify(added=counts_added, removed=counts_removed, missing=counts_missing))
 
+def update_pending_registrations(group, unregistered_users):
+    if 'attributes' in group:
+        attrs = group['attributes']
+    else:
+        attrs = group['attributes'] = {}
+
+    attrs['pending'] = unregistered_users
+
+    keycloak_admin = admin_api()
+    keycloak_admin.update_group (group['id'], group)
