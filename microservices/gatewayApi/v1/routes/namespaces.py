@@ -30,8 +30,9 @@ def create_namespace() -> object:
 
     keycloak_admin = admin_api()
 
+    namespace = request.values['name']
     payload = {
-        "name": request.values['name']
+        "name": namespace
     }
 
     parent_group = keycloak_admin.get_group_by_path('/team')
@@ -40,6 +41,11 @@ def create_namespace() -> object:
         response = keycloak_admin.create_group (payload, parent=parent_group['id'])
 
         new_id = response['id']
+
+        if 'preferred_username' in g.principal:
+            user_id = keycloak_admin.get_user_id (g.principal['preferred_username'])
+            log.debug("[%s] ADDING user %s" % (namespace, username))
+            keycloak_admin.group_user_add (user_id, new_id)
 
     except KeycloakGetError as err:
         if err.response_code == 409:
