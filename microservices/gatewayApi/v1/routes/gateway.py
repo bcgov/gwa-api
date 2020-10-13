@@ -20,16 +20,11 @@ def write_config(namespace: str) -> object:
     (Over)write
     :return: JSON of success message or error message
     """
+    enforce_authorization(namespace)
+
     log = app.logger
 
-    if 'team' not in g.principal:
-        abort(make_response(jsonify(error="Missing Claims."), 403))
-
-    team = g.principal['team']
-    if team != namespace:
-        abort(make_response(jsonify(error="Not authorized to use %s namespace." % namespace), 403))
-
-    selectTag = outFolder = team
+    selectTag = outFolder = g.principal['team']
 
     log.debug(g.principal)
 

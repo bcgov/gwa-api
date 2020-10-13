@@ -53,7 +53,6 @@ class OIDCTokenValidator(BearerTokenValidator):
             )
         self.jwk = jwk_r.json()
 
-
     def authenticate_token(self, token_string):
         token = jwt.decode(token_string, self.jwk)
         token.validate()

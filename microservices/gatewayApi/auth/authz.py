@@ -9,3 +9,10 @@ def enforce_authorization(namespace):
     team = g.principal['team']
     if team != namespace:
         abort(make_response(jsonify(error="Not authorized to use %s namespace." % namespace), 403))
+
+def enforce_role_authorization(role):
+    return
+    # # Make sure namespace matches the 'team' claim
+    # team = g.principal['team']
+    # if team != namespace:
+    #     abort(make_response(jsonify(error="Not authorized to use %s namespace." % namespace), 403))

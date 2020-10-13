@@ -9,8 +9,11 @@
 # - membership:manage : ability to manage the namespace membership
 #
 import os
+import string
+import random
 import shutil
-from keycloak.exceptions import KeycloakGetError
+from keycloak.exceptions import raise_error_from_response, KeycloakGetError
+from keycloak.urls_patterns import URL_ADMIN_CLIENTS
 from subprocess import Popen, PIPE, STDOUT
 import uuid
 import logging
@@ -25,6 +28,29 @@ from v1.auth.auth import admin_jwt, enforce_authorization
 sa = Blueprint('serviceaccounts', 'serviceaccounts')
 
 @sa.route('',
+           methods=['GET'], strict_slashes=False)
+@admin_jwt(None)
+def list_service_accounts(namespace: str) -> object:
+    enforce_authorization(namespace)
+
+    ns = g.principal['team']
+
+    keycloak_admin = admin_api()
+
+    try:
+        params_path = {"realm-name": keycloak_admin.realm_name}
+        data_raw = keycloak_admin.raw_get(URL_ADMIN_CLIENTS.format(**params_path), clientId='sa-%s-' % ns, search=True)
+        response = raise_error_from_response(data_raw, KeycloakGetError)
+        result = []
+        for r in response:
+            result.append(r['clientId'])
+        return (json.dumps(result), 200)
+    except KeycloakGetError as err:
+        log.error(err)
+        abort(make_response(jsonify(error="Failed to read service accounts"), 400))
+
+
+@sa.route('',
            methods=['POST'], strict_slashes=False)
 @admin_jwt(None)
 def create_service_account(namespace: str) -> object:
@@ -34,7 +60,7 @@ def create_service_account(namespace: str) -> object:
     j = json.loads(f.read())
 
     ns = g.principal['team']
-    cid = "ns-%s" % ns
+    cid = "sa-%s-%s" % (ns, get_random_string(10))
 
     j['clientId'] = cid
     j['protocolMappers'][0]['config']['claim.value'] = ns
@@ -59,9 +85,9 @@ def create_service_account(namespace: str) -> object:
 def update_service_account_credentials(namespace: str, client_id: str) -> object:
     enforce_authorization(namespace)
 
-    cid = "ns-%s" % namespace
+    cid = "sa-%s-" % namespace
 
-    if client_id != cid:
+    if not client_id.startswith(cid):
         abort(make_response(jsonify(error="Invalid client ID"), 400))
 
     keycloak_admin = admin_api()
@@ -76,3 +102,10 @@ def update_service_account_credentials(namespace: str, client_id: str) -> object
         else:
             log.error(err)
             abort(make_response(jsonify(error="Failed to add service account"), 400))
+
+
+def get_random_string(length):
+    letters = string.ascii_lowercase + string.digits
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    print("Random string of length", length, "is:", result_str)
+    return result_str

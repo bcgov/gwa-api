@@ -23,6 +23,27 @@ paths:
   # /namespaces/{namespace}/members (PUT)
   # /namespaces/{namespace}/catalog/{api} (GET, PUT)
   /namespaces/{namespace}/serviceaccounts:
+    get:
+      summary: Get service accounts
+      description: Get service accounts
+      tags:
+        - Service Accounts
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
     post:
       summary: Add a new service account
       description: Add a new service account
@@ -173,8 +194,6 @@ paths:
       description: Returns the changes that were performed
       tags:
         - Gateway
-      consumes:
-        - multipart/form-data
       parameters:
         - name: namespace
           in: path
@@ -297,13 +316,13 @@ components:
       flows:
         clientCredentials:
           tokenUrl: "{{accesstoken_url}}"
-          authorizationUrl: "{{authorization_url}}"
-          scopes: {}
-    implicit:
+          scopes:
+            "system/Gateway.write": "Change Kong Gateway Configuration"
+    authorizationCode:
       type: oauth2       
       x-tokenInfoUrl: "{{tokeninfo_url}}"
       flows:
-        implicit:
+        authorizationCode:
           authorizationUrl: "{{authorization_url}}"
           scopes: {}
     password:
@@ -311,7 +330,9 @@ components:
       x-tokenInfoUrl: "{{tokeninfo_url}}"
       flows:
         password:
-          authorizationUrl: "{{authorization_url}}"
+          tokenUrl: "{{token_url}}"
           scopes: {}
 security:
   - oauth2: []
+  - authorizationCode: []
+ 

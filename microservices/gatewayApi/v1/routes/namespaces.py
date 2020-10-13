@@ -15,7 +15,7 @@ import yaml
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
 
-from v1.auth.auth import admin_jwt, enforce_authorization
+from v1.auth.auth import admin_jwt, enforce_authorization, enforce_role_authorization
 
 from clients.keycloak import admin_api
 
@@ -23,8 +23,10 @@ ns = Blueprint('namespaces', 'namespaces')
 
 @ns.route('',
            methods=['POST'], strict_slashes=False)
-@admin_jwt('ns:manage')
+@admin_jwt(None)
 def create_namespace() -> object:
+
+    enforce_role_authorization('aps.ns:manage')
 
     keycloak_admin = admin_api()
 
@@ -50,8 +52,10 @@ def create_namespace() -> object:
 
 @ns.route('/<string:namespace>',
            methods=['DELETE'], strict_slashes=False)
-@admin_jwt('ns:manage')
+@admin_jwt(None)
 def delete_namespace(namespace: str) -> object:
+
+    enforce_role_authorization('aps.ns:manage')
 
     keycloak_admin = admin_api()
 
