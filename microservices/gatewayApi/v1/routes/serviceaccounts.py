@@ -59,11 +59,10 @@ def create_service_account(namespace: str) -> object:
     f = open("templates/keycloak/client.json", "r")
     j = json.loads(f.read())
 
-    ns = g.principal['team']
-    cid = "sa-%s-%s" % (ns, get_random_string(10))
+    cid = "sa-%s-%s" % (namespace, get_random_string(10))
 
     j['clientId'] = cid
-    j['protocolMappers'][0]['config']['claim.value'] = ns
+    j['protocolMappers'][0]['config']['claim.value'] = namespace
 
     keycloak_admin = admin_api()
 
@@ -103,6 +102,29 @@ def update_service_account_credentials(namespace: str, client_id: str) -> object
             log.error(err)
             abort(make_response(jsonify(error="Failed to add service account"), 400))
 
+@sa.route('/<string:client_id>',
+           methods=['DELETE'], strict_slashes=False)
+@admin_jwt(None)
+def delete_service_account(namespace: str, client_id: str) -> object:
+    enforce_authorization(namespace)
+
+    cid = "sa-%s-" % namespace
+
+    if not client_id.startswith(cid):
+        abort(make_response(jsonify(error="Invalid client ID"), 400))
+
+    keycloak_admin = admin_api()
+
+    try:
+        cuuid = keycloak_admin.get_client_id(client_id)
+        if cuuid is None:
+            abort(make_response(jsonify(error="Service Account does not exist"), 400))
+        else:
+            keycloak_admin.delete_client (cuuid)
+            return ({}, 204)
+    except KeycloakGetError as err:
+        log.error(err)
+        abort(make_response(jsonify(error="Failed to delete service account"), 400))
 
 def get_random_string(length):
     letters = string.ascii_lowercase + string.digits

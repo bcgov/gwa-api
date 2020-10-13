@@ -99,6 +99,31 @@ paths:
           $ref: '#/components/responses/400BadRequest'
         '500':
           $ref: '#/components/responses/500InternalServerError'
+    delete:
+      summary: Delete service account
+      description: Delete service account
+      tags:
+        - Service Accounts
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
   /namespaces/{namespace}:
     delete:
