@@ -43,7 +43,8 @@ def create_namespace() -> object:
         new_id = response['id']
 
         if 'preferred_username' in g.principal:
-            user_id = keycloak_admin.get_user_id (g.principal['preferred_username'])
+            username = g.principal['preferred_username']
+            user_id = keycloak_admin.get_user_id (username)
             log.debug("[%s] ADDING user %s" % (namespace, username))
             keycloak_admin.group_user_add (user_id, new_id)
 
