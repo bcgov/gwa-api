@@ -23,7 +23,7 @@ def write_config(namespace: str) -> object:
     log = app.logger
     enforce_authorization(namespace)
 
-    selectTag = outFolder = g.principal['team']
+    selectTag = outFolder = namespace
 
     log.debug(g.principal)
 
@@ -60,7 +60,7 @@ def write_config(namespace: str) -> object:
         if request.values['dryRun'] == 'true':
             cmd = "diff"
 
-        log.info("%s for %s" % (cmd, team))
+        log.info("%s for %s" % (cmd, namespace))
         args = [
             "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", "ns.%s" % selectTag, "--state", tempFolder
         ]
