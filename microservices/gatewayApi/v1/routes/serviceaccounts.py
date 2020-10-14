@@ -33,13 +33,11 @@ sa = Blueprint('serviceaccounts', 'serviceaccounts')
 def list_service_accounts(namespace: str) -> object:
     enforce_authorization(namespace)
 
-    ns = g.principal['team']
-
     keycloak_admin = admin_api()
 
     try:
         params_path = {"realm-name": keycloak_admin.realm_name}
-        data_raw = keycloak_admin.raw_get(URL_ADMIN_CLIENTS.format(**params_path), clientId='sa-%s-' % ns, search=True)
+        data_raw = keycloak_admin.raw_get(URL_ADMIN_CLIENTS.format(**params_path), clientId='sa-%s-' % namespace, search=True)
         response = raise_error_from_response(data_raw, KeycloakGetError)
         result = []
         for r in response:
