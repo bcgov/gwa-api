@@ -104,6 +104,19 @@ def create_app(test_config=None):
         log.error(request.headers)
         return make_response(content, HTTPStatus.INTERNAL_SERVER_ERROR)
 
+    @app.errorhandler(HTTPStatus.BAD_REQUEST)
+    def bad_request_error(error):
+        log = app.logger
+        log.error("Bad Request %s - %s" % (request.remote_addr, str(error)))
+        content = jsonify({
+            "error": "Bad Request",
+            "code": HTTPStatus.BAD_REQUEST
+        })
+        log.error(request.get_data())
+        log.error(request.form)
+        log.error(request.headers)
+        return make_response(content, HTTPStatus.BAD_REQUEST)
+
     @app.errorhandler(JoseError)
     def forbidden(error):
         log.error("Denied access %s - %s" % (request.remote_addr, str(error)))

@@ -90,9 +90,9 @@ def update_service_account_credentials(namespace: str, client_id: str) -> object
     keycloak_admin = admin_api()
 
     try:
-        cuuid = keycloak_admin.get_client_id(cid)
+        cuuid = keycloak_admin.get_client_id(client_id)
         r = keycloak_admin.generate_client_secrets(cuuid)
-        return ({'client_id': cid, 'client_secret': r['value']}, 201)
+        return ({'client_id': client_id, 'client_secret': r['value']}, 201)
     except KeycloakGetError as err:
         if err.response_code == 409:
             abort(make_response(jsonify(error="Service Account for this namespace is already created."), 400))

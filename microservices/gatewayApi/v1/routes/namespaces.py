@@ -30,7 +30,7 @@ def create_namespace() -> object:
 
     keycloak_admin = admin_api()
 
-    namespace = request.values['name']
+    namespace = request.get_json(force=True)['name']
     payload = {
         "name": namespace
     }
