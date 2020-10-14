@@ -50,8 +50,10 @@ def create_namespace() -> object:
 
     except KeycloakGetError as err:
         if err.response_code == 409:
+            log.error("Namespace %s already created." % namespace)
             abort(make_response(jsonify(error="Namespace is already created."), 400))
         else:
+            log.error("Failed to create namespace %s" % namespace)
             log.error(err)
             abort(make_response(jsonify(error="Failed to add namespace"), 400))
 
