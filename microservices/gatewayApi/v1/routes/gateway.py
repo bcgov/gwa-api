@@ -10,6 +10,8 @@ from io import TextIOWrapper
 
 from v1.auth.auth import admin_jwt, enforce_authorization
 
+from clients.openshift import prepare_routes, apply_routes
+
 gw = Blueprint('gwa', 'gateway')
 
 @gw.route('',
@@ -68,8 +70,12 @@ def write_config(namespace: str) -> object:
         out, err = deck_run.communicate()
         if deck_run.returncode != 0:
             cleanup (tempFolder)
-            log.warn("%s - %s" % (team, out.decode('utf-8')))
+            log.warn("%s - %s" % (namespace, out.decode('utf-8')))
             abort(make_response(jsonify(error="Sync Failed.", results=out.decode('utf-8')), 400))
+
+        else:
+            prepare_routes (tempFolder)
+            apply_routes (tempFolder)
 
         cleanup (tempFolder)
 

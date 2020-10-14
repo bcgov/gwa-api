@@ -206,3 +206,4 @@ venv.bak/
 config/*.json
 
 LOCAL.md
+_tmp
