@@ -16,10 +16,13 @@ from flask import Blueprint, jsonify, request, Response, make_response, abort, g
 from io import TextIOWrapper
 
 from v1.auth.auth import admin_jwt, enforce_authorization, enforce_role_authorization
+from v1.auth.authz import group_root
 
 from clients.keycloak import admin_api
 
 ns = Blueprint('namespaces', 'namespaces')
+
+_group_root = group_root()
 
 @ns.route('',
            methods=['POST'], strict_slashes=False)
@@ -35,7 +38,7 @@ def create_namespace() -> object:
         "name": namespace
     }
 
-    parent_group = keycloak_admin.get_group_by_path('/team')
+    parent_group = keycloak_admin.get_group_by_path(_group_root)
 
     try:
         response = keycloak_admin.create_group (payload, parent=parent_group['id'])
@@ -68,7 +71,7 @@ def delete_namespace(namespace: str) -> object:
 
     keycloak_admin = admin_api()
 
-    group = keycloak_admin.get_group_by_path("/team/%s" % namespace, search_in_subgroups=True)
+    group = keycloak_admin.get_group_by_path("%s/%s" % (_group_root, namespace), search_in_subgroups=True)
 
     if group is None:
         abort(make_response(jsonify(error="Group does not exist"), 400))
@@ -100,7 +103,7 @@ def update_membership(namespace: str) -> object:
 
     keycloak_admin = admin_api()
 
-    group = keycloak_admin.get_group_by_path("/team/%s" % namespace, search_in_subgroups=True)
+    group = keycloak_admin.get_group_by_path("%s/%s" % (_group_root, namespace), search_in_subgroups=True)
 
     membership = keycloak_admin.get_group_members (group['id'])
 

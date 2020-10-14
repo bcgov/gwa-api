@@ -48,8 +48,8 @@
             "config": {
                 "id.token.claim": "true",
                 "access.token.claim": "true",
-                "claim.name": "team",
-                "claim.value": "__team__",
+                "claim.name": "namespace",
+                "claim.value": "__namespace__",
                 "userinfo.token.claim": "true"
             }
         },

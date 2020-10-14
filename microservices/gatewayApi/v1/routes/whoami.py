@@ -8,6 +8,7 @@ from flask import Blueprint, jsonify, request, Response, make_response, abort, g
 from io import TextIOWrapper
 
 from v1.auth.auth import admin_jwt
+from v1.auth.authz import ns_claim
 
 whoami = Blueprint('whoami', 'whoami')
 
@@ -20,7 +21,7 @@ def who_am_i() -> object:
     """
     log = app.logger
 
-    if 'team' not in g.principal:
+    if ns_claim not in g.principal:
         abort(make_response(jsonify(error="Missing Claims."), 500))
 
     output = {
@@ -28,7 +29,7 @@ def who_am_i() -> object:
         "scope": g.principal['scope'],
         "issuer": g.principal['iss'],
         # "audience": g.principal['aud'],
-        "namespace": g.principal['team'],
+        "namespace": g.principal[ns_claim],
         "client-address": g.principal['clientAddress'],
     }
     return make_response(jsonify(output))

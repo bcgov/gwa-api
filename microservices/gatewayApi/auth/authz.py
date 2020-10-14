@@ -1,18 +1,22 @@
 from flask import g, abort, make_response, jsonify
 
-def enforce_authorization(namespace):
+def group_root():
+    return '/ns'
 
-    if 'team' not in g.principal:
+def ns_claim():
+    return 'namespace'
+
+def enforce_authorization(namespace):
+    the_ns_claim = ns_claim()
+
+    if the_ns_claim not in g.principal:
         abort(make_response(jsonify(error="Missing Claims."), 403))
 
-    # Make sure namespace matches the 'team' claim
-    team = g.principal['team']
-    if team != namespace and team != ('/team/%s' % namespace):
+    # Make sure namespace matches the one in the claim
+    # It can be in two formats: '/ns/<namespace>' or '<namespace>'
+    ns = g.principal[the_ns_claim]
+    if ns != namespace and ns != ('%s/%s' % (group_root(), namespace)):
         abort(make_response(jsonify(error="Not authorized to use %s namespace." % namespace), 403))
 
 def enforce_role_authorization(role):
     return
-    # # Make sure namespace matches the 'team' claim
-    # team = g.principal['team']
-    # if team != namespace:
-    #     abort(make_response(jsonify(error="Not authorized to use %s namespace." % namespace), 403))
