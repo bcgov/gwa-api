@@ -8,7 +8,7 @@ import yaml
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
 
-from v1.auth.auth import admin_jwt
+from v1.auth.auth import admin_jwt, enforce_authorization
 
 gw = Blueprint('gwa', 'gateway')
 
@@ -20,9 +20,8 @@ def write_config(namespace: str) -> object:
     (Over)write
     :return: JSON of success message or error message
     """
-    enforce_authorization(namespace)
-
     log = app.logger
+    enforce_authorization(namespace)
 
     selectTag = outFolder = g.principal['team']
 
