@@ -25,7 +25,7 @@ ns = Blueprint('namespaces', 'namespaces')
            methods=['POST'], strict_slashes=False)
 @admin_jwt(None)
 def create_namespace() -> object:
-
+    log = app.logger
     enforce_role_authorization('aps.ns:manage')
 
     keycloak_admin = admin_api()
@@ -60,7 +60,7 @@ def create_namespace() -> object:
            methods=['DELETE'], strict_slashes=False)
 @admin_jwt(None)
 def delete_namespace(namespace: str) -> object:
-
+    log = app.logger
     enforce_role_authorization('aps.ns:manage')
 
     keycloak_admin = admin_api()
