@@ -15,14 +15,14 @@ import yaml
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
 
-from v1.auth.auth import admin_jwt, enforce_authorization, enforce_role_authorization
-from v1.auth.authz import group_root
+from v1.auth.auth import admin_jwt, enforce_authorization, enforce_role_authorization, group_root, group_root_name
 
 from clients.keycloak import admin_api
 
 ns = Blueprint('namespaces', 'namespaces')
 
 _group_root = group_root()
+_group_root_name = group_root_name()
 
 @ns.route('',
            methods=['POST'], strict_slashes=False)
@@ -39,8 +39,11 @@ def create_namespace() -> object:
     }
 
     parent_group = keycloak_admin.get_group_by_path(_group_root)
-
     try:
+        if parent_group is None:
+            keycloak_admin.create_group ({"name": _group_root_name})
+            parent_group = keycloak_admin.get_group_by_path(_group_root)
+
         response = keycloak_admin.create_group (payload, parent=parent_group['id'])
 
         new_id = response['id']

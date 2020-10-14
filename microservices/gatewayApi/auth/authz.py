@@ -1,7 +1,10 @@
 from flask import g, abort, make_response, jsonify
 
+def group_root_name():
+    return 'ns'
+
 def group_root():
-    return '/ns'
+    return '/%s' % group_root_name()
 
 def ns_claim():
     return 'namespace'
