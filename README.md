@@ -59,13 +59,13 @@ access: read, write
 
 A `namespace` represents a collections of Kong Services and Routes that are managed independently.
 
-Go to <a href="https://gwa-qwzrwc-dev.pathfinder.gov.bc.ca/int" target="_blank">gwa-ui</a>.
+To create a new namespace, go to the <a href="https://gwa-qwzrwc-dev.pathfinder.gov.bc.ca/int" target="_blank">API Services Portal</a>.
 
-After login and selection of an existing namespace, go to the `namespaces` tab and click the `Create Namespace` button.
+After login and selection of an existing namespace, go to the `New Namespace` tab and click the `Create Namespace` button.
 
 The namespace must be an alphanumeric string between 5 and 10 characters.
 
-Logout by clicking your username at the top right of the page.  When you login, you should be able to select the new namespace from the `API Programme Services` project selector.
+Logout by clicking your username at the top right of the page.  When you login again, you should be able to select the new namespace from the `API Programme Services` project selector.
 
 ## 2. Generate a Service Account
 
@@ -96,7 +96,7 @@ Select a `configFile` file.  An example of a very minimal config is:
 
 ```
 export NS="my_namespace"
-export NAME="some_service_name_$NS"
+export NAME="some-service-name-$NS"
 echo "
 services:
 - name: $NAME
@@ -138,25 +138,35 @@ echo "
 AUTHORIZATION_ENDPOINT=https://auth-qwzrwc-dev.pathfinder.gov.bc.ca/auth/realms/aps/protocol/openid-connect/token
 CLIENT_ID=sa-xxxx-g9ah2ess3y
 CLIENT_SECRET=0000-0000-0000-0000
-PUBLISH_ENDPOINT=https://gwa-api-qwzrwc-dev.pathfinder.gov.bc.ca/v1/namespaces/legacyapps/gateway
+API_HOST=https://gwa-api-qwzrwc-dev.pathfinder.gov.bc.ca/v1
 " > .env
 ```
 
 ```
-gwa pg sample.yaml 
+gwa pg --namespace $NS sample.yaml 
 ```
 
 ## 4. Verify routes
 
 ```
-curl $NAME.api.333223.xyz
+curl https://$NAME.api.333223.xyz/headers
 ```
 
 ## 5. View metrics
 
 Go to <a href="https://grafana-qwzrwc-dev.pathfinder.gov.bc.ca/" target="_blank">Grafana</a> to view metrics for your configured services.
 
-## 6. Add to your CI/CD Pipeline
+
+## 6. Grant access to others
+
+The `acl` command is an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
+
+```
+gwa acl --namespace $NS --users acope@idir,jjones@idir
+```
+
+## 7. Add to your CI/CD Pipeline
 
 Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated on the gateway.
+
 
