@@ -94,7 +94,7 @@ status:
 """)
 
     ts = int(time.time())
-    fmt_time = datetime.now().strftime("%Y/%m-%b/%d")
+    fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
 
     ssl_key = read_and_indent(ssl_key_path, 8)
     ssl_crt = read_and_indent(ssl_crt_path, 8)
