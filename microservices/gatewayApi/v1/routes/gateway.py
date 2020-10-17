@@ -56,6 +56,8 @@ def write_config(namespace: str) -> object:
         # Enrichment #1
         # Enrich the rate-limiting plugin with the appropriate Redis details
 
+        # Validate based on DNS 952
+        
         # Call the 'deck' command
         cmd = "sync"
         print(request.values)
@@ -74,7 +76,7 @@ def write_config(namespace: str) -> object:
             abort(make_response(jsonify(error="Sync Failed.", results=out.decode('utf-8')), 400))
 
         else:
-            prepare_routes (tempFolder)
+            prepare_routes (namespace, tempFolder)
             apply_routes (tempFolder)
 
         cleanup (tempFolder)

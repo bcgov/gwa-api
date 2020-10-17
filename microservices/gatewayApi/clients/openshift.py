@@ -3,6 +3,7 @@
 import os
 import yaml
 import time
+from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
 from flask import current_app as app
 from string import Template
@@ -18,7 +19,7 @@ def apply_routes (rootPath):
         log.error("Failed to apply routes", out, err)
         raise Exception("Failed to apply routes")
 
-def prepare_routes (rootPath):
+def prepare_routes (ns, rootPath):
     ssl_key_path = "/ssl/tls.key"
     ssl_crt_path = "/ssl/tls.crt"
 
@@ -65,8 +66,10 @@ metadata:
   name: ${name}
   annotations:
   labels:
-    generated-by: "kong-config-batch-job"
-    generated-at: "${timestamp}"
+    aps-generated-by: "gwa-cli"
+    aps-published-on: "${fmt_time}"
+    aps-namespace: "${ns}"
+    aps-published-ts: "${timestamp}"
 spec:
   host: ${host}
   port:
@@ -91,6 +94,7 @@ status:
 """)
 
     ts = int(time.time())
+    fmt_time = datetime.now().strftime("%Y/%m-%b/%d")
 
     ssl_key = read_and_indent(ssl_key_path, 8)
     ssl_crt = read_and_indent(ssl_crt_path, 8)
@@ -99,7 +103,7 @@ status:
         index = 1
         for host in host_list:
             print("Route %03d %s" % (index, host))
-            out_file.write(template.substitute(name="wild-%s" % host, host=host, path='/', ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-dev-kong-proxy', timestamp=ts))
+            out_file.write(template.substitute(name="wild-%s" % host, ns=ns, host=host, path='/', ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-dev-kong-proxy', timestamp=ts, fmt_time=fmt_time))
             out_file.write('\n---\n')
             index = index + 1
 
