@@ -1,0 +1,260 @@
+{
+    "help":"Shows the package info with the given id. Param : id",
+    "success":true,
+    "result":{
+       "sector":"Service",
+       "image_url":"",
+       "license_title":"Open Government Licence - British Columbia",
+       "maintainer":null,
+       "relationships_as_object":[
+          
+       ],
+       "view_audience":"Public",
+       "private":false,
+       "maintainer_email":null,
+       "num_tags":8,
+       "metadata_language":"eng",
+       "id":"8f4a016f-14db-4def-8ef9-7c797de1cdd9",
+       "metadata_created":"2014-12-11T05:08:35.554220",
+       "odsi_uid":"177577",
+       "metadata_modified":"2019-07-23T16:08:25.214847",
+       "author":"d0716cb8-7eb5-4d43-9f57-6022096fd79f",
+       "author_email":null,
+       "metadata_standard_name":"North American Profile of ISO 19115-1:2014 - Geographic information - Metadata (NAP-Metadata)",
+       "state":"active",
+       "version":null,
+       "license_id":"2",
+       "type":"WebService",
+       "metadata_standard_version":"n/a",
+       "resources":[
+          {
+             "cache_last_updated":null,
+             "data_collection_start_date":"",
+             "package_id":"8f4a016f-14db-4def-8ef9-7c797de1cdd9",
+             "resource_storage_access_method":"Direct Access",
+             "datastore_active":false,
+             "id":"40d6411e-ab98-4df9-a24e-67f81c45f6fa",
+             "size":0,
+             "format":"openapi-json",
+             "state":"active",
+             "edc_resource_type":"Data",
+             "hash":"",
+             "description":"",
+             "cache_url":null,
+             "tracking_summary":{
+                "total":110,
+                "recent":2
+             },
+             "last_modified":null,
+             "url_type":"",
+             "data_collection_end_date":"",
+             "mimetype":null,
+             "resource_storage_location":"Catalogue Data Store",
+             "name":"API Console",
+             "created":"2016-03-11T10:09:28.901317",
+             "url":"https://raw.githubusercontent.com/bcgov/api-specs/master/geocoder/geocoder-combined.json",
+             "mimetype_inner":null,
+             "resource_update_cycle":"asNeeded",
+             "position":0,
+             "revision_id":"dabd4ebf-6958-4cd5-909c-5229352bba32",
+             "resource_type":null
+          },
+          {
+             "cache_last_updated":null,
+             "data_collection_start_date":"",
+             "package_id":"8f4a016f-14db-4def-8ef9-7c797de1cdd9",
+             "resource_storage_access_method":"Direct Access",
+             "datastore_active":false,
+             "id":"e12848c1-eecd-49a2-8ec1-99e0a277f170",
+             "size":0,
+             "format":"html",
+             "state":"active",
+             "edc_resource_type":"Data",
+             "hash":"",
+             "description":"",
+             "cache_url":null,
+             "tracking_summary":{
+                "total":49,
+                "recent":2
+             },
+             "last_modified":null,
+             "url_type":"",
+             "data_collection_end_date":"",
+             "mimetype":null,
+             "resource_storage_location":"Catalogue Data Store",
+             "name":"API Spec Editor",
+             "created":"2015-12-18T17:35:08.513846",
+             "url":"https://oas-editor.apps.gov.bc.ca/?url=https://raw.githubusercontent.com/bcgov/api-specs/master/geocoder/geocoder-combined.json",
+             "mimetype_inner":null,
+             "resource_update_cycle":"asNeeded",
+             "position":1,
+             "revision_id":"dabd4ebf-6958-4cd5-909c-5229352bba32",
+             "resource_type":null
+          },
+          {
+             "cache_last_updated":null,
+             "data_collection_start_date":"",
+             "package_id":"8f4a016f-14db-4def-8ef9-7c797de1cdd9",
+             "resource_storage_access_method":"Direct Access",
+             "datastore_active":false,
+             "id":"125ca593-70c6-4b58-9a5f-cfeeebc3a9a7",
+             "size":null,
+             "format":"html",
+             "state":"active",
+             "edc_resource_type":"Data",
+             "hash":"",
+             "description":"",
+             "cache_url":null,
+             "tracking_summary":{
+                "total":141,
+                "recent":4
+             },
+             "last_modified":null,
+             "url_type":null,
+             "data_collection_end_date":"",
+             "mimetype":null,
+             "resource_storage_location":"Catalogue Data Store",
+             "name":"Auto-completing Address Finder Code Widget",
+             "created":"2016-04-29T15:59:59.349212",
+             "url":"https://bcgov.github.io/ols-devkit/widget/",
+             "mimetype_inner":null,
+             "resource_update_cycle":"asNeeded",
+             "position":2,
+             "revision_id":"dabd4ebf-6958-4cd5-909c-5229352bba32",
+             "resource_type":null
+          }
+       ],
+       "more_info":[
+          {
+             "link":"https://www2.gov.bc.ca/gov/content/data/geographic-data-services/location-services/geocoder",
+             "delete":"0"
+          }
+       ],
+       "num_resources":3,
+       "tags":[
+          {
+             "vocabulary_id":null,
+             "state":"active",
+             "display_name":"API",
+             "id":"4bd16f13-e4af-48ab-9676-255d04600fd4",
+             "name":"API"
+          },
+          {
+             "vocabulary_id":null,
+             "state":"active",
+             "display_name":"OpenAPI spec",
+             "id":"5c1e7cd0-d772-4430-8efd-63bb6954f803",
+             "name":"OpenAPI spec"
+          },
+          {
+             "vocabulary_id":null,
+             "state":"active",
+             "display_name":"Parcels",
+             "id":"8a69278b-0451-4e20-b30e-e9f2a7a3091b",
+             "name":"Parcels"
+          },
+          {
+             "vocabulary_id":null,
+             "state":"active",
+             "display_name":"REST",
+             "id":"3c1f901b-36e5-4816-bbaa-58c85924e59e",
+             "name":"REST"
+          },
+          {
+             "vocabulary_id":null,
+             "state":"active",
+             "display_name":"address",
+             "id":"f67ee0e0-fe62-4534-8891-ac549745669d",
+             "name":"address"
+          },
+          {
+             "vocabulary_id":null,
+             "state":"active",
+             "display_name":"geocode",
+             "id":"e0a96008-8b3f-4291-9152-a0f013904dc8",
+             "name":"geocode"
+          },
+          {
+             "vocabulary_id":null,
+             "state":"active",
+             "display_name":"geocoder",
+             "id":"a25fbdc3-808e-4eb5-bdfd-87792b7f60d2",
+             "name":"geocoder"
+          },
+          {
+             "vocabulary_id":null,
+             "state":"active",
+             "display_name":"key-optional",
+             "id":"34b11d10-ce69-4cc0-83f9-831d59feab6e",
+             "name":"key-optional"
+          }
+       ],
+       "retention_expiry_date":"",
+       "contacts":[
+          {
+             "name":"DataBC Operations",
+             "private":"Display",
+             "role":"pointOfContact",
+             "branch":"d2e433a1-b785-4d03-8a2b-392069175eb4",
+             "organization":"4f7ae636-4cdf-4273-b274-6608c615dba0",
+             "email":"data@gov.bc.ca",
+             "delete":"0"
+          }
+       ],
+       "resource_status":"completed",
+       "tracking_summary":{
+          "total":3101,
+          "recent":31
+       },
+       "record_archive_date":"",
+       "groups":[
+          {
+             "display_name":"BC Government API Registry",
+             "description":"An API Registry for BC Government ",
+             "image_display_url":"https://catalogue.data.gov.bc.ca/uploads/group/2018-02-21-215929.13946617069795.png",
+             "title":"BC Government API Registry",
+             "id":"65c44d61-ff6e-418f-b1aa-6023c3f7ed4c",
+             "name":"bc-government-api-registry"
+          }
+       ],
+       "creator_user_id":"d0716cb8-7eb5-4d43-9f57-6022096fd79f",
+       "download_audience":"Public",
+       "org":"4f7ae636-4cdf-4273-b274-6608c615dba0",
+       "replacement_record":"",
+       "relationships_as_subject":[
+          
+       ],
+       "name":"bc-address-geocoder-web-service",
+       "metadata_character_set":"utf8",
+       "security_class":"LOW-PUBLIC",
+       "organization":{
+          "description":"[DataBC](http://www.data.gov.bc.ca/) helps the Province manage data as an asset. It enables public servants and citizens to share and use data. DataBC delivers on this mandate by providing leadership in : data governance and custodianship; data licensing; literacy and outreach; data cataloging; data provisioning; geographic data integration and management; location based services and web mapping applications.\r\n\r\n",
+          "created":"2014-12-10T15:05:57.849695",
+          "title":"DataBC",
+          "full_title":"Ministry of Citizens Services, DataBC Program",
+          "name":"databc",
+          "is_organization":true,
+          "state":"active",
+          "image_url":"2018-07-19-230622.091907bcanddatabcsmallwhite.png",
+          "revision_id":"f95b9f71-3089-4459-8f65-476189600c49",
+          "type":"organization",
+          "id":"d2e433a1-b785-4d03-8a2b-392069175eb4",
+          "approval_status":"approved"
+       },
+       "record_publish_date":"2013-01-25",
+       "isopen":false,
+       "image_display_url":"",
+       "url":"https://raw.githubusercontent.com/BCDevExchange/API-Management/master/swagger-json/geocoder.json",
+       "source_data_path":"",
+       "notes":"The BC Address Geocoder is a REST API that can used to resolve the physical locations of addresses and place names in British Columbia (i.e., their latitude and longitude). It also provides additional capability, such as correcting and standardizing civic and non-civic addresses, reverse geocoding addresses within areas of interest, locating intersections and identifying parcels associated with specific addresses.\r\n\r\nThe API is governed by [these terms of use](https://www2.gov.bc.ca/gov/content?id=D1EE0A405E584363B205CD4353E02C88), with the exception of the parcels API resource (see note below).\r\n\r\n__Note: the parcels API resource is restricted to B.C. government ministries use only.__  Ministries should [contact DataBC](https://forms.gov.bc.ca/databc-contact-us/) to request an API key.",
+       "owner_org":"d2e433a1-b785-4d03-8a2b-392069175eb4",
+       "edc_state":"PUBLISHED",
+       "record_last_modified":"2019-07-23",
+       "license_url":"https://www2.gov.bc.ca/gov/content?id=A519A56BC2BF44E4A008B33FCF527F61",
+       "metadata_visibility":"Public",
+       "title":"BC Address Geocoder Web Service",
+       "revision_id":"494aa095-edde-4df7-bfe7-b31a432523e8",
+       "record_create_date":"2013-01-25",
+       "sub_org":"d2e433a1-b785-4d03-8a2b-392069175eb4"
+    }
+ }

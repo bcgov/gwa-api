@@ -1,0 +1,54 @@
+{
+       "parameters": [
+          {
+            "name": "file",
+            "in": "formData",
+            "type": "file",
+            "description": "The uploaded file."
+          },
+          {
+            "name": "name",
+            "in": "formData",
+            "description": "The desired name of the resulting activity.",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "in": "formData",
+            "description": "The desired description of the resulting activity.",
+            "type": "string"
+          },
+          {
+            "name": "trainer",
+            "in": "formData",
+            "description": "Whether the resulting activity should be marked as having been performed on a trainer.",
+            "type": "string"
+          },
+          {
+            "name": "commute",
+            "in": "formData",
+            "description": "Whether the resulting activity should be tagged as a commute.",
+            "type": "string"
+          },
+          {
+            "name": "data_type",
+            "in": "formData",
+            "description": "The format of the uploaded file.",
+            "type": "string",
+            "enum": [
+              "fit",
+              "fit.gz",
+              "tcx",
+              "tcx.gz",
+              "gpx",
+              "gpx.gz"
+            ]
+          },
+          {
+            "name": "external_id",
+            "in": "formData",
+            "description": "The desired external identifier of the resulting activity.",
+            "type": "string"
+          }
+        ]
+}

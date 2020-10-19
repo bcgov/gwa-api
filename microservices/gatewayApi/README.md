@@ -36,6 +36,7 @@ docker run -ti --rm \
  -e KC_PASSWORD="SdufuSYnFAANnluWrAH0waHavE9YWdCu" \
  -e KC_USER_REALM=master \
  -e KC_CLIENT_ID=admin-cli \
+ -v `pwd`/_tmp:/ssl \
  --add-host=docker:$hostip -p 2000:2000 gwa_kong_api
 ```
 

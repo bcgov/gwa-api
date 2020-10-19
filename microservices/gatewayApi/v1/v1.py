@@ -1,6 +1,7 @@
 import os
 from flask import Blueprint, jsonify, request
 from functools import reduce
+from v1.routes.catalog import cat
 from v1.routes.gateway import gw
 from v1.routes.namespaces import ns
 from v1.routes.serviceaccounts import sa
@@ -23,9 +24,10 @@ def get_status():
 
 class Register:
     def __init__(self, app):
-        app.register_blueprint(v1, url_prefix="/v1")
-        app.register_blueprint(gw, url_prefix="/v1/namespaces/<string:namespace>/gateway")
-        app.register_blueprint(sa, url_prefix="/v1/namespaces/<string:namespace>/serviceaccounts")
-        app.register_blueprint(ns, url_prefix="/v1/namespaces")
-        app.register_blueprint(whoami, url_prefix="/v1/whoami")
-        app.register_blueprint(docs, url_prefix="/v1/api-docs")
+        # app.register_blueprint(v1, url_prefix="/v1")
+        # app.register_blueprint(gw, url_prefix="/v1/namespaces/<string:namespace>/gateway")
+        # app.register_blueprint(sa, url_prefix="/v1/namespaces/<string:namespace>/serviceaccounts")
+        # app.register_blueprint(ns, url_prefix="/v1/namespaces")
+        app.register_blueprint(cat, url_prefix="/v1/namespaces/<string:namespace>/packages")
+        # app.register_blueprint(whoami, url_prefix="/v1/whoami")
+        # app.register_blueprint(docs, url_prefix="/v1/api-docs")
