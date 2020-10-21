@@ -103,7 +103,7 @@ status:
         index = 1
         for host in host_list:
             print("Route %03d %s" % (index, host))
-            out_file.write(template.substitute(name="wild-%s" % host, ns=ns, host=host, path='/', ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-dev-kong-proxy', timestamp=ts, fmt_time=fmt_time))
+            out_file.write(template.substitute(name="wild-%s" % host, ns=ns, host=host, path='/', ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-kong-proxy', timestamp=ts, fmt_time=fmt_time))
             out_file.write('\n---\n')
             index = index + 1
 
