@@ -1,0 +1,10 @@
+
+services:
+- name: MY_REST_API
+  tags: [ _NS_ ]
+  plugins:
+  - name: bcgov-gwa-endpoint
+    tags: [ _NS_ ]
+    enabled: true
+    config:
+      api_owners: [ CONSUMER_OWNER_1, CONSUMER_OWNER_2 ]
