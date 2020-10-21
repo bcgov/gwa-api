@@ -76,23 +76,11 @@ With scopes:
 * `admin:acl`     : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
 * `admin:catalog` : Permission to update BC Data Catalog datasets for describing APIs available for consumption
 
-## 3. Prepare and apply gateway configuration
+## 3. Prepare configuration
 
-The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa-cli` can be used.
+The gateway configuration can be hand-crafted or you can use the `gwa` `new` command the walk you through the creation of the config.
 
-### Swagger Console
-
-Go to <a href="https://gwa-api-qwzrwc-test.pathfinder.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
-
-Select the `PUT` `/namespaces/{namespace}/gateway` API.
-
-The Service Account uses the OAuth2 Client Credentials Grant Flow.  Click the `lock` link on the right and enter in the Service Account credentials that were generated in step #2.
-
-For the `Parameter namespace`, enter the namespace that you created in step #1.
-
-Select `dryRun` to `true`.
-
-Select a `configFile` file.  An example of a very minimal config is:
+**Hand-crafted Example**
 
 ```
 export NS="my_namespace"
@@ -116,8 +104,31 @@ services:
     https_redirect_status_code: 426
     path_handling: v0
 " > sample.yaml
-
 ```
+
+**gwa CLI Example**
+
+`gwa new`
+
+## 4. Apply gateway configuration
+
+The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa-cli` can be used.
+
+### Swagger Console
+
+Go to <a href="https://gwa-api-qwzrwc-test.pathfinder.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
+
+Select the `PUT` `/namespaces/{namespace}/gateway` API.
+
+The Service Account uses the OAuth2 Client Credentials Grant Flow.  Click the `lock` link on the right and enter in the Service Account credentials that were generated in step #2.
+
+For the `Parameter namespace`, enter the namespace that you created in step #1.
+
+Select `dryRun` to `true`.
+
+Select a `configFile` file.
+
+Send the request.
 
 ### Command Line
 
@@ -155,7 +166,7 @@ gwa init -T --namespace=$NS --client-id=<YOUR CLIENT ID> --client-secret=<YOUR C
 gwa pg sample.yaml 
 ```
 
-## 4. Verify routes
+## 5. Verify routes
 
 ```
 curl https://$NAME.api.189768.xyz/headers
@@ -164,12 +175,12 @@ ab -n 20 -c 2 https://$NAME.api.189768.xyz/headers
 
 ```
 
-## 5. View metrics
+## 6. View metrics
 
 Go to <a href="https://grafana-qwzrwc-test.pathfinder.gov.bc.ca/" target="_blank">Grafana</a> to view metrics for your configured services.
 
 
-## 6. Grant access to others
+## 7. Grant access to others
 
 The `acl` command is an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
 
@@ -177,7 +188,7 @@ The `acl` command is an all-inclusive membership list, so the `--users` should h
 gwa acl --users acope@idir jjones@idir
 ```
 
-## 7. Add to your CI/CD Pipeline
+## 8. Add to your CI/CD Pipeline
 
 Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated on the gateway.
 
