@@ -59,7 +59,7 @@ access: read, write
 
 A `namespace` represents a collections of Kong Services and Routes that are managed independently.
 
-To create a new namespace, go to the <a href="https://gwa-qwzrwc-dev.pathfinder.gov.bc.ca/int" target="_blank">API Services Portal</a>.
+To create a new namespace, go to the <a href="https://gwa-qwzrwc-test.pathfinder.gov.bc.ca/int" target="_blank">API Services Portal</a>.
 
 After login and selection of an existing namespace, go to the `New Namespace` tab and click the `Create Namespace` button.
 
@@ -82,7 +82,7 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 
 ### Swagger Console
 
-Go to <a href="https://gwa-api-qwzrwc-dev.pathfinder.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
+Go to <a href="https://gwa-api-qwzrwc-test.pathfinder.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
 
 Select the `PUT` `/namespaces/{namespace}/gateway` API.
 
@@ -96,7 +96,7 @@ Select a `configFile` file.  An example of a very minimal config is:
 
 ```
 export NS="my_namespace"
-export NAME="some-service-name-$NS"
+export NAME="a-service-for-$NS"
 echo "
 services:
 - name: $NAME
@@ -109,7 +109,7 @@ services:
   - name: $NAME-route
     tags: [ ns.$NS ]
     hosts:
-    - $NAME.api.333223.xyz
+    - $NAME.api.189768.xyz
     paths:
     - /
     strip_path: false
@@ -135,26 +135,34 @@ Create a `.env` file and update the CLIENT_ID and CLIENT_SECRET with the new cre
 
 ```
 echo "
-AUTHORIZATION_ENDPOINT=https://auth-qwzrwc-dev.pathfinder.gov.bc.ca/auth/realms/aps/protocol/openid-connect/token
-CLIENT_ID=sa-xxxx-g9ah2ess3y
-CLIENT_SECRET=0000-0000-0000-0000
-API_HOST=https://gwa-api-qwzrwc-dev.pathfinder.gov.bc.ca/v1
+GWA_NAMESPACE=$NS
+CLIENT_ID=sa-xxx-tq68qi6zgy
+CLIENT_SECRET=39be093a-9b9a-4c36-ab8d-78dc0c3f94b6
+GWA_ENV=test
 " > .env
+
+OR run:
+
+gwa init -T --namespace=$NS --client-id=<YOUR CLIENT ID> --client-secret=<YOUR CLIENT SECRET>
+
 ```
 
 ```
-gwa pg --namespace $NS sample.yaml 
+gwa pg sample.yaml 
 ```
 
 ## 4. Verify routes
 
 ```
-curl https://$NAME.api.333223.xyz/headers
+curl https://$NAME.api.189768.xyz/headers
+
+ab -n 20 -c 2 https://$NAME.api.189768.xyz/headers
+
 ```
 
 ## 5. View metrics
 
-Go to <a href="https://grafana-qwzrwc-dev.pathfinder.gov.bc.ca/" target="_blank">Grafana</a> to view metrics for your configured services.
+Go to <a href="https://grafana-qwzrwc-test.pathfinder.gov.bc.ca/" target="_blank">Grafana</a> to view metrics for your configured services.
 
 
 ## 6. Grant access to others
@@ -162,11 +170,11 @@ Go to <a href="https://grafana-qwzrwc-dev.pathfinder.gov.bc.ca/" target="_blank"
 The `acl` command is an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
 
 ```
-gwa acl --namespace $NS --users acope@idir,jjones@idir
+gwa acl --users acope@idir jjones@idir
 ```
 
 ## 7. Add to your CI/CD Pipeline
 
 Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated on the gateway.
 
-
+> TODO: Examples
