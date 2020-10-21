@@ -131,6 +131,8 @@ npm run build
 npm link
 ```
 
+**Configure**
+
 Create a `.env` file and update the CLIENT_ID and CLIENT_SECRET with the new credentials that were generated in step #2:
 
 ```
@@ -146,6 +148,8 @@ OR run:
 gwa init -T --namespace=$NS --client-id=<YOUR CLIENT ID> --client-secret=<YOUR CLIENT SECRET>
 
 ```
+
+**Publish Gateway Configuration**
 
 ```
 gwa pg sample.yaml 
