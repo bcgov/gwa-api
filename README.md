@@ -78,9 +78,9 @@ With scopes:
 
 ## 3. Prepare configuration
 
-The gateway configuration can be hand-crafted or you can use the `gwa` `new` command the walk you through the creation of the config.
+The gateway configuration can be hand-crafted or you can use the `gwa` `new` command to walk you through the creation of the config.
 
-**Hand-crafted Example**
+**Simple Example**
 
 ```
 export NS="my_namespace"
@@ -108,7 +108,7 @@ services:
 
 **gwa CLI Example**
 
-`gwa new`
+Run: `gwa new` and follow the prompts.
 
 ## 4. Apply gateway configuration
 
@@ -149,18 +149,18 @@ Create a `.env` file and update the CLIENT_ID and CLIENT_SECRET with the new cre
 ```
 echo "
 GWA_NAMESPACE=$NS
-CLIENT_ID=sa-xxx-tq68qi6zgy
-CLIENT_SECRET=39be093a-9b9a-4c36-ab8d-78dc0c3f94b6
+CLIENT_ID=<YOUR SERVICE ACCOUNT ID>
+CLIENT_SECRET=<YOUR SERVICE ACCOUNT SECRET>
 GWA_ENV=test
 " > .env
 
 OR run:
 
-gwa init -T --namespace=$NS --client-id=<YOUR CLIENT ID> --client-secret=<YOUR CLIENT SECRET>
+gwa init -T --namespace=$NS --client-id=<YOUR SERVICE ACCOUNT ID> --client-secret=<YOUR SERVICE ACCOUNT SECRET>
 
 ```
 
-**Publish Gateway Configuration**
+**Publish**
 
 ```
 gwa pg sample.yaml 
