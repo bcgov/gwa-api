@@ -107,3 +107,4 @@ status:
             out_file.write('\n---\n')
             index = index + 1
 
+    return len(host_list)
