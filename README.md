@@ -80,6 +80,8 @@ With scopes:
 
 The gateway configuration can be hand-crafted or you can use the `gwa` `new` command to walk you through the creation of the config.
 
+You can view examples [here](/docs/samples/service-plugins).
+
 **Simple Example**
 
 ```
