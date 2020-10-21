@@ -72,9 +72,9 @@ Logout by clicking your username at the top right of the page.  When you login a
 Go to the `Service Accounts` tab and click the `Create Service Account`.  A new credential will be created - make a note of the `ID` and `Secret`.
 
 With scopes:
-* admin:gateway
-* admin:acl
-* admin:catalog
+* `admin:gateway` : Permission to publish gateway configuration to Kong
+* `admin:acl`     : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
+* `admin:catalog` : Permission to update BC Data Catalog datasets for describing APIs available for consumption
 
 ## 3. Prepare and apply gateway configuration
 
