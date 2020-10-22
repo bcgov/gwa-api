@@ -76,8 +76,9 @@ def write_config(namespace: str) -> object:
             abort(make_response(jsonify(error="Sync Failed.", results=out.decode('utf-8')), 400))
 
         else:
-            prepare_routes (namespace, tempFolder)
-            apply_routes (tempFolder)
+            route_count = prepare_routes (namespace, tempFolder)
+            if route_count > 0:
+                apply_routes (tempFolder)
 
         cleanup (tempFolder)
 
