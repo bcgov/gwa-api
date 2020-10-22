@@ -18,6 +18,7 @@ from io import TextIOWrapper
 from v1.auth.auth import admin_jwt, enforce_authorization, enforce_role_authorization, group_root, group_root_name
 
 from clients.keycloak import admin_api
+from utils.validators import namespace_validation, namespace_validation_rule
 
 ns = Blueprint('namespaces', 'namespaces')
 
@@ -34,6 +35,10 @@ def create_namespace() -> object:
     keycloak_admin = admin_api()
 
     namespace = request.get_json(force=True)['name']
+
+    if not namespace_validation(namespace):
+        abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
+
     payload = {
         "name": namespace
     }

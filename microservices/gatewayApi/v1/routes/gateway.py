@@ -10,24 +10,22 @@ from io import TextIOWrapper
 
 from v1.auth.auth import admin_jwt, enforce_authorization
 
-from clients.openshift import prepare_routes, apply_routes
+from clients.openshift import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
 
 gw = Blueprint('gwa', 'gateway')
 
 @gw.route('',
            methods=['PUT'], strict_slashes=False)
-@admin_jwt(None)
+#@admin_jwt(None)
 def write_config(namespace: str) -> object:
     """
     (Over)write
     :return: JSON of success message or error message
     """
+    #enforce_authorization(namespace)
     log = app.logger
-    enforce_authorization(namespace)
 
     selectTag = outFolder = namespace
-
-    log.debug(g.principal)
 
     if 'configFile' in request.files:
         log.debug(request.files['configFile'])
@@ -36,27 +34,30 @@ def write_config(namespace: str) -> object:
         tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
         os.makedirs (tempFolder, exist_ok=False)
 
-        dfile.save("%s/%s" % (tempFolder, 'config.yaml'))
+        # dfile.save("%s/%s" % (tempFolder, 'config.yaml'))
         
-        log.debug("Saved to %s" % tempFolder)
+        # log.debug("Saved to %s" % tempFolder)
+        yaml_documents = yaml.load_all(dfile, Loader=yaml.FullLoader)
 
-        with open("%s/%s" % (tempFolder, 'config.yaml')) as file:
-            gw_config = yaml.load(file, Loader=yaml.FullLoader)
+        for index, gw_config in enumerate(yaml_documents):
+            log.debug("Parsing file %s %s" % (namespace, index))
+            with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
+                yaml.dump(gw_config, file)
 
-        # Validation #1
-        # Validate that the every object is tagged with the namespace
-        try:
-            validate_tags (gw_config, "ns.%s" % namespace)
-        except Exception as ex:
-            abort(make_response(jsonify(error="Validation Errors - %s" % ex), 400))
+            # Validation #1
+            # Validate that the every object is tagged with the namespace
+            try:
+                validate_tags (gw_config, "ns.%s" % namespace)
+            except Exception as ex:
+                abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
 
-        # Validation #3
-        # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
+            # Validation #3
+            # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
 
-        # Enrichment #1
-        # Enrich the rate-limiting plugin with the appropriate Redis details
+            # Enrichment #1
+            # Enrich the rate-limiting plugin with the appropriate Redis details
 
-        # Validate based on DNS 952
+            # Validate based on DNS 952
         
         # Call the 'deck' command
         cmd = "sync"
@@ -75,10 +76,13 @@ def write_config(namespace: str) -> object:
             log.warn("%s - %s" % (namespace, out.decode('utf-8')))
             abort(make_response(jsonify(error="Sync Failed.", results=out.decode('utf-8')), 400))
 
-        else:
-            route_count = prepare_routes (namespace, tempFolder)
+        elif cmd == "sync":
+            route_count = prepare_apply_routes (namespace, tempFolder)
             if route_count > 0:
                 apply_routes (tempFolder)
+            route_count = prepare_delete_routes (namespace, tempFolder)
+            if route_count > 0:
+                delete_routes (tempFolder)
 
         cleanup (tempFolder)
 
@@ -109,7 +113,7 @@ def validate_tags (yaml, required_tag):
     errors = []
     traverse ("", errors, yaml, required_tag)
     if len(errors) != 0:
-        raise Exception(','.join(errors))
+        raise Exception('\n'.join(errors))
 
 def traverse (source, errors, yaml, required_tag):
     traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
@@ -120,7 +124,9 @@ def traverse (source, errors, yaml, required_tag):
                     if required_tag not in item['tags']:
                         errors.append("%s.%s.%s missing required tag %s" % (source, k, item['name'], required_tag))
                     for tag in item['tags']:
-                        if tag.startswith("ns.") and tag != required_tag:
+                        # if the required_tag is "abc" and the tag starts with "ns."
+                        # then ns.abc and ns.abc.dev are valid, but anything else is an error
+                        if tag.startswith("ns.") and tag != required_tag and not tag.startswith("%s." % required_tag):
                             errors.append("%s.%s.%s invalid ns tag %s" % (source, k, item['name'], tag))
                 else:
                     errors.append("%s.%s.%s no tags found" % (source, k, item['name']))
