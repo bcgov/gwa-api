@@ -16,13 +16,13 @@ gw = Blueprint('gwa', 'gateway')
 
 @gw.route('',
            methods=['PUT'], strict_slashes=False)
-#@admin_jwt(None)
+@admin_jwt(None)
 def write_config(namespace: str) -> object:
     """
     (Over)write
     :return: JSON of success message or error message
     """
-    #enforce_authorization(namespace)
+    enforce_authorization(namespace)
     log = app.logger
 
     selectTag = outFolder = namespace
