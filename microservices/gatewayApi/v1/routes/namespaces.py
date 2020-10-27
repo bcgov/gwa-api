@@ -36,8 +36,9 @@ def create_namespace() -> object:
 
     namespace = request.get_json(force=True)['name']
 
-    if not namespace_validation(namespace):
-        abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
+    #if not namespace_validation(namespace):
+    #    log.error("Namespace validation failed %s" % namespace)
+    #    abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
 
     payload = {
         "name": namespace
