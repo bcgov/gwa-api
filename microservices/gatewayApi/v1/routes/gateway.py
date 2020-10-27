@@ -27,7 +27,7 @@ def write_config(namespace: str) -> object:
     enforce_authorization(namespace)
     log = app.logger
 
-    selectTag = outFolder = namespace
+    outFolder = namespace
 
     if 'configFile' in request.files:
         log.debug(request.files['configFile'])
@@ -41,45 +41,68 @@ def write_config(namespace: str) -> object:
         # log.debug("Saved to %s" % tempFolder)
         yaml_documents = yaml.load_all(dfile, Loader=yaml.FullLoader)
 
+        selectTag = "ns.%s" % namespace
+        ns_qualifier = None
+
         for index, gw_config in enumerate(yaml_documents):
             log.debug("Parsing file %s %s" % (namespace, index))
 
-            # Transformations before saving
+            #######################
+            # Enrichments
+            #######################
+
+            # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
             host_transformation (namespace, gw_config)
+
+            # If there is a tag with a pipeline qualifier (i.e./ ns.<namespace>.dev)
+            # then add to tags automatically the tag: ns.<namespace>
+            tags_transformation (namespace, gw_config)
+
+            #
+            # Enrich the rate-limiting plugin with the appropriate Redis details
 
             with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
                 yaml.dump(gw_config, file)
 
-            # Validation #1
+            #######################
+            # Validations
+            #######################
+
             # Validate that the every object is tagged with the namespace
             try:
-                validate_tags (gw_config, "ns.%s" % namespace)
+                validate_tags (gw_config, selectTag)
             except Exception as ex:
                 abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
 
             # Validate that hosts are valid
-            # try:
-            #     validate_hosts (gw_config)
-            # except Exception as ex:
-            #     abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
+            try:
+                validate_hosts (gw_config)
+            except Exception as ex:
+                abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
 
             # Validation #3
             # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
 
-            # Enrichment #1
-            # Enrich the rate-limiting plugin with the appropriate Redis details
-
             # Validate based on DNS 952
         
+            nsq = traverse_get_ns_qualifier (gw_config, selectTag)
+            if nsq is not None:
+                if ns_qualifier is not None and nsq != ns_qualifier:
+                    abort(make_response(jsonify(error="Validation Errors:\n%s" % ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))), 400))
+                ns_qualifier = nsq
+
+        if ns_qualifier is not None:
+            selectTag = ns_qualifier
+
         # Call the 'deck' command
         cmd = "sync"
         print(request.values)
         if request.values['dryRun'] == 'true':
             cmd = "diff"
 
-        log.info("%s for %s" % (cmd, namespace))
+        log.info("%s for %s using %s" % (cmd, namespace, selectTag))
         args = [
-            "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", "ns.%s" % selectTag, "--state", tempFolder
+            "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
         ]
         deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
         out, err = deck_run.communicate()
@@ -123,11 +146,19 @@ def cleanup (dir_path):
 def validate_tags (yaml, required_tag):
     # throw an exception if there are invalid tags
     errors = []
-    traverse ("", errors, yaml, required_tag)
+    qualifiers = []
+
+    if traverse_has_ns_qualifier(yaml, required_tag) and traverse_has_ns_tag_only(yaml, required_tag):
+        errors.append("Tags for the namespace can not have a mix of 'ns.<namespace>' and 'ns.<namespace>.<qualifier>'.  Rejecting request.")
+
+    traverse ("", errors, yaml, required_tag, qualifiers)
+    if len(qualifiers) > 1:
+        errors.append("Too many different qualified namespaces (%s).  Rejecting request." % qualifiers)
+
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
 
-def traverse (source, errors, yaml, required_tag):
+def traverse (source, errors, yaml, required_tag, qualifiers):
     traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
     for k in yaml:
         if k in traversables:
@@ -140,9 +171,11 @@ def traverse (source, errors, yaml, required_tag):
                         # then ns.abc and ns.abc.dev are valid, but anything else is an error
                         if tag.startswith("ns.") and tag != required_tag and not tag.startswith("%s." % required_tag):
                             errors.append("%s.%s.%s invalid ns tag %s" % (source, k, item['name'], tag))
+                        if tag.startswith("%s." % required_tag) and tag not in qualifiers:
+                            qualifiers.append(tag)
                 else:
                     errors.append("%s.%s.%s no tags found" % (source, k, item['name']))
-                traverse ("%s.%s.%s" % (source, k, item['name']), errors, item, required_tag)
+                traverse ("%s.%s.%s" % (source, k, item['name']), errors, item, required_tag, qualifiers)
 
 def host_transformation (namespace, yaml):
     log = app.logger
@@ -151,13 +184,14 @@ def host_transformation (namespace, yaml):
     conf = app.config['hostTransformation']
     if conf['enabled'] is True:
         for service in yaml['services']:
-            for route in service['routes']:
-                if 'hosts' in route:
-                    new_hosts = []
-                    for host in route['hosts']:
-                        new_hosts.append("%s.%s" % (host.replace('.', '-'), conf['baseUrl']))
-                        transforms = transforms + 1
-                    route['hosts'] = new_hosts
+            if 'routes' in service:
+                for route in service['routes']:
+                    if 'hosts' in route:
+                        new_hosts = []
+                        for host in route['hosts']:
+                            new_hosts.append("%s.%s" % (host.replace('.', '-'), conf['baseUrl']))
+                            transforms = transforms + 1
+                        route['hosts'] = new_hosts
     log.debug("[%s] Host transformations %d" % (namespace, transforms))
 
 def validate_hosts (yaml):
@@ -165,10 +199,82 @@ def validate_hosts (yaml):
     errors = []
 
     for service in yaml['services']:
-        for route in service['routes']:
-            if 'hosts' in route:
-                for host in route['hosts']:
-                    if host_valid(host) is False:
-                        errors.append("Host not passing DNS-952 validation '%s'" % host)
+        if 'routes' in service:
+            for route in service['routes']:
+                if 'hosts' in route:
+                    for host in route['hosts']:
+                        if host_valid(host) is False:
+                            errors.append("Host not passing DNS-952 validation '%s'" % host)
+                else:
+                    errors.append("service.%s.route.%s A host must be specified for routes." % (service['name'], route['name']))
+
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
+
+def tags_transformation (namespace, yaml):
+    traverse_tags_transform (yaml, namespace, "ns.%s" % namespace)
+
+def traverse_tags_transform (yaml, namespace, required_tag):
+    log = app.logger
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
+    for k in yaml:
+        if k in traversables:
+            for item in yaml[k]:
+                if 'tags' in item:
+                    new_tags = []
+                    for tag in item['tags']:
+                        new_tags.append(tag)
+                        # add the base required tag automatically if there is already a qualifying namespace
+                        if tag.startswith("ns.") and tag.startswith("%s." % required_tag) and required_tag not in item['tags']:
+                            log.debug("[%s] Adding base tag %s to %s" % (namespace, required_tag, k))
+                            new_tags.append(required_tag)
+                    item['tags'] = new_tags
+                traverse_tags_transform (item, namespace, required_tag)
+
+def traverse_has_ns_qualifier (yaml, required_tag):
+    log = app.logger
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
+    for k in yaml:
+        if k in traversables:
+            for item in yaml[k]:
+                if 'tags' in item:
+                    for tag in item['tags']:
+                        if tag.startswith("%s." % required_tag):
+                            return True
+                if traverse_has_ns_qualifier (item, required_tag) == True:
+                    return True
+    return False
+
+def traverse_has_ns_tag_only (yaml, required_tag):
+    log = app.logger
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
+    for k in yaml:
+        if k in traversables:
+            for item in yaml[k]:
+                if 'tags' in item:
+                    if required_tag in item['tags'] and has_ns_qualifier(item['tags'], required_tag) is False:
+                        return True
+                if traverse_has_ns_tag_only (item, required_tag) == True:
+                    return True
+    return False
+
+def has_ns_qualifier (tags, required_tag):
+    for tag in tags:
+        if tag.startswith("%s." % required_tag):
+            return True
+    return False
+
+def traverse_get_ns_qualifier (yaml, required_tag):
+    log = app.logger
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
+    for k in yaml:
+        if k in traversables:
+            for item in yaml[k]:
+                if 'tags' in item:
+                    for tag in item['tags']:
+                        if tag.startswith("%s." % required_tag):
+                            return tag
+                qualifier = traverse_get_ns_qualifier (item, required_tag)
+                if qualifier is not None:
+                    return qualifier
+    return None

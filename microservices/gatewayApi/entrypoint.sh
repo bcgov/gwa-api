@@ -10,6 +10,7 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
     "tokenMatch": {
         "aud": "$TOKEN_MATCH_AUD"
     },
+    "kongAdminUrl": "$KONG_ADMIN_URL",
     "workingFolder": "$WORKING_FOLDER",
     "keycloak": {
         "serverUrl": "$KC_SERVER_URL",

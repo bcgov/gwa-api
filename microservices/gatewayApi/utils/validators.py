@@ -11,6 +11,7 @@ def namespace_valid(input_string):
     return bool(match is not None)
 
 def host_valid(input_string):
-    regex = re.compile(host_validation_rule)
-    match = regex.match(str(input_string))
-    return bool(match is not None)
+    return True
+    # regex = re.compile(host_validation_rule)
+    # match = regex.match(str(input_string))
+    # return bool(match is not None)
