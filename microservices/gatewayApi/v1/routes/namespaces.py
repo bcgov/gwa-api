@@ -105,8 +105,8 @@ def update_membership(namespace: str) -> object:
 
     desired_membership_list = json.loads(request.get_data())
 
-    ucounts_added, ucounts_removed, ucounts_missing = membership_sync ('viewer', desired_membership_list)
-    acounts_added, acounts_removed, acounts_missing = membership_sync ('admin', desired_membership_list)
+    ucounts_added, ucounts_removed, ucounts_missing = membership_sync (namespace, 'viewer', desired_membership_list)
+    acounts_added, acounts_removed, acounts_missing = membership_sync (namespace, 'admin', desired_membership_list)
 
     return make_response(jsonify(added=ucounts_added + acounts_added, removed=ucounts_removed + acounts_removed, missing=ucounts_missing + acounts_missing))
 
@@ -122,7 +122,7 @@ def update_pending_registrations(group, unregistered_users):
     keycloak_admin.update_group (group['id'], group)
 
 
-def membership_sync (role_name, desired_membership_list):
+def membership_sync (namespace, role_name, desired_membership_list):
     log = app.logger
 
     desired_membership = []
@@ -135,6 +135,11 @@ def membership_sync (role_name, desired_membership_list):
     base_group_path = get_base_group_path (role_name)
 
     group = keycloak_admin.get_group_by_path("%s/%s" % (base_group_path, namespace), search_in_subgroups=True)
+
+    if group is None:
+        log.warn("[%s] Group %s/%s Missing!" % (namespace, base_group_path, namespace))
+        create_group (namespace, base_group_path, role_name)
+        group = keycloak_admin.get_group_by_path("%s/%s" % (base_group_path, namespace), search_in_subgroups=True)
 
     membership = keycloak_admin.get_group_members (group['id'])
 
@@ -155,7 +160,7 @@ def membership_sync (role_name, desired_membership_list):
     for username in desired_membership:
         user_id = keycloak_admin.get_user_id (username)
         if user_id is None:
-            log.error("[%s] UNREGISTERED user %s FROM %s" % (namespace, username, base_group_path))
+            log.debug("[%s] UNREGISTERED user %s FROM %s" % (namespace, username, base_group_path))
             counts_missing = counts_missing + 1
             unregistered_users.append(username)
         else:
@@ -178,3 +183,16 @@ def get_base_group_name(role_name):
 
 def get_base_group_path(role_name):
     return "/%s" % get_base_group_name(role_name)
+
+def create_group(namespace, group_base_path, role_name):
+    log = app.logger
+    keycloak_admin = admin_api()
+
+    parent_group = keycloak_admin.get_group_by_path(group_base_path)
+    if parent_group is None:
+        keycloak_admin.create_group ({"name": get_base_group_name(role_name)})
+        parent_group = keycloak_admin.get_group_by_path(group_base_path)
+
+    response = keycloak_admin.create_group ({"name": namespace}, parent=parent_group['id'])
+    log.debug("[%s] Group %s/%s created!" % (namespace, group_base_path, namespace))
+
