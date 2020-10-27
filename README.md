@@ -191,8 +191,10 @@ Go to <a href="https://grafana-qwzrwc-test.pathfinder.gov.bc.ca/" target="_blank
 
 The `acl` command is an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
 
+For administrative privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
+
 ```
-gwa acl --users acope@idir jjones@idir
+gwa acl --managers acope@idir --users acope@idir jjones@idir
 ```
 
 ## 8. Add to your CI/CD Pipeline
