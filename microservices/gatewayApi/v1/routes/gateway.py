@@ -112,10 +112,10 @@ def write_config(namespace: str) -> object:
             abort(make_response(jsonify(error="Sync Failed.", results=out.decode('utf-8')), 400))
 
         elif cmd == "sync":
-            route_count = prepare_apply_routes (namespace, tempFolder)
+            route_count = prepare_apply_routes (namespace, selectTag, tempFolder)
             if route_count > 0:
                 apply_routes (tempFolder)
-            route_count = prepare_delete_routes (namespace, tempFolder)
+            route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
             if route_count > 0:
                 delete_routes (tempFolder)
 

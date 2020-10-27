@@ -40,11 +40,11 @@ def delete_routes (rootPath):
         log.error("Failed to delete routes", out, err)
         raise Exception("Failed to delete routes")
 
-def prepare_delete_routes (ns, rootPath):
+def prepare_delete_routes (ns, select_tag, rootPath):
     log = app.logger
 
     args = [
-        "kubectl", "get", "routes", "-l", "aps-namespace=%s" % ns, "-o", "json"
+        "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
     ]
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
@@ -64,7 +64,7 @@ def prepare_delete_routes (ns, rootPath):
     for route_name in current_routes:
         match = False
         for host in host_list:
-            if route_name == "wild-%s-%s" % (ns, host):
+            if route_name == "wild-%s-%s" % (select_tag.replace('.','-'), host):
                 match = True
         if match == False:
             delete_list.append(route_name)
@@ -85,17 +85,17 @@ metadata:
     with open(out_filename, 'w') as out_file:
         index = 1
         for route_name in delete_list:
-            log.debug("[%s] Route D %03d %s" % (ns, index, route_name))
+            log.debug("[%s] Route D %03d %s" % (select_tag, index, route_name))
             out_file.write(template.substitute(name=route_name))
             out_file.write('\n---\n')
             index = index + 1
 
     if len(delete_list) == 0:
-        log.debug("[%s] Route D No Deletions Needed" % ns)
+        log.debug("[%s] Route D No Deletions Needed" % select_tag)
 
     return len(delete_list)
 
-def prepare_apply_routes (ns, rootPath):
+def prepare_apply_routes (ns, select_tag, rootPath):
     log = app.logger
     ssl_key_path = "/ssl/tls.key"
     ssl_crt_path = "/ssl/tls.crt"
@@ -115,6 +115,7 @@ metadata:
     aps-generated-by: "gwa-cli"
     aps-published-on: "${fmt_time}"
     aps-namespace: "${ns}"
+    aps-select-tag: "${select_tag}"
     aps-published-ts: "${timestamp}"
 spec:
   host: ${host}
@@ -148,8 +149,8 @@ status:
     with open(out_filename, 'w') as out_file:
         index = 1
         for host in host_list:
-            log.debug("[%s] Route A %03d wild-%s-%s" % (ns, index, ns, host))
-            out_file.write(template.substitute(name="wild-%s-%s" % (ns, host), ns=ns, host=host, path='/', ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-kong-proxy', timestamp=ts, fmt_time=fmt_time))
+            log.debug("[%s] Route A %03d wild-%s-%s" % (select_tag, index, select_tag.replace('.','-'), host))
+            out_file.write(template.substitute(name="wild-%s-%s" % (select_tag.replace('.','-'), host), ns=ns, select_tag=select_tag, host=host, path='/', ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-kong-proxy', timestamp=ts, fmt_time=fmt_time))
             out_file.write('\n---\n')
             index = index + 1
 
