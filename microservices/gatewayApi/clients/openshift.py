@@ -46,7 +46,7 @@ def prepare_delete_routes (ns, select_tag, rootPath):
     args = [
         "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
     ]
-    run = Popen(args, stdout=PIPE, stderr=STDOUT)
+    run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
     if run.returncode != 0:
         log.error("Failed to get existing routes", out, err)
