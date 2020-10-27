@@ -19,6 +19,10 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
         "userRealm": "$KC_USER_REALM",
         "username": "$KC_USERNAME",
         "password": "$KC_PASSWORD"
+    },
+    "hostTransformation": {
+        "enabled": ${HOST_TRANSFORM_ENABLED:-false},
+        "baseUrl": "${HOST_TRANSFORM_BASE_URL}"
     }
 }
 EOF

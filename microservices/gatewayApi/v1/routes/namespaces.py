@@ -15,15 +15,13 @@ import yaml
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
 
-from v1.auth.auth import admin_jwt, enforce_authorization, enforce_role_authorization, group_root, group_root_name
+from v1.auth.auth import admin_jwt, enforce_authorization, enforce_role_authorization, users_group_root, admins_group_root
 
 from clients.keycloak import admin_api
-from utils.validators import namespace_validation, namespace_validation_rule
+from utils.validators import namespace_valid, namespace_validation_rule
 
 ns = Blueprint('namespaces', 'namespaces')
 
-_group_root = group_root()
-_group_root_name = group_root_name()
 
 @ns.route('',
            methods=['POST'], strict_slashes=False)
@@ -36,33 +34,38 @@ def create_namespace() -> object:
 
     namespace = request.get_json(force=True)['name']
 
-    if not namespace_validation(namespace):
+    if not namespace_valid(namespace):
         log.error("Namespace validation failed %s" % namespace)
-    #    abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
+        abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
 
     payload = {
         "name": namespace
     }
 
-    parent_group = keycloak_admin.get_group_by_path(_group_root)
     try:
-        if parent_group is None:
-            keycloak_admin.create_group ({"name": _group_root_name})
-            parent_group = keycloak_admin.get_group_by_path(_group_root)
+        for role_name in ['viewer', 'admin']:
 
-        response = keycloak_admin.create_group (payload, parent=parent_group['id'])
+            group_base_path = get_base_group_path(role_name)
+            parent_group = keycloak_admin.get_group_by_path(group_base_path)
+            if parent_group is None:
+                keycloak_admin.create_group ({"name": get_base_group_name(role_name)})
+                parent_group = keycloak_admin.get_group_by_path(group_base_path)
 
-        new_id = response['id']
+            response = keycloak_admin.create_group (payload, parent=parent_group['id'])
+            log.debug("[%s] Group %s/%s created!" % (namespace, group_base_path, namespace))
 
-        if 'preferred_username' in g.principal:
-            username = g.principal['preferred_username']
-            user_id = keycloak_admin.get_user_id (username)
-            log.debug("[%s] ADDING user %s" % (namespace, username))
-            keycloak_admin.group_user_add (user_id, new_id)
+            new_users_group_id = response['id']
+
+            if 'preferred_username' in g.principal:
+                username = g.principal['preferred_username']
+                user_id = keycloak_admin.get_user_id (username)
+                log.debug("[%s] ADDING user %s TO %s" % (namespace, username, group_base_path))
+                keycloak_admin.group_user_add (user_id, new_users_group_id)
 
     except KeycloakGetError as err:
         if err.response_code == 409:
             log.error("Namespace %s already created." % namespace)
+            log.error(err)
             abort(make_response(jsonify(error="Namespace is already created."), 400))
         else:
             log.error("Failed to create namespace %s" % namespace)
@@ -80,14 +83,11 @@ def delete_namespace(namespace: str) -> object:
 
     keycloak_admin = admin_api()
 
-    group = keycloak_admin.get_group_by_path("%s/%s" % (_group_root, namespace), search_in_subgroups=True)
-
-    if group is None:
-        abort(make_response(jsonify(error="Group does not exist"), 400))
-
     try:
-        keycloak_admin.delete_group (group['id'])
-
+        for role_name in ['viewer', 'admin']:
+            group = keycloak_admin.get_group_by_path("%s/%s" % (get_base_group_path(role_name), namespace), search_in_subgroups=True)
+            if group is not None:
+                keycloak_admin.delete_group (group['id'])
     except KeycloakGetError as err:
         log.error(err)
         abort(make_response(jsonify(error="Failed to delete namespace"), 400))
@@ -101,49 +101,14 @@ def update_membership(namespace: str) -> object:
     # Sync the membership list provided with the group membership
     # in Keycloak
     #
-    log = app.logger
-
     enforce_authorization(namespace)
 
     desired_membership_list = json.loads(request.get_data())
-    desired_membership = []
-    for user in desired_membership_list:
-        desired_membership.append(user['username'])
 
-    keycloak_admin = admin_api()
+    ucounts_added, ucounts_removed, ucounts_missing = membership_sync ('viewer', desired_membership_list)
+    acounts_added, acounts_removed, acounts_missing = membership_sync ('admin', desired_membership_list)
 
-    group = keycloak_admin.get_group_by_path("%s/%s" % (_group_root, namespace), search_in_subgroups=True)
-
-    membership = keycloak_admin.get_group_members (group['id'])
-
-    counts_removed = 0
-    counts_added = 0
-    counts_missing = 0
-    # Remove users that are not part of the provided membership
-    for member in membership:
-        if member['username'] not in desired_membership:
-            log.debug("[%s] REMOVE user %s" % (namespace, member['username']))
-            keycloak_admin.group_user_remove (member['id'], group['id'])
-            counts_removed = counts_removed + 1
-        else:
-            desired_membership.remove(member['username'])
-
-    # Add missing users to the membership
-    unregistered_users = []
-    for username in desired_membership:
-        user_id = keycloak_admin.get_user_id (username)
-        if user_id is None:
-            log.error("[%s] UNREGISTERED user %s" % (namespace, username))
-            counts_missing = counts_missing + 1
-            unregistered_users.append(username)
-        else:
-            log.debug("[%s] ADDING user %s" % (namespace, username))
-            keycloak_admin.group_user_add (user_id, group['id'])
-            counts_added = counts_added + 1
-
-    update_pending_registrations (group, unregistered_users)
-
-    return make_response(jsonify(added=counts_added, removed=counts_removed, missing=counts_missing))
+    return make_response(jsonify(added=ucounts_added + acounts_added, removed=ucounts_removed + acounts_removed, missing=ucounts_missing + acounts_missing))
 
 def update_pending_registrations(group, unregistered_users):
     if 'attributes' in group:
@@ -155,3 +120,61 @@ def update_pending_registrations(group, unregistered_users):
 
     keycloak_admin = admin_api()
     keycloak_admin.update_group (group['id'], group)
+
+
+def membership_sync (role_name, desired_membership_list):
+    log = app.logger
+
+    desired_membership = []
+    for user in desired_membership_list:
+        if role_name in user['roles']:
+            desired_membership.append(user['username'])
+
+    keycloak_admin = admin_api()
+
+    base_group_path = get_base_group_path (role_name)
+
+    group = keycloak_admin.get_group_by_path("%s/%s" % (base_group_path, namespace), search_in_subgroups=True)
+
+    membership = keycloak_admin.get_group_members (group['id'])
+
+    counts_removed = 0
+    counts_added = 0
+    counts_missing = 0
+    # Remove users that are not part of the provided membership
+    for member in membership:
+        if member['username'] not in desired_membership:
+            log.debug("[%s] REMOVE user %s from %s" % (namespace, member['username'], base_group_path))
+            keycloak_admin.group_user_remove (member['id'], group['id'])
+            counts_removed = counts_removed + 1
+        else:
+            desired_membership.remove(member['username'])
+
+    # Add missing users to the membership
+    unregistered_users = []
+    for username in desired_membership:
+        user_id = keycloak_admin.get_user_id (username)
+        if user_id is None:
+            log.error("[%s] UNREGISTERED user %s FROM %s" % (namespace, username, base_group_path))
+            counts_missing = counts_missing + 1
+            unregistered_users.append(username)
+        else:
+            log.debug("[%s] ADDING user %s TO %s" % (namespace, username, base_group_path))
+            keycloak_admin.group_user_add (user_id, group['id'])
+            counts_added = counts_added + 1
+
+    # Update the pending attribute with users that are not registered yet
+    update_pending_registrations (group, unregistered_users)
+
+    return counts_added, counts_removed, counts_missing
+
+def get_base_group_name(role_name):
+    if role_name == "viewer":
+        return users_group_root()
+    elif role_name == "admin":
+        return admins_group_root()
+    else:
+        raise Exception("Illegal Argument - Role %s" % role_name)
+
+def get_base_group_path(role_name):
+    return "/%s" % get_base_group_name(role_name)

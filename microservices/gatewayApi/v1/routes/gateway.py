@@ -12,6 +12,8 @@ from v1.auth.auth import admin_jwt, enforce_authorization
 
 from clients.openshift import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
 
+from utils.validators import host_valid
+
 gw = Blueprint('gwa', 'gateway')
 
 @gw.route('',
@@ -41,6 +43,10 @@ def write_config(namespace: str) -> object:
 
         for index, gw_config in enumerate(yaml_documents):
             log.debug("Parsing file %s %s" % (namespace, index))
+
+            # Transformations before saving
+            host_transformation (namespace, gw_config)
+
             with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
                 yaml.dump(gw_config, file)
 
@@ -50,6 +56,12 @@ def write_config(namespace: str) -> object:
                 validate_tags (gw_config, "ns.%s" % namespace)
             except Exception as ex:
                 abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
+
+            # Validate that hosts are valid
+            # try:
+            #     validate_hosts (gw_config)
+            # except Exception as ex:
+            #     abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
 
             # Validation #3
             # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
@@ -131,3 +143,32 @@ def traverse (source, errors, yaml, required_tag):
                 else:
                     errors.append("%s.%s.%s no tags found" % (source, k, item['name']))
                 traverse ("%s.%s.%s" % (source, k, item['name']), errors, item, required_tag)
+
+def host_transformation (namespace, yaml):
+    log = app.logger
+
+    transforms = 0
+    conf = app.config['hostTransformation']
+    if conf['enabled'] is True:
+        for service in yaml['services']:
+            for route in service['routes']:
+                if 'hosts' in route:
+                    new_hosts = []
+                    for host in route['hosts']:
+                        new_hosts.append("%s.%s" % (host.replace('.', '-'), conf['baseUrl']))
+                        transforms = transforms + 1
+                    route['hosts'] = new_hosts
+    log.debug("[%s] Host transformations %d" % (namespace, transforms))
+
+def validate_hosts (yaml):
+    log = app.logger
+    errors = []
+
+    for service in yaml['services']:
+        for route in service['routes']:
+            if 'hosts' in route:
+                for host in route['hosts']:
+                    if host_valid(host) is False:
+                        errors.append("Host not passing DNS-952 validation '%s'" % host)
+    if len(errors) != 0:
+        raise Exception('\n'.join(errors))
