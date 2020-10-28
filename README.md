@@ -8,9 +8,8 @@ For self-service of the APIs, a set of microservices are used to coordinate upda
 
 All APIs are protected by an OIDC JWT Token with the following claims:
 
-* `aud` : https://gwa-qwzrwc-dev.pathfinder.gov.bc.ca/
-* `namespace` : Identifies the namespace that the APIs belong to, used to scope what changes are synced with Kong
-* `scope` : `manage:config`
+* `aud` : `gwa`
+* `namespace` : Identifies the namespace that the APIs belong to, used to scope what changes are allowed.
 
 **Configuration:**
 
@@ -34,29 +33,7 @@ All APIs are protected by an OIDC JWT Token with the following claims:
 | `HOST_TRANSFORM_ENABLED` | For Dev and Test a way to transform the host for working in these environments | `false`
 | `HOST_TRANSFORM_BASE_URL` | For Dev and Test a way to transform the host for working in these environments |
 
-
-## Gateway API
-
-The `Gateway API` has a `dry-run` and `sync` of Kong and OCP configuration.
-
-The token must have a valid scope for managing the config.
-
-
-# Access
-
-```
-scope := permission/resource.access
-
-permission, resource, access := any string (without space, period, slash, or asterisk) | asterisk
-```
-
-permission type is based on single or bulk records.
-
-resource types: GatewayConfig, Catalog
-
-access: read, write
-
-# Flow
+# API Provider Flow
 
 ## 1. Register a new namespace
 
@@ -119,9 +96,15 @@ services:
 
 Run: `gwa new` and follow the prompts.
 
+Example:
+
+```
+gwa new -o sample.yaml https://bcgov.github.io/gwa-api/openapi/simple.yaml`
+```
+
 ## 4. Apply gateway configuration
 
-The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa-cli` can be used.
+The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa Command Line` can be used.
 
 ### Swagger Console
 
@@ -139,7 +122,7 @@ Select a `configFile` file.
 
 Send the request.
 
-### Command Line
+### gwa Command Line
 
 **Install**
 
@@ -188,14 +171,22 @@ ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.189768.xyz/headers
 
 ## 6. View metrics
 
-Go to <a href="https://grafana-qwzrwc-test.pathfinder.gov.bc.ca/" target="_blank">Grafana</a> to view metrics for your configured services.
+The following metrics can be viewed in real-time for the Services that you configure on the Gateway:
 
+* Request Rate : Requests / Second (by Service/Route, by HTTP Status)
+* Latency : Standard deviations measured for latency inside Kong and on the Upstream Service (by Service/Route)
+* Bandwidth : Ingress/egress bandwidth (by Service/Route)
+* Total Requests : In 5 minute windows (by Consumer, by User Agent, by Service, by HTTP Status)
+
+All metrics can be viewed by an arbitrary time window - defaults to `Last 24 Hours`.
+
+Go to <a href="https://grafana-qwzrwc-test.pathfinder.gov.bc.ca/" target="_blank">Grafana</a> to view metrics for your configured services.
 
 ## 7. Grant access to others
 
 The `acl` command is an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
 
-For administrative privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
+For elevated privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
 
 ```
 gwa acl --managers acope@idir --users acope@idir jjones@idir
@@ -205,7 +196,7 @@ gwa acl --managers acope@idir --users acope@idir jjones@idir
 
 Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated on the gateway.
 
-### Github Actions
+### Github Actions Example
 
 In the repository that you maintain your CI/CD Pipeline configuration, use the Service Account details from `Step 2` to set up two `Secrets`:
 
