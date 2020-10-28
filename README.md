@@ -1,10 +1,10 @@
 # GWA APIs
 
-For self-service of the APIs, a set of microservices are used to coordinate updates by the API Owners.
+For self-service of APIs, a set of microservices are used to coordinate updates by the providers of APIs.
 
-* Gateway API : Provides a way for API Owners to update their Kong configuration (and internally the OCP Edge Router)
-* Authz API : Provides a way for API Owners to update Keycloak for access to the API Services Portal
-* Catalog API : Providers a way for API Owners to update the API details in the BC Data Catalog
+* `Gateway` : Provides a way for API Owners to update their Kong configuration (and internally the OCP Edge Router)
+* `Authz` : Provides a way for API Owners to update Keycloak for access to functionality on the API Services Portal
+* `Catalog` : Provides a way for API Owners to update the API details in the BC Data Catalog
 
 All APIs are protected by an OIDC JWT Token with the following claims:
 
