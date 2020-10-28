@@ -205,7 +205,7 @@ Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated o
 
 ### Github Actions
 
-In the repository that you maintain your CI/CD Pipeline configuration, use the Service Account information to set up two `Secrets`:
+In the repository that you maintain your CI/CD Pipeline configuration, use the Service Account details from `Step 2` to set up two `Secrets`:
 
 * GWA_ACCT_ID
 
