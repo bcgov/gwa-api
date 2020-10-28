@@ -1,16 +1,15 @@
 # GWA APIs
 
-For self-service of the APIs, a set of microservices are used to coordinate updates by the API Owners.
+For self-service of APIs, a set of microservices are used to coordinate updates by the providers of APIs.
 
-* Gateway API : Provides a way for API Owners to update their Kong configuration (and internally the OCP Edge Router)
-* Authz API : Provides a way for API Owners to update Keycloak for access to the API Services Portal
-* Catalog API : Providers a way for API Owners to update the API details in the BC Data Catalog
+* `Gateway` : Provides a way for API Owners to update their Kong configuration (and internally the OCP Edge Router)
+* `Authz` : Provides a way for API Owners to update Keycloak for access to functionality on the API Services Portal
+* `Catalog` : Provides a way for API Owners to update the API details in the BC Data Catalog
 
 All APIs are protected by an OIDC JWT Token with the following claims:
 
-* `aud` : https://gwa-qwzrwc-dev.pathfinder.gov.bc.ca/
-* `namespace` : Identifies the namespace that the APIs belong to, used to scope what changes are synced with Kong
-* `scope` : `manage:config`
+* `aud` : `gwa`
+* `namespace` : Identifies the namespace that the APIs belong to, used to scope what changes are allowed.
 
 **Configuration:**
 
@@ -33,30 +32,9 @@ All APIs are protected by an OIDC JWT Token with the following claims:
 | `KC_PASSWORD`     | Keycloak access for administrative rights to manage groups for namespaces | `xxx`
 | `HOST_TRANSFORM_ENABLED` | For Dev and Test a way to transform the host for working in these environments | `false`
 | `HOST_TRANSFORM_BASE_URL` | For Dev and Test a way to transform the host for working in these environments |
+| `PLUGINS_RATELIMITING_REDIS_PASSWORD` | The Redis credential added to the rate-limiting Kong plugin during publish |
 
-
-## Gateway API
-
-The `Gateway API` has a `dry-run` and `sync` of Kong and OCP configuration.
-
-The token must have a valid scope for managing the config.
-
-
-# Access
-
-```
-scope := permission/resource.access
-
-permission, resource, access := any string (without space, period, slash, or asterisk) | asterisk
-```
-
-permission type is based on single or bulk records.
-
-resource types: GatewayConfig, Catalog
-
-access: read, write
-
-# Flow
+# API Provider Flow
 
 ## 1. Register a new namespace
 
@@ -119,9 +97,23 @@ services:
 
 Run: `gwa new` and follow the prompts.
 
+Example:
+
+```
+gwa new -o sample.yaml https://bcgov.github.io/gwa-api/openapi/simple.yaml
+```
+
+> The current beta version of `gwa new` results in Kong configuration that needs to be edited before it is ready to be applied.
+
+> Make the following edits:
+> * Add a `hosts` list under each `route` with the external URL of your service on the gateway (i.e./ a value that is: `$NAME.api.gov.bc.ca`)
+> * The `service` `url` might need to be edited to equal your upstream URL
+> * Optionally: Add a qualifier to the namespace tags if you are separating your configuration into different pipelines
+
+
 ## 4. Apply gateway configuration
 
-The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa-cli` can be used.
+The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa Command Line` can be used.
 
 ### Swagger Console
 
@@ -139,7 +131,7 @@ Select a `configFile` file.
 
 Send the request.
 
-### Command Line
+### gwa Command Line
 
 **Install**
 
@@ -175,6 +167,12 @@ gwa init -T --namespace=$NS --client-id=<YOUR SERVICE ACCOUNT ID> --client-secre
 gwa pg sample.yaml 
 ```
 
+If you want to see the expected changes but not actually apply them, you can run:
+
+```
+gwa pg --dry-run sample.yaml
+```
+
 ## 5. Verify routes
 
 In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-qwzrwc-test.pathfinder.gov.bc.ca/int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
@@ -188,24 +186,34 @@ ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.189768.xyz/headers
 
 ## 6. View metrics
 
-Go to <a href="https://grafana-qwzrwc-test.pathfinder.gov.bc.ca/" target="_blank">Grafana</a> to view metrics for your configured services.
+The following metrics can be viewed in real-time for the Services that you configure on the Gateway:
 
+* Request Rate : Requests / Second (by Service/Route, by HTTP Status)
+* Latency : Standard deviations measured for latency inside Kong and on the Upstream Service (by Service/Route)
+* Bandwidth : Ingress/egress bandwidth (by Service/Route)
+* Total Requests : In 5 minute windows (by Consumer, by User Agent, by Service, by HTTP Status)
+
+All metrics can be viewed by an arbitrary time window - defaults to `Last 24 Hours`.
+
+Go to <a href="https://grafana-qwzrwc-test.pathfinder.gov.bc.ca/" target="_blank">Grafana</a> to view metrics for your configured services.
 
 ## 7. Grant access to others
 
-The `acl` command is an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
+The `acl` command provides a way to update the access for the namespace.  It expects an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
 
-For administrative privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
+For elevated privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
 
 ```
-gwa acl --managers acope@idir --users acope@idir jjones@idir
+gwa acl --users acope@idir jjones@idir --managers acope@idir
 ```
+
+The result will show the ACL changes.  The Add/Delete counts represent the membership changes of registered users.  The Missing count represents the users that will automatically be added to the namespace once they have logged into the `APS Services Portal`.
 
 ## 8. Add to your CI/CD Pipeline
 
 Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated on the gateway.
 
-### Github Actions
+### Github Actions Example
 
 In the repository that you maintain your CI/CD Pipeline configuration, use the Service Account details from `Step 2` to set up two `Secrets`:
 
