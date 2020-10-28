@@ -32,6 +32,7 @@ All APIs are protected by an OIDC JWT Token with the following claims:
 | `KC_PASSWORD`     | Keycloak access for administrative rights to manage groups for namespaces | `xxx`
 | `HOST_TRANSFORM_ENABLED` | For Dev and Test a way to transform the host for working in these environments | `false`
 | `HOST_TRANSFORM_BASE_URL` | For Dev and Test a way to transform the host for working in these environments |
+| `PLUGINS_RATELIMITING_REDIS_PASSWORD` | The Redis credential added to the rate-limiting Kong plugin during publish |
 
 # API Provider Flow
 
