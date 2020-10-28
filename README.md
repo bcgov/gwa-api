@@ -99,7 +99,7 @@ Run: `gwa new` and follow the prompts.
 Example:
 
 ```
-gwa new -o sample.yaml https://bcgov.github.io/gwa-api/openapi/simple.yaml`
+gwa new -o sample.yaml https://bcgov.github.io/gwa-api/openapi/simple.yaml
 ```
 
 > The current beta version of `gwa new` results in Kong configuration that needs to be edited before it is ready to be applied.
