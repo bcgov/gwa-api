@@ -183,30 +183,32 @@ def host_transformation (namespace, yaml):
     transforms = 0
     conf = app.config['hostTransformation']
     if conf['enabled'] is True:
-        for service in yaml['services']:
-            if 'routes' in service:
-                for route in service['routes']:
-                    if 'hosts' in route:
-                        new_hosts = []
-                        for host in route['hosts']:
-                            new_hosts.append("%s.%s" % (host.replace('.', '-'), conf['baseUrl']))
-                            transforms = transforms + 1
-                        route['hosts'] = new_hosts
+        if 'service' in yaml:
+            for service in yaml['services']:
+                if 'routes' in service:
+                    for route in service['routes']:
+                        if 'hosts' in route:
+                            new_hosts = []
+                            for host in route['hosts']:
+                                new_hosts.append("%s.%s" % (host.replace('.', '-'), conf['baseUrl']))
+                                transforms = transforms + 1
+                            route['hosts'] = new_hosts
     log.debug("[%s] Host transformations %d" % (namespace, transforms))
 
 def validate_hosts (yaml):
     log = app.logger
     errors = []
 
-    for service in yaml['services']:
-        if 'routes' in service:
-            for route in service['routes']:
-                if 'hosts' in route:
-                    for host in route['hosts']:
-                        if host_valid(host) is False:
-                            errors.append("Host not passing DNS-952 validation '%s'" % host)
-                else:
-                    errors.append("service.%s.route.%s A host must be specified for routes." % (service['name'], route['name']))
+    if 'service' in yaml:
+        for service in yaml['services']:
+            if 'routes' in service:
+                for route in service['routes']:
+                    if 'hosts' in route:
+                        for host in route['hosts']:
+                            if host_valid(host) is False:
+                                errors.append("Host not passing DNS-952 validation '%s'" % host)
+                    else:
+                        errors.append("service.%s.route.%s A host must be specified for routes." % (service['name'], route['name']))
 
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
