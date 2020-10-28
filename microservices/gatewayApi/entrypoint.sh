@@ -24,6 +24,13 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
     "hostTransformation": {
         "enabled": ${HOST_TRANSFORM_ENABLED:-false},
         "baseUrl": "${HOST_TRANSFORM_BASE_URL}"
+    },
+    "plugins": {
+        "rate_limiting": {
+            "redis_host": "redis-master",
+            "redis_port": 6379,
+            "redis_password": "${PLUGINS_RATELIMITING_REDIS_PASSWORD}"
+        }
     }
 }
 EOF

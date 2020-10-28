@@ -13,6 +13,9 @@ from v1.auth.auth import admin_jwt, enforce_authorization
 from clients.openshift import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
 
 from utils.validators import host_valid
+from utils.transforms import plugins_transformations
+from utils.masking import mask
+
 
 gw = Blueprint('gwa', 'gateway')
 
@@ -60,6 +63,7 @@ def write_config(namespace: str) -> object:
 
             #
             # Enrich the rate-limiting plugin with the appropriate Redis details
+            plugins_transformations (namespace, gw_config)
 
             with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
                 yaml.dump(gw_config, file)
@@ -109,7 +113,7 @@ def write_config(namespace: str) -> object:
         if deck_run.returncode != 0:
             cleanup (tempFolder)
             log.warn("%s - %s" % (namespace, out.decode('utf-8')))
-            abort(make_response(jsonify(error="Sync Failed.", results=out.decode('utf-8')), 400))
+            abort(make_response(jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))), 400))
 
         elif cmd == "sync":
             route_count = prepare_apply_routes (namespace, selectTag, tempFolder)
@@ -127,7 +131,7 @@ def write_config(namespace: str) -> object:
         if cmd == 'diff':
             message = "Dry-run.  No changes applied."
 
-        return make_response(jsonify(message=message, results=out.decode('utf-8')))
+        return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
     else:
         log.error("Missing input")
         log.error(request.get_data())
