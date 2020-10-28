@@ -187,7 +187,7 @@ def host_transformation (namespace, yaml):
     transforms = 0
     conf = app.config['hostTransformation']
     if conf['enabled'] is True:
-        if 'service' in yaml:
+        if 'services' in yaml:
             for service in yaml['services']:
                 if 'routes' in service:
                     for route in service['routes']:
@@ -203,7 +203,7 @@ def validate_hosts (yaml):
     log = app.logger
     errors = []
 
-    if 'service' in yaml:
+    if 'services' in yaml:
         for service in yaml['services']:
             if 'routes' in service:
                 for route in service['routes']:
