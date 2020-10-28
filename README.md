@@ -203,4 +203,43 @@ gwa acl --managers acope@idir --users acope@idir jjones@idir
 
 Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated on the gateway.
 
-> TODO: Examples
+### Github Actions
+
+In the repository that you maintain your CI/CD Pipeline configuration, use the Service Account information to set up two `Secrets`:
+
+* APS_ACCT_ID
+
+* APS_ACCT_SECRET
+
+Add a `.bcgovaps` folder (can be called anything) that will be used to hold your gateway configuration.
+
+The below example Github Workflow is for updating the `global` namespace:
+
+```
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 10
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - run: |
+        git clone -b feature/feature-refactor https://github.com/bcgov/gwa-cli.git
+        cd gwa-cli
+        npm install
+        npm run build
+        npm link
+
+        gwa init -T \
+          --namespace=global \
+          --client-id=$APS_ACCT_ID \
+          --client-secret=$APS_ACCT_SECRET
+
+        cd ../.bcgovaps/global
+
+        gwa pg .
+```
