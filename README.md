@@ -211,7 +211,7 @@ In the repository that you maintain your CI/CD Pipeline configuration, use the S
 
 * GWA_ACCT_SECRET
 
-Add a `.bcgovaps` folder (can be called anything) that will be used to hold your gateway configuration.
+Add a `.gwa` folder (can be called anything) that will be used to hold your gateway configuration.
 
 The below example Github Workflow is for updating the `global` namespace:
 
@@ -241,7 +241,7 @@ jobs:
 
         cat .env
 
-        cd ../.bcgovaps/global
+        cd ../.gwa/global
 
         gwa pg .
 
