@@ -207,9 +207,9 @@ Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated o
 
 In the repository that you maintain your CI/CD Pipeline configuration, use the Service Account information to set up two `Secrets`:
 
-* APS_ACCT_ID
+* GWA_ACCT_ID
 
-* APS_ACCT_SECRET
+* GWA_ACCT_SECRET
 
 Add a `.bcgovaps` folder (can be called anything) that will be used to hold your gateway configuration.
 
@@ -236,10 +236,14 @@ jobs:
 
         gwa init -T \
           --namespace=global \
-          --client-id=$APS_ACCT_ID \
-          --client-secret=$APS_ACCT_SECRET
+          --client-id=${{ secrets.GWA_ACCT_ID }} \
+          --client-secret=${{ secrets.GWA_ACCT_SECRET }}
+
+        cat .env
 
         cd ../.bcgovaps/global
 
         gwa pg .
+
+        gwa acl --users acope@idir --managers acope@idir
 ```
