@@ -166,6 +166,12 @@ gwa init -T --namespace=$NS --client-id=<YOUR SERVICE ACCOUNT ID> --client-secre
 gwa pg sample.yaml 
 ```
 
+If you want to see the expected changes but not actually apply them, you can run:
+
+```
+gwa pg --dry-run sample.yaml
+```
+
 ## 5. Verify routes
 
 In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-qwzrwc-test.pathfinder.gov.bc.ca/int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
