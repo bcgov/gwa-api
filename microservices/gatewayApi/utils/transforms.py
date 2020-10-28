@@ -19,13 +19,24 @@ def rate_limiting (plugin):
     plugin_config = plugin['config']
 
     for k, v in override_config.items():
-        log.debug("[%s] Override %s" % (plugin['name'], k))
         plugin_config[k] = v
 
     # Add null values to the following if they are not specified
     for nval in ['second', 'minute', 'hour', 'day', 'month', 'year', 'header_name']:
         if nval not in plugin_config:
             plugin_config[nval] = None
+
+    # Add these defaults if not defined
+    defaults = {
+        "enabled": True,
+        "protocols": [
+            "http",
+            "https"
+        ]
+    }
+    for k, v in defaults.items():
+        if k not in plugin:
+            plugin[k] = v
 
 def traverse_plugins (yaml):
     traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
