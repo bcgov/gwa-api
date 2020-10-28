@@ -198,13 +198,15 @@ Go to <a href="https://grafana-qwzrwc-test.pathfinder.gov.bc.ca/" target="_blank
 
 ## 7. Grant access to others
 
-The `acl` command is an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
+The `acl` command provides a way to update the access for the namespace.  It expects an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
 
 For elevated privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
 
 ```
-gwa acl --managers acope@idir --users acope@idir jjones@idir
+gwa acl --users acope@idir jjones@idir --managers acope@idir
 ```
+
+The result will show the ACL changes.  The Add/Delete counts represent the membership changes of registered users.  The Missing count represents the users that will automatically be added to the namespace once they have logged into the `APS Services Portal`.
 
 ## 8. Add to your CI/CD Pipeline
 
