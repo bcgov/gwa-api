@@ -27,6 +27,7 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
     },
     "plugins": {
         "rate_limiting": {
+            "redis_database": 0,
             "redis_host": "redis-master",
             "redis_port": 6379,
             "redis_password": "${PLUGINS_RATELIMITING_REDIS_PASSWORD}",

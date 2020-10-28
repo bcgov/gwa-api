@@ -23,7 +23,7 @@ def rate_limiting (plugin):
         plugin_config[k] = v
 
     # Add null values to the following if they are not specified
-    for nval in ['second', 'minute', 'hour', 'day', 'month', 'year']:
+    for nval in ['second', 'minute', 'hour', 'day', 'month', 'year', 'header_name']:
         if nval not in plugin_config:
             plugin_config[nval] = None
 
