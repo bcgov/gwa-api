@@ -104,7 +104,7 @@ services:
   - name: $NAME-route
     tags: [ ns.$NS ]
     hosts:
-    - $NAME.api.189768.xyz
+    - $NAME.api.gov.bc.ca
     paths:
     - /
     strip_path: false
@@ -175,10 +175,12 @@ gwa pg sample.yaml
 
 ## 5. Verify routes
 
-```
-curl https://$NAME.api.189768.xyz/headers
+In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-qwzrwc-test.pathfinder.gov.bc.ca/int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
 
-ab -n 20 -c 2 https://$NAME.api.189768.xyz/headers
+```
+curl https://${NAME}-api-gov-bc-ca.test.189768.xyz/headers
+
+ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.189768.xyz/headers
 
 ```
 
