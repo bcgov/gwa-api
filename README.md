@@ -113,6 +113,8 @@ services:
 " > sample.yaml
 ```
 
+> NOTE: If you have separate pipelines for your environments (i.e./ dev, test and prod), you can split your configuration and update the `tags`.  So for example, you can use a tag `ns.$NS.dev` to sync Kong configuration for `dev` only.
+
 **gwa CLI Example**
 
 Run: `gwa new` and follow the prompts.
