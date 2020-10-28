@@ -10,6 +10,7 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
     "tokenMatch": {
         "aud": "$TOKEN_MATCH_AUD"
     },
+    "kongAdminUrl": "$KONG_ADMIN_URL",
     "workingFolder": "$WORKING_FOLDER",
     "keycloak": {
         "serverUrl": "$KC_SERVER_URL",
@@ -19,6 +20,10 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
         "userRealm": "$KC_USER_REALM",
         "username": "$KC_USERNAME",
         "password": "$KC_PASSWORD"
+    },
+    "hostTransformation": {
+        "enabled": ${HOST_TRANSFORM_ENABLED:-false},
+        "baseUrl": "${HOST_TRANSFORM_BASE_URL}"
     }
 }
 EOF

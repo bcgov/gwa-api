@@ -1,0 +1,10 @@
+
+services:
+- name: MY_REST_API
+  tags: [ _NS_ ]
+  plugins:
+  - name: ip-restriction
+    tags: [ _NS_ ]
+    enabled: true
+    config:
+      allow: [ "10.10.10.0/24" ]

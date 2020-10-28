@@ -18,7 +18,7 @@ All APIs are protected by an OIDC JWT Token with the following claims:
 | --------          | ----------- | ------- |
 | `PORT`            | Port        | `2000` |
 | `LOG_LEVEL`       | Log level for the application | `INFO` |
-| `ENVIRONMENT`     | Indicates what environment config to use | `production` |
+| `ENVIRONMENT`     | Indicates what environment config to use (development|test|production) | `production` |
 | `CONFIG_PATH`     | Location of the config | `/tmp/production.json` |
 | `OIDC_BASE_URL`   | Base url used for OIDC Discovery for getting the `jwks_uri` for the list of supported keys. | `https://keycloak.domain/auth/realms/abc`
 | `TOKEN_MATCH_AUD` | The `audience` that the token must match. | `gwa`
@@ -31,6 +31,9 @@ All APIs are protected by an OIDC JWT Token with the following claims:
 | `KC_USER_REALM`   | Keycloak access for administrative rights to manage groups for namespaces | `master`
 | `KC_USERNAME`     | Keycloak access for administrative rights to manage groups for namespaces | `kcadmin`
 | `KC_PASSWORD`     | Keycloak access for administrative rights to manage groups for namespaces | `xxx`
+| `HOST_TRANSFORM_ENABLED` | For Dev and Test a way to transform the host for working in these environments | `false`
+| `HOST_TRANSFORM_BASE_URL` | For Dev and Test a way to transform the host for working in these environments |
+
 
 ## Gateway API
 
@@ -59,7 +62,7 @@ access: read, write
 
 A `namespace` represents a collections of Kong Services and Routes that are managed independently.
 
-To create a new namespace, go to the <a href="https://gwa-qwzrwc-dev.pathfinder.gov.bc.ca/int" target="_blank">API Services Portal</a>.
+To create a new namespace, go to the <a href="https://gwa-qwzrwc-test.pathfinder.gov.bc.ca/int" target="_blank">API Services Portal</a>.
 
 After login and selection of an existing namespace, go to the `New Namespace` tab and click the `Create Namespace` button.
 
@@ -72,31 +75,23 @@ Logout by clicking your username at the top right of the page.  When you login a
 Go to the `Service Accounts` tab and click the `Create Service Account`.  A new credential will be created - make a note of the `ID` and `Secret`.
 
 With scopes:
-* admin:gateway
-* admin:acl
-* admin:catalog
+* `admin:gateway` : Permission to publish gateway configuration to Kong
+* `admin:acl`     : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
+* `admin:catalog` : Permission to update BC Data Catalog datasets for describing APIs available for consumption
 
-## 3. Prepare and apply gateway configuration
+## 3. Prepare configuration
 
-The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa-cli` can be used.
+The gateway configuration can be hand-crafted or you can use the `gwa` `new` command to walk you through the creation of the config.
 
-### Swagger Console
+To view a list of available plugins, you can run: `gwa plugins`.
 
-Go to <a href="https://gwa-api-qwzrwc-dev.pathfinder.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
+To view examples go [here](/docs/samples/service-plugins).
 
-Select the `PUT` `/namespaces/{namespace}/gateway` API.
-
-The Service Account uses the OAuth2 Client Credentials Grant Flow.  Click the `lock` link on the right and enter in the Service Account credentials that were generated in step #2.
-
-For the `Parameter namespace`, enter the namespace that you created in step #1.
-
-Select `dryRun` to `true`.
-
-Select a `configFile` file.  An example of a very minimal config is:
+**Simple Example**
 
 ```
 export NS="my_namespace"
-export NAME="some-service-name-$NS"
+export NAME="a-service-for-$NS"
 echo "
 services:
 - name: $NAME
@@ -109,15 +104,38 @@ services:
   - name: $NAME-route
     tags: [ ns.$NS ]
     hosts:
-    - $NAME.api.333223.xyz
+    - $NAME.api.189768.xyz
     paths:
     - /
     strip_path: false
     https_redirect_status_code: 426
     path_handling: v0
 " > sample.yaml
-
 ```
+
+**gwa CLI Example**
+
+Run: `gwa new` and follow the prompts.
+
+## 4. Apply gateway configuration
+
+The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa-cli` can be used.
+
+### Swagger Console
+
+Go to <a href="https://gwa-api-qwzrwc-test.pathfinder.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
+
+Select the `PUT` `/namespaces/{namespace}/gateway` API.
+
+The Service Account uses the OAuth2 Client Credentials Grant Flow.  Click the `lock` link on the right and enter in the Service Account credentials that were generated in step #2.
+
+For the `Parameter namespace`, enter the namespace that you created in step #1.
+
+Select `dryRun` to `true`.
+
+Select a `configFile` file.
+
+Send the request.
 
 ### Command Line
 
@@ -131,42 +149,56 @@ npm run build
 npm link
 ```
 
+**Configure**
+
 Create a `.env` file and update the CLIENT_ID and CLIENT_SECRET with the new credentials that were generated in step #2:
 
 ```
 echo "
-AUTHORIZATION_ENDPOINT=https://auth-qwzrwc-dev.pathfinder.gov.bc.ca/auth/realms/aps/protocol/openid-connect/token
-CLIENT_ID=sa-xxxx-g9ah2ess3y
-CLIENT_SECRET=0000-0000-0000-0000
-API_HOST=https://gwa-api-qwzrwc-dev.pathfinder.gov.bc.ca/v1
+GWA_NAMESPACE=$NS
+CLIENT_ID=<YOUR SERVICE ACCOUNT ID>
+CLIENT_SECRET=<YOUR SERVICE ACCOUNT SECRET>
+GWA_ENV=test
 " > .env
-```
+
+OR run:
+
+gwa init -T --namespace=$NS --client-id=<YOUR SERVICE ACCOUNT ID> --client-secret=<YOUR SERVICE ACCOUNT SECRET>
 
 ```
-gwa pg --namespace $NS sample.yaml 
-```
 
-## 4. Verify routes
+**Publish**
 
 ```
-curl https://$NAME.api.333223.xyz/headers
+gwa pg sample.yaml 
 ```
 
-## 5. View metrics
+## 5. Verify routes
 
-Go to <a href="https://grafana-qwzrwc-dev.pathfinder.gov.bc.ca/" target="_blank">Grafana</a> to view metrics for your configured services.
+```
+curl https://$NAME.api.189768.xyz/headers
+
+ab -n 20 -c 2 https://$NAME.api.189768.xyz/headers
+
+```
+
+## 6. View metrics
+
+Go to <a href="https://grafana-qwzrwc-test.pathfinder.gov.bc.ca/" target="_blank">Grafana</a> to view metrics for your configured services.
 
 
-## 6. Grant access to others
+## 7. Grant access to others
 
 The `acl` command is an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
 
+For administrative privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
+
 ```
-gwa acl --namespace $NS --users acope@idir,jjones@idir
+gwa acl --managers acope@idir --users acope@idir jjones@idir
 ```
 
-## 7. Add to your CI/CD Pipeline
+## 8. Add to your CI/CD Pipeline
 
 Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated on the gateway.
 
-
+> TODO: Examples
