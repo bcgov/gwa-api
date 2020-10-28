@@ -104,7 +104,7 @@ services:
   - name: $NAME-route
     tags: [ ns.$NS ]
     hosts:
-    - $NAME.api.189768.xyz
+    - $NAME.api.gov.bc.ca
     paths:
     - /
     strip_path: false
@@ -112,6 +112,8 @@ services:
     path_handling: v0
 " > sample.yaml
 ```
+
+> NOTE: If you have separate pipelines for your environments (i.e./ dev, test and prod), you can split your configuration and update the `tags`.  So for example, you can use a tag `ns.$NS.dev` to sync Kong configuration for `dev` Service and Routes only.
 
 **gwa CLI Example**
 
@@ -175,10 +177,12 @@ gwa pg sample.yaml
 
 ## 5. Verify routes
 
-```
-curl https://$NAME.api.189768.xyz/headers
+In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-qwzrwc-test.pathfinder.gov.bc.ca/int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
 
-ab -n 20 -c 2 https://$NAME.api.189768.xyz/headers
+```
+curl https://${NAME}-api-gov-bc-ca.test.189768.xyz/headers
+
+ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.189768.xyz/headers
 
 ```
 
@@ -201,4 +205,47 @@ gwa acl --managers acope@idir --users acope@idir jjones@idir
 
 Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated on the gateway.
 
-> TODO: Examples
+### Github Actions
+
+In the repository that you maintain your CI/CD Pipeline configuration, use the Service Account details from `Step 2` to set up two `Secrets`:
+
+* GWA_ACCT_ID
+
+* GWA_ACCT_SECRET
+
+Add a `.gwa` folder (can be called anything) that will be used to hold your gateway configuration.
+
+The below example Github Workflow is for updating the `global` namespace:
+
+```
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 10
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - run: |
+        git clone -b feature/feature-refactor https://github.com/bcgov/gwa-cli.git
+        cd gwa-cli
+        npm install
+        npm run build
+        npm link
+
+        gwa init -T \
+          --namespace=global \
+          --client-id=${{ secrets.GWA_ACCT_ID }} \
+          --client-secret=${{ secrets.GWA_ACCT_SECRET }}
+
+        cat .env
+
+        cd ../.gwa/global
+
+        gwa pg .
+
+        gwa acl --users acope@idir --managers acope@idir
+```
