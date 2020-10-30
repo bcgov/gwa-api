@@ -38,11 +38,11 @@ All APIs are protected by an OIDC JWT Token with the following claims:
 
 ## 1. Register a new namespace
 
-A `namespace` represents a collections of Kong Services and Routes that are managed independently.
+A `namespace` represents a collection of Kong Services and Routes that are managed independently.
 
 To create a new namespace, go to the <a href="https://gwa-qwzrwc-test.pathfinder.gov.bc.ca/int" target="_blank">API Services Portal</a>.
 
-After login and selection of an existing namespace, go to the `New Namespace` tab and click the `Create Namespace` button.
+After login (and selection of an existing namespace if you have one already assigned), go to the `New Namespace` tab and click the `Create Namespace` button.
 
 The namespace must be an alphanumeric string between 5 and 10 characters.
 
@@ -52,18 +52,16 @@ Logout by clicking your username at the top right of the page.  When you login a
 
 Go to the `Service Accounts` tab and click the `Create Service Account`.  A new credential will be created - make a note of the `ID` and `Secret`.
 
-With access:
+The credential has the following access:
 * `admin:gateway` : Permission to publish gateway configuration to Kong
 * `admin:acl`     : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
 * `admin:catalog` : Permission to update BC Data Catalog datasets for describing APIs available for consumption
 
 ## 3. Prepare configuration
 
-The gateway configuration can be hand-crafted or you can use the `gwa` `new` command to walk you through the creation of the config.
+The gateway configuration can be hand-crafted or you can use a command line interface that we developed called `gwa` to convert your Openapi v3 spec to a Kong configuration.
 
-To view a list of available plugins, you can run: `gwa plugins`.
-
-To view examples go [here](/docs/samples/service-plugins).
+### Hand-crafted (recommended if you don't have an Openapi spec)
 
 **Simple Example**
 
@@ -91,9 +89,11 @@ services:
 " > sample.yaml
 ```
 
+To view optional plugin examples go [here](/docs/samples/service-plugins).
+
 > NOTE: If you have separate pipelines for your environments (i.e./ dev, test and prod), you can split your configuration and update the `tags`.  So for example, you can use a tag `ns.$NS.dev` to sync Kong configuration for `dev` Service and Routes only.
 
-**gwa CLI Example**
+### gwa Command Line
 
 Run: `gwa new` and follow the prompts.
 
@@ -102,6 +102,8 @@ Example:
 ```
 gwa new -o sample.yaml https://bcgov.github.io/gwa-api/openapi/simple.yaml
 ```
+
+> See below for the `gwa` CLI install instructions.
 
 > The current beta version of `gwa new` results in Kong configuration that needs to be edited before it is ready to be applied.
 
@@ -115,23 +117,7 @@ gwa new -o sample.yaml https://bcgov.github.io/gwa-api/openapi/simple.yaml
 
 The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa Command Line` can be used.
 
-### Swagger Console
-
-Go to <a href="https://gwa-api-qwzrwc-test.pathfinder.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
-
-Select the `PUT` `/namespaces/{namespace}/gateway` API.
-
-The Service Account uses the OAuth2 Client Credentials Grant Flow.  Click the `lock` link on the right and enter in the Service Account credentials that were generated in step #2.
-
-For the `Parameter namespace`, enter the namespace that you created in step #1.
-
-Select `dryRun` to `true`.
-
-Select a `configFile` file.
-
-Send the request.
-
-### gwa Command Line
+### gwa Command Line (recommended)
 
 **Install**
 
@@ -172,6 +158,23 @@ If you want to see the expected changes but not actually apply them, you can run
 ```
 gwa pg --dry-run sample.yaml
 ```
+
+### Swagger Console
+
+Go to <a href="https://gwa-api-qwzrwc-test.pathfinder.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
+
+Select the `PUT` `/namespaces/{namespace}/gateway` API.
+
+The Service Account uses the OAuth2 Client Credentials Grant Flow.  Click the `lock` link on the right and enter in the Service Account credentials that were generated in step #2.
+
+For the `Parameter namespace`, enter the namespace that you created in step #1.
+
+Select `dryRun` to `true`.
+
+Select a `configFile` file.
+
+Send the request.
+
 
 ## 5. Verify routes
 
