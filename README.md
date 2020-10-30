@@ -44,7 +44,7 @@ To create a new namespace, go to the <a href="https://gwa-qwzrwc-test.pathfinder
 
 After login (and selection of an existing namespace if you have one already assigned), go to the `New Namespace` tab and click the `Create Namespace` button.
 
-The namespace must be an alphanumeric string between 5 and 15 characters (regexp reference: `^[a-z][a-z0-9]{4,14}$`).
+The namespace must be an alphanumeric string between 5 and 15 characters (RegExp reference: `^[a-z][a-z0-9]{4,14}$`).
 
 Logout by clicking your username at the top right of the page.  When you login again, you should be able to select the new namespace from the `API Programme Services` project selector.
 
