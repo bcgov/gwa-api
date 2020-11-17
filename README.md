@@ -103,6 +103,22 @@ Example:
 gwa new -o sample.yaml https://bcgov.github.io/gwa-api/openapi/simple.yaml
 ```
 
+> The current beta version of `gwa new` results in Kong configuration that needs to be edited before it is ready to be applied.
+
+> Make the following edits:
+> * Add a `hosts` list under each `route` with the external URL of your service on the gateway (i.e./ a value that is: `$NAME.api.gov.bc.ca`)
+> * The `service` `url` might need to be edited to equal your upstream URL
+> * Optionally: Add a qualifier to the namespace tags if you are separating your configuration into different pipelines
+
+
+## 4. Apply gateway configuration
+
+The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa Command Line` can be used.
+
+```
+gwa new -o sample.yaml https://bcgov.github.io/gwa-api/openapi/simple.yaml
+```
+
 > See below for the `gwa` CLI install instructions.
 
 > The current beta version of `gwa new` results in Kong configuration that needs to be edited before it is ready to be applied.
@@ -118,6 +134,8 @@ gwa new -o sample.yaml https://bcgov.github.io/gwa-api/openapi/simple.yaml
 The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa Command Line` can be used.
 
 ### gwa Command Line (recommended)
+Send the request.
+
 
 **Install**
 
