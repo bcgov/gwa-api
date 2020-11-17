@@ -6,7 +6,7 @@ from flask import current_app as app
 from string import Template
 from subprocess import Popen, PIPE, STDOUT
 
-from clients.openshift import kubectl_apply
+from clients.openshift import kubectl_apply, kubectl_delete
 
 def check_nsp (ns, ocp_ns):
     log = app.logger
@@ -63,6 +63,13 @@ spec:
 
     kubectl_apply (out_filename)
 
+def delete_nsp (ns, ocp_ns):
+    log = app.logger
+
+    name = "aps-upstream-%s-%s" % (ns, ocp_ns)
+    
+    kubectl_delete ("nsp", name)
+
 def get_ocp_service_namespaces(rootPath):
     files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml"]
 
@@ -86,3 +93,58 @@ def get_ocp_service_namespaces(rootPath):
 
     service_ns_list = list(set(service_ns_list))
     return service_ns_list
+
+# def prepare_deletions (ns, ocp_ns, rootPath):
+#     log = app.logger
+
+#     args = [
+#         "kubectl", "get", "nsp", "-l", "aps-namespace=%s" % select_tag, "-o", "json"
+#     ]
+#     run = Popen(args, stdout=PIPE, stderr=PIPE)
+#     out, err = run.communicate()
+#     if run.returncode != 0:
+#         log.error("Failed to get existing routes", out, err)
+#         raise Exception("Failed to get existing routes")
+
+#     current_routes = []
+
+#     existing = json.loads(out)
+#     for route in existing['items']:
+#         current_routes.append(route['metadata']['name'])
+
+#     host_list = get_host_list(rootPath)
+
+#     delete_list = []
+#     for route_name in current_routes:
+#         match = False
+#         for host in host_list:
+#             if route_name == "wild-%s-%s" % (select_tag.replace('.','-'), host):
+#                 match = True
+#         if match == False:
+#             delete_list.append(route_name)
+
+#     template = Template("""
+# apiVersion: route.openshift.io/v1
+# kind: Route
+# metadata:
+#   name: ${name}
+
+# """)
+
+#     ts = int(time.time())
+#     fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
+
+#     out_filename = "%s/routes-deletions.yaml" % rootPath
+
+#     with open(out_filename, 'w') as out_file:
+#         index = 1
+#         for route_name in delete_list:
+#             log.debug("[%s] Route D %03d %s" % (select_tag, index, route_name))
+#             out_file.write(template.substitute(name=route_name))
+#             out_file.write('\n---\n')
+#             index = index + 1
+
+#     if len(delete_list) == 0:
+#         log.debug("[%s] Route D No Deletions Needed" % select_tag)
+
+#     return len(delete_list)

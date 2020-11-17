@@ -29,7 +29,18 @@ def kubectl_apply (fileName):
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
     if run.returncode != 0:
-        log.error("Failed to apply routes", out, err)
+        log.error("Failed to apply", out, err)
+        raise Exception("Failed to apply routes")
+
+def kubectl_delete (type, name):
+    log = app.logger
+    args = [
+        "kubectl", "delete", type, name
+    ]
+    run = Popen(args, stdout=PIPE, stderr=STDOUT)
+    out, err = run.communicate()
+    if run.returncode != 0:
+        log.error("Failed to delete", out, err)
         raise Exception("Failed to apply routes")
 
 def delete_routes (rootPath):
