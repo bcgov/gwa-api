@@ -19,14 +19,28 @@ def read_and_indent(full_path, indent):
     return result
 
 def apply_routes (rootPath):
+    kubectl_apply ("%s/routes-current.yaml" % rootPath)
+
+def kubectl_apply (fileName):
     log = app.logger
     args = [
-        "kubectl", "apply", "-f", "%s/routes-current.yaml" % rootPath
+        "kubectl", "apply", "-f", fileName
     ]
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
     if run.returncode != 0:
-        log.error("Failed to apply routes", out, err)
+        log.error("Failed to apply", out, err)
+        raise Exception("Failed to apply routes")
+
+def kubectl_delete (type, name):
+    log = app.logger
+    args = [
+        "kubectl", "delete", type, name
+    ]
+    run = Popen(args, stdout=PIPE, stderr=STDOUT)
+    out, err = run.communicate()
+    if run.returncode != 0:
+        log.error("Failed to delete", out, err)
         raise Exception("Failed to apply routes")
 
 def delete_routes (rootPath):

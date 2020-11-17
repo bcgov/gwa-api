@@ -33,4 +33,5 @@ def who_am_i() -> object:
         "namespace": g.principal[_ns_claim],
         "client-address": g.principal['clientAddress'],
     }
+
     return make_response(jsonify(output))

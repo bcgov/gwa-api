@@ -10,12 +10,13 @@ from io import TextIOWrapper
 
 from v1.auth.auth import admin_jwt, enforce_authorization
 
+from clients.kong import get_routes
+from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp
 from clients.openshift import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
 
 from utils.validators import host_valid
 from utils.transforms import plugins_transformations
 from utils.masking import mask
-
 
 gw = Blueprint('gwa', 'gateway')
 
@@ -31,6 +32,15 @@ def write_config(namespace: str) -> object:
     log = app.logger
 
     outFolder = namespace
+
+    reserved_hosts = []
+    all_routes = get_routes()
+    tag_match = "ns.%s" % namespace
+    for route in all_routes:
+        if tag_match not in route['tags'] and 'hosts' in route:
+            for host in route['hosts']:
+                reserved_hosts.append(transform_host(host))
+    reserved_hosts = list(set(reserved_hosts))
 
     if 'configFile' in request.files:
         log.debug(request.files['configFile'])
@@ -80,7 +90,7 @@ def write_config(namespace: str) -> object:
 
             # Validate that hosts are valid
             try:
-                validate_hosts (gw_config)
+                validate_hosts (gw_config, reserved_hosts)
             except Exception as ex:
                 abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
 
@@ -100,7 +110,6 @@ def write_config(namespace: str) -> object:
 
         # Call the 'deck' command
         cmd = "sync"
-        print(request.values)
         if request.values['dryRun'] == 'true':
             cmd = "diff"
 
@@ -122,6 +131,13 @@ def write_config(namespace: str) -> object:
             route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
             if route_count > 0:
                 delete_routes (tempFolder)
+        
+            # create Network Security Policies (nsp) for any upstream that
+            # has the format: <name>.<ocp_ns>.svc
+            ocp_ns_list = get_ocp_service_namespaces (tempFolder)
+            for ocp_ns in ocp_ns_list:
+                if check_nsp (namespace, ocp_ns) is False:
+                    apply_nsp (namespace, ocp_ns, tempFolder)
 
         cleanup (tempFolder)
 
@@ -194,21 +210,28 @@ def host_transformation (namespace, yaml):
                         if 'hosts' in route:
                             new_hosts = []
                             for host in route['hosts']:
-                                new_hosts.append("%s.%s" % (host.replace('.', '-'), conf['baseUrl']))
+                                new_hosts.append(transform_host(host))
                                 transforms = transforms + 1
                             route['hosts'] = new_hosts
     log.debug("[%s] Host transformations %d" % (namespace, transforms))
 
-def validate_hosts (yaml):
+def transform_host (host):
+    conf = app.config['hostTransformation']
+    return "%s.%s" % (host.replace('.', '-'), conf['baseUrl'])
+
+def validate_hosts (yaml, reserved_hosts):
     log = app.logger
     errors = []
 
+    ## A host must not exist outside of namespace (reserved_hosts)
     if 'services' in yaml:
         for service in yaml['services']:
             if 'routes' in service:
                 for route in service['routes']:
                     if 'hosts' in route:
                         for host in route['hosts']:
+                            if host in reserved_hosts:
+                                errors.append("service.%s.route.%s The host is already used in another namespace '%s'" % (service['name'], route['name'], host))
                             if host_valid(host) is False:
                                 errors.append("Host not passing DNS-952 validation '%s'" % host)
                     else:

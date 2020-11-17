@@ -343,6 +343,7 @@ components:
           tokenUrl: "{{accesstoken_url}}"
           scopes:
             "system/Gateway.write": "Change Kong Gateway Configuration"
+            "openid": "Open ID"
     authorizationCode:
       type: oauth2       
       x-tokenInfoUrl: "{{tokeninfo_url}}"
