@@ -19,9 +19,12 @@ def read_and_indent(full_path, indent):
     return result
 
 def apply_routes (rootPath):
+    kubectl_apply ("%s/routes-current.yaml" % rootPath)
+
+def kubectl_apply (fileName):
     log = app.logger
     args = [
-        "kubectl", "apply", "-f", "%s/routes-current.yaml" % rootPath
+        "kubectl", "apply", "-f", fileName
     ]
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()

@@ -1,7 +1,7 @@
 
 import re
 
-namespace_validation_rule='^[a-z][a-z0-9]{4,14}$'
+namespace_validation_rule='^[a-z][a-z0-9-]{4,14}$'
 
 host_validation_rule='[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*'
 
