@@ -4,8 +4,14 @@ info:
   description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/) or HTML.
   version: 0.0.1
 servers:
-  - url: https://httpbin.org
-    description: The upstream service
+  - url: https://hlth-pnet{environment}.gov.bc.ca/v1
+    variables:
+      environment:
+        default: ".api"   # Production server
+        enum:
+          - ".api"        # Production server
+          - -test.api     # Test server
+          - -dev.api      # Dev server
 paths:
   "/headers":
     get:
