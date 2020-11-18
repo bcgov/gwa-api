@@ -101,11 +101,9 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 **Install**
 
 ```
-git clone -b feature/feature-refactor https://github.com/bcgov/gwa-cli.git
-cd gwa-cli
-npm install
-npm run build
-npm link
+curl -L -O https://bcgov.github.io/gwa-cli/gwa_v1.0.6_macos_x64.zip
+unzip gwa_v1.0.6_macos_x64.zip
+./gwa --version
 ```
 
 **Configure**
