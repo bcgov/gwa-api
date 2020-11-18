@@ -86,7 +86,7 @@ Example:
 ```
 gwa new -o sample.yaml \
   --route-host myapi.api.gov.bc.ca \
-  --service-url upstream-api.ocp4ns.svc \
+  --service-url https://httpbin.org \
   https://bcgov.github.io/gwa-api/openapi/simple.yaml
 ```
 
@@ -186,7 +186,7 @@ The `acl` command provides a way to update the access for the namespace.  It exp
 For elevated privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
 
 ```
-gwa acl --users acope@idir jjones@idir --managers acope@idir
+gwa acl --users jjones@idir --managers acope@idir
 ```
 
 The result will show the ACL changes.  The Add/Delete counts represent the membership changes of registered users.  The Missing count represents the users that will automatically be added to the namespace once they have logged into the `APS Services Portal`.
