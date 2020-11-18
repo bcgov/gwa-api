@@ -47,3 +47,4 @@ def traverse_plugins (yaml):
                     if item['name'] == 'rate-limiting':
                         rate_limiting(item)
                 traverse_plugins (item)
+

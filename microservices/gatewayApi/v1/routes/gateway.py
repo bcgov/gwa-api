@@ -11,7 +11,7 @@ from io import TextIOWrapper
 from v1.auth.auth import admin_jwt, enforce_authorization
 
 from clients.kong import get_routes
-from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp
+from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
 from clients.openshift import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
 
 from utils.validators import host_valid
