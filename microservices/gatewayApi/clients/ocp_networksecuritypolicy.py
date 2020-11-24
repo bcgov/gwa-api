@@ -6,7 +6,7 @@ from flask import current_app as app
 from string import Template
 from subprocess import Popen, PIPE, STDOUT
 
-from clients.openshift import kubectl_apply, kubectl_delete
+from clients.ocp_routes import kubectl_apply, kubectl_delete, files_to_ignore
 
 def check_nsp (ns, ocp_ns):
     log = app.logger
@@ -71,8 +71,6 @@ def delete_nsp (ns, ocp_ns):
     kubectl_delete ("nsp", name)
 
 def get_ocp_service_namespaces(rootPath):
-    files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml"]
-
     service_ns_list = []
 
     for x in os.walk(rootPath):

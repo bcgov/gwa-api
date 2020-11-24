@@ -1,10 +1,13 @@
 import os
 import shutil
+import sys
+import traceback
 from subprocess import Popen, PIPE, STDOUT
 import uuid
 import logging
 import json
 import yaml
+from werkzeug.exceptions import HTTPException, NotFound
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
 
@@ -12,7 +15,8 @@ from v1.auth.auth import admin_jwt, enforce_authorization
 
 from clients.kong import get_routes
 from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
-from clients.openshift import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
+from clients.ocp_routes import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
+from clients.ocp_gateway_secret import prep_submitted_config, prep_and_apply_secret, write_submitted_config
 
 from utils.validators import host_valid
 from utils.transforms import plugins_transformations
@@ -43,7 +47,7 @@ def write_config(namespace: str) -> object:
     reserved_hosts = list(set(reserved_hosts))
 
     if 'configFile' in request.files:
-        log.debug(request.files['configFile'])
+        log.debug("[%s] %s" % (namespace, request.files['configFile']))
         dfile = request.files['configFile']
 
         tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
@@ -52,13 +56,19 @@ def write_config(namespace: str) -> object:
         # dfile.save("%s/%s" % (tempFolder, 'config.yaml'))
         
         # log.debug("Saved to %s" % tempFolder)
-        yaml_documents = yaml.load_all(dfile, Loader=yaml.FullLoader)
+        yaml_documents_iter = yaml.load_all(dfile, Loader=yaml.FullLoader)
+
+        yaml_documents = []
+        for doc in yaml_documents_iter:
+            yaml_documents.append(doc)
 
         selectTag = "ns.%s" % namespace
         ns_qualifier = None
 
+        orig_config = prep_submitted_config (yaml_documents)
+
         for index, gw_config in enumerate(yaml_documents):
-            log.debug("Parsing file %s %s" % (namespace, index))
+            log.info("[%s] Parsing file %s" % (namespace, index))
 
             #######################
             # Enrichments
@@ -104,6 +114,7 @@ def write_config(namespace: str) -> object:
                 if ns_qualifier is not None and nsq != ns_qualifier:
                     abort(make_response(jsonify(error="Validation Errors:\n%s" % ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))), 400))
                 ns_qualifier = nsq
+                log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
 
         if ns_qualifier is not None:
             selectTag = ns_qualifier
@@ -113,7 +124,7 @@ def write_config(namespace: str) -> object:
         if request.values['dryRun'] == 'true':
             cmd = "diff"
 
-        log.info("%s for %s using %s" % (cmd, namespace, selectTag))
+        log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
         args = [
             "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
         ]
@@ -125,23 +136,36 @@ def write_config(namespace: str) -> object:
             abort(make_response(jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))), 400))
 
         elif cmd == "sync":
-            route_count = prepare_apply_routes (namespace, selectTag, tempFolder)
-            if route_count > 0:
-                apply_routes (tempFolder)
-            route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
-            if route_count > 0:
-                delete_routes (tempFolder)
-        
-            # create Network Security Policies (nsp) for any upstream that
-            # has the format: <name>.<ocp_ns>.svc
-            ocp_ns_list = get_ocp_service_namespaces (tempFolder)
-            for ocp_ns in ocp_ns_list:
-                if check_nsp (namespace, ocp_ns) is False:
-                    apply_nsp (namespace, ocp_ns, tempFolder)
+            try:
+                route_count = prepare_apply_routes (namespace, selectTag, tempFolder)
+                if route_count > 0:
+                    apply_routes (tempFolder)
+                route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
+                if route_count > 0:
+                    delete_routes (tempFolder)
+            
+                # create Network Security Policies (nsp) for any upstream that
+                # has the format: <name>.<ocp_ns>.svc
+                ocp_ns_list = get_ocp_service_namespaces (tempFolder)
+                for ocp_ns in ocp_ns_list:
+                    if check_nsp (namespace, ocp_ns) is False:
+                        apply_nsp (namespace, ocp_ns, tempFolder)
+
+                # ok all looks good, so update a secret containing the original submitted request
+                write_submitted_config (orig_config, tempFolder)
+                prep_and_apply_secret (namespace, selectTag, tempFolder)
+            except HTTPException as ex:
+                traceback.print_exc()
+                log.error("Error updating custom routes, nsps and secrets. %s" % ex)
+                abort(make_response(jsonify(error="Partially failed."), 400))
+            except:
+                traceback.print_exc()
+                log.error("Error updating custom routes, nsps and secrets. %s" % sys.exc_info()[0])
+                abort(make_response(jsonify(error="Partially failed."), 400))
 
         cleanup (tempFolder)
 
-        log.debug("The exit code was: %d" % deck_run.returncode)
+        log.debug("[%s] The exit code was: %d" % (namespace, deck_run.returncode))
 
         message = "Sync successful."
         if cmd == 'diff':
