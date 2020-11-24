@@ -9,6 +9,8 @@ from subprocess import Popen, PIPE, STDOUT
 from flask import current_app as app
 from string import Template
 
+files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml", "submitted_config.yaml", "submitted_config_secret.yaml"]
+
 def read_and_indent(full_path, indent):
     pad = "                    "
     stream = open(full_path, 'r')
@@ -171,7 +173,6 @@ status:
     return len(host_list)
 
 def get_host_list(rootPath):
-    files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml"]
 
     host_list = []
 
