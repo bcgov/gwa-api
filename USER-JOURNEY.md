@@ -98,7 +98,7 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 
 ### gwa Command Line (recommended)
 
-**Install (for Linux) **
+**Install (for Linux)**
 
 ```
 curl -L -O https://bcgov.github.io/gwa-cli/gwa_v1.0.10_linux_x64.zip
