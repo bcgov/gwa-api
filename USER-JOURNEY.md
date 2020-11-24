@@ -226,7 +226,7 @@ jobs:
       run: |
         curl -L -O https://bcgov.github.io/gwa-cli/gwa_v1.0.10_linux_x64.zip
         unzip gwa_v1.0.10_linux_x64.zip
-        export PATH=$PATH:.
+        export PATH=$PATH:`pwd`
 
         cd ../.gwa/{$GWA_NAMESPACE}
 
