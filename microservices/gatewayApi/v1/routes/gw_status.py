@@ -1,0 +1,138 @@
+import requests
+import sys
+from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
+from v1.auth.auth import admin_jwt
+import traceback
+import urllib3
+import certifi
+import socket
+
+from clients.kong import get_services_by_ns, get_routes_by_ns
+
+gw_status = Blueprint('gw_status', 'gw_status')
+
+@gw_status.route('',
+           methods=['GET'], strict_slashes=False)
+@admin_jwt(None)
+def get_statuses(namespace: str) -> object:
+    log = app.logger
+
+    log.info("Get status for %s" % namespace)
+
+    services = get_services_by_ns (namespace)
+    routes = get_routes_by_ns (namespace)
+
+    response = []
+
+    for service in services:
+        url = build_url (service)
+        status = "UP"
+        reason = ""
+
+
+        host = None
+        for route in routes:
+            if route['service']['id'] == service['id'] and 'hosts' in route:
+                host = clean_host(route['hosts'][0])
+
+        try:
+            addr = socket.gethostbyname(service['host'])
+            log.info("Address = %s" % addr)
+        except:
+            status = "DOWN"
+            reason = "DNS"
+
+        if status == "UP":
+            try:
+                headers = {}
+                if host is not None:
+                    headers['Host'] = host
+                log.info("GET %-30s %s" % (url, headers))
+
+                urllib3.disable_warnings()
+                pool = urllib3.HTTPSConnectionPool(
+                    service['host'],
+                    assert_hostname=host,
+                    server_hostname=host,
+                    cert_reqs='CERT_NONE',
+                    ca_certs=certifi.where()
+                )
+                req = pool.urlopen(
+                    "GET",
+                    "/",
+                    headers={"Host": host},
+                    assert_same_host=False,
+                    timeout=2.0,
+                    retries=False
+                )
+
+                status_code = req.status
+
+                #r = pool.request('GET', url, headers=headers, timeout=1.0)
+                log.info("Result received!! %d" % status_code)
+                if status_code < 400:
+                    status =  "UP"
+                    reason = "%d Response" % status_code
+                elif status_code == 401 or status_code == 403:
+                    status = "UP"
+                    reason = "AUTH %d" % status_code
+                else:
+                    status =  "DOWN"
+                    reason = "%d Response" % status_code
+            except requests.exceptions.Timeout as ex:
+                status = "DOWN"
+                reason = "TIMEOUT"
+            except urllib3.exceptions.ConnectTimeoutError as ex:
+                status = "DOWN"
+                reason = "TIMEOUT"
+            except requests.exceptions.ConnectionError as ex:
+                log.error("ConnError %s" % ex)
+                status = "DOWN"
+                reason = "CONNECTION"
+            except requests.exceptions.SSLError as ex:
+                status = "DOWN"
+                reason = "SSL"
+            except urllib3.exceptions.NewConnectionError as ex:
+                log.error("NewConnError %s" % ex)
+                status = "DOWN"
+                reason = "CON_ERR"
+            except urllib3.exceptions.SSLError as ex:
+                log.error(ex)
+                status = "DOWN"
+                reason = "SSL_URLLIB3"
+            except Exception as ex:
+                log.error(ex)
+                traceback.print_exc(file=sys.stdout)
+                status = "DOWN"
+                reason = "UNKNOWN"
+
+        log.info("GET %-30s %s" % (url,reason))
+        response.append({"name": service['name'], "url": url, "status": status, "reason": reason, "host": host})
+
+    return make_response(jsonify(response))
+
+def build_url (s):
+    schema = default(s, "protocol", "http")
+    host = s['host']
+    port = default(s, "port", 80)
+    path = default(s, "path", "/")
+    if 'url' in s:
+        return s['url']
+    else:
+        return "%s://%s:%d%s" % (schema, host, port, path)
+
+
+def default (s, key, val):
+    if key in s and s[key] is not None:
+        return s[key]
+    else:
+        return val
+
+
+def clean_host (host):
+    conf = app.config['hostTransformation']
+    if conf['enabled'] is True:
+        conf = app.config['hostTransformation']
+        return host.replace(conf['baseUrl'], 'gov.bc.ca').replace('-data-gov-bc-ca', '.data').replace('-api-gov-bc-ca', '.api').replace('-apps-gov-bc-ca', '.apps')
+    else:
+        return host

@@ -6,6 +6,7 @@ from v1.routes.namespaces import ns
 from v1.routes.serviceaccounts import sa
 from v1.routes.whoami import whoami
 from v1.routes.docs import docs
+from v1.routes.gw_status import gw_status
 
 v1 = Blueprint('v1', 'v1')
 
@@ -24,6 +25,7 @@ def get_status():
 class Register:
     def __init__(self, app):
         app.register_blueprint(v1, url_prefix="/v1")
+        app.register_blueprint(gw_status, url_prefix="/v1/namespaces/<string:namespace>/services")
         app.register_blueprint(gw, url_prefix="/v1/namespaces/<string:namespace>/gateway")
         app.register_blueprint(sa, url_prefix="/v1/namespaces/<string:namespace>/serviceaccounts")
         app.register_blueprint(ns, url_prefix="/v1/namespaces")

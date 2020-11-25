@@ -22,6 +22,29 @@ paths:
   # /namespaces/{namespace}/gateway (PUT)
   # /namespaces/{namespace}/members (PUT)
   # /namespaces/{namespace}/catalog/{api} (GET, PUT)
+
+  /namespaces/{namespace}/services:
+    get:
+      summary: Get status of services
+      description: Ping the upstream service and get status of services
+      tags:
+        - Service Status
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
   /namespaces/{namespace}/serviceaccounts:
     get:
       summary: Get service accounts
@@ -344,21 +367,21 @@ components:
           scopes:
             "system/Gateway.write": "Change Kong Gateway Configuration"
             "openid": "Open ID"
-    authorizationCode:
-      type: oauth2       
-      x-tokenInfoUrl: "{{tokeninfo_url}}"
-      flows:
-        authorizationCode:
-          authorizationUrl: "{{authorization_url}}"
-          scopes: {}
-    password:
-      type: oauth2       
-      x-tokenInfoUrl: "{{tokeninfo_url}}"
-      flows:
-        password:
-          tokenUrl: "{{token_url}}"
-          scopes: {}
+    # authorizationCode:
+    #   type: oauth2       
+    #   x-tokenInfoUrl: "{{tokeninfo_url}}"
+    #   flows:
+    #     authorizationCode:
+    #       authorizationUrl: "{{authorization_url}}"
+    #       scopes: {}
+    # password:
+    #   type: oauth2       
+    #   x-tokenInfoUrl: "{{tokeninfo_url}}"
+    #   flows:
+    #     password:
+    #       tokenUrl: "{{token_url}}"
+    #       scopes: {}
 security:
   - oauth2: []
-  - authorizationCode: []
+#  - authorizationCode: []
  

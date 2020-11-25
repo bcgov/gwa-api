@@ -6,9 +6,15 @@ import urllib.parse
 #
 # Use the Route Hosts found in Kong to ensure there are no conflicts
 def get_routes ():
-    return recurse_get_routes ([], "/routes")
+    return recurse_get_records ([], "/routes")
 
-def recurse_get_routes (result, url):
+def get_services_by_ns (ns):
+    return recurse_get_records ([], "/services?tags=ns.%s" % ns)
+
+def get_routes_by_ns (ns):
+    return recurse_get_records ([], "/routes?tags=ns.%s" % ns)
+
+def recurse_get_records (result, url):
     log = app.logger
     admin_url = app.config['kongAdminUrl']
 
