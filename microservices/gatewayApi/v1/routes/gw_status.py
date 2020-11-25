@@ -48,30 +48,32 @@ def get_statuses(namespace: str) -> object:
         if status == "UP":
             try:
                 headers = {}
-                if host is not None:
+                if host is None or service['host'].endswith('.svc'):
+                    r = requests.get(url, headers=headers, timeout=1.0)
+                    status_code = r.status_code
+                else:
                     headers['Host'] = host
-                log.info("GET %-30s %s" % (url, headers))
+                    log.info("GET %-30s %s" % (url, headers))
 
-                urllib3.disable_warnings()
-                pool = urllib3.HTTPSConnectionPool(
-                    service['host'],
-                    assert_hostname=host,
-                    server_hostname=host,
-                    cert_reqs='CERT_NONE',
-                    ca_certs=certifi.where()
-                )
-                req = pool.urlopen(
-                    "GET",
-                    "/",
-                    headers={"Host": host},
-                    assert_same_host=False,
-                    timeout=2.0,
-                    retries=False
-                )
+                    urllib3.disable_warnings()
+                    pool = urllib3.HTTPSConnectionPool(
+                        service['host'],
+                        assert_hostname=host,
+                        server_hostname=host,
+                        cert_reqs='CERT_NONE',
+                        ca_certs=certifi.where()
+                    )
+                    req = pool.urlopen(
+                        "GET",
+                        "/",
+                        headers={"Host": host},
+                        assert_same_host=False,
+                        timeout=1.0,
+                        retries=False
+                    )
 
-                status_code = req.status
+                    status_code = req.status
 
-                #r = pool.request('GET', url, headers=headers, timeout=1.0)
                 log.info("Result received!! %d" % status_code)
                 if status_code < 400:
                     status =  "UP"
