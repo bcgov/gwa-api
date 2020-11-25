@@ -1,11 +1,12 @@
 import requests
 import sys
-from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
-from v1.auth.auth import admin_jwt
 import traceback
 import urllib3
 import certifi
 import socket
+from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
+
+from v1.auth.auth import admin_jwt, enforce_authorization
 
 from clients.kong import get_services_by_ns, get_routes_by_ns
 
@@ -15,6 +16,8 @@ gw_status = Blueprint('gw_status', 'gw_status')
            methods=['GET'], strict_slashes=False)
 @admin_jwt(None)
 def get_statuses(namespace: str) -> object:
+    enforce_authorization(namespace)
+
     log = app.logger
 
     log.info("Get status for %s" % namespace)
