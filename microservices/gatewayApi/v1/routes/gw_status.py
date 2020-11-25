@@ -107,7 +107,7 @@ def get_statuses(namespace: str) -> object:
                 reason = "UNKNOWN"
 
         log.info("GET %-30s %s" % (url,reason))
-        response.append({"name": service['name'], "url": url, "status": status, "reason": reason, "host": host})
+        response.append({"name": service['name'], "upstream": url, "status": status, "reason": reason, "host": host})
 
     return make_response(jsonify(response))
 
