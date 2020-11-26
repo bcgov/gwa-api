@@ -166,6 +166,10 @@ ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.apsgw.xyz/headers
 
 ```
 
+To help with troubleshooting, you can use the GWA API to get a health check for each of the upstream services to verify the Gateway is connecting OK.
+
+Go to the <a href="https://gwa-api-264e6f-test.apps.silver.devops.gov.bc.ca/api/doc#/Service%20Status/get_namespaces__namespace__services">GWA API</a>, enter in the new credentials that were generated in step #2, click `Try it out`, enter your namespace and click `Execute`.  The results are returned in a JSON object.
+
 ## 6. View metrics
 
 The following metrics can be viewed in real-time for the Services that you configure on the Gateway:
