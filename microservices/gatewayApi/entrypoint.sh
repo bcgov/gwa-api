@@ -42,4 +42,4 @@ cat > /tmp/deck.yaml <<EOF
 kong-addr: $KONG_ADMIN_URL
 EOF
 
-python wsgi.py
+python3 wsgi.py

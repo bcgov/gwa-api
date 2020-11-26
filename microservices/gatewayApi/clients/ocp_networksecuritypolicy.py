@@ -45,6 +45,7 @@ spec:
     allow namespace to access the internet
   source:
     - - app.kubernetes.io/instance=kong
+    - - app.kubernetes.io/instance=bcgov-gwa-api
   destination:
     - - $$namespace=${ocp_ns}
 """)
