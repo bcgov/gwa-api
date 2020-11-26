@@ -101,12 +101,12 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 **Install (for Linux)**
 
 ```
-curl -L -O https://bcgov.github.io/gwa-cli/gwa_v1.0.10_linux_x64.zip
-unzip gwa_v1.0.10_linux_x64.zip
+curl -L -O https://bcgov.github.io/gwa-cli/gwa_v1.0.12_linux_x64.zip
+unzip gwa_v1.0.12_linux_x64.zip
 ./gwa --version
 ```
 
-> MacOS or Windows? For Mac `gwa_v1.0.10_macos_x64.zip` and for Windows `gwa_v1.0.10_win_x64.zip`
+> MacOS or Windows? For Mac `gwa_v1.0.12_macos_x64.zip` and for Windows `gwa_v1.0.12_win_x64.zip`
 
 **Configure**
 
@@ -183,7 +183,7 @@ You can also access the metrics from the `API Services Portal`.
 
 ## 7. Grant access to others
 
-The `acl` command provides a way to update the access for the namespace.  It expects an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
+The `acl` command provides a way to update the access for the namespace.  It expects an all-inclusive membership list, so if a user is not either part of the `--users` list or the `--managers` list, they will be removed from the namespace.
 
 For elevated privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
 
@@ -224,8 +224,8 @@ jobs:
     - env:
         GWA_NAMESPACE: global
       run: |
-        curl -L -O https://bcgov.github.io/gwa-cli/gwa_v1.0.10_linux_x64.zip
-        unzip gwa_v1.0.10_linux_x64.zip
+        curl -L -O https://bcgov.github.io/gwa-cli/gwa_v1.0.12_linux_x64.zip
+        unzip gwa_v1.0.12_linux_x64.zip
         export PATH=$PATH:`pwd`
 
         cd ../.gwa/{$GWA_NAMESPACE}
@@ -237,6 +237,6 @@ jobs:
 
         gwa pg
 
-        gwa acl --users acope@idir --managers acope@idir
+        gwa acl --managers acope@idir
 
 ```
