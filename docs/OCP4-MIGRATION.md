@@ -3,7 +3,7 @@
 
 ## What do I need to do to setup my Service on the new APS Gateway?
 
-### Configure APS Gateway
+### Configure the APS Gateway
 
 As part of migrating your service to OCP4, you will need to prepare the Gateway configuration for your Service. An example of what it would look like:
 
@@ -38,9 +38,28 @@ The appropriate `tags` need to be added and optionally and  `plugins` added.
 
 Apply your changes to the `APS Gateway` by running the `gwa pg` command (see the [API Provider Flow](/USER-JOURNEY.md) for detailed instructions).
 
+### Add the NetworkSecurityPolicy (NSP)
+
+The `APS Gateway` needs to be able to route to your service from within the OCP4 cluster.  To do this, add the following NSP to your OCP4 namespace:
+
+```
+kind: NetworkSecurityPolicy
+apiVersion: security.devops.gov.bc.ca/v1alpha1
+metadata:
+  name: aps-gateway-to-your-upstream-api
+spec:
+  description: |
+    allow the aps gateway to route traffic to your api
+  source:
+    - - $namespace=264e6f-test
+    - - $namespace=264e6f-prod
+  destination:
+    - - app.kubernetes.io/name=my-upstream-api
+```
+
 ### Remove all Routes/Ingress
 
-In `OCP3` you most likely had routes for `*.api`, `*.data` or `*.apps`.  For `OCP4` your `Pod Service` does not need to have an external route because the `APS Gateway` is acting as the entry point for your service.  So you should ensure that you do not have any routes that have the host as `*.api.gov.bc.ca`, `*.data.gov.bc.ca`, or `*.apps.gov.bc.ca`.  Having routes with these hosts will conflict with the routes that the `APS Gateway` will create automatically based on your configuration.  It is ok to create routes under the `.apps.silver.devops.gov.bc.ca` domain for dev/testing.
+In `OCP3` you most likely had routes for `*.api`, `*.data` or `*.apps`.  For `OCP4` your `Pod Service` does not need to have an external route because the `APS Gateway` is acting as the entry point for your service.  So you should ensure that you do not have any routes that have the host as `*.api.gov.bc.ca`, `*.data.gov.bc.ca`, or `*.apps.gov.bc.ca`.  Having routes with these hosts will conflict with the routes that the `APS Gateway` will create automatically based on your configuration.  It is ok to create routes under the `.apps.silver.devops.gov.bc.ca` domain for dev and testing.
 
 ### Regression test your Service
 
@@ -57,18 +76,18 @@ This is what you will use to peform your regression testing.  To find out the ex
 
 **APS Gateway Production Setup**
 
-When the Production instance of the `APS Gateway` is ready, communication will go out to the teams as additional tasks will be required to enable the service on our Production environment:
+When the Production instance of the `APS Gateway` is ready, communication will go out to API Owners as additional tasks will be required to enable the service on our Production environment:
 
 | Task                                                     | Responsibility | 
 | -------------------------------------------------------- | -------------- |
 | Create namespace and service account on production instance | API Owner |
-| Apply you dev/test/prod configuration (either in your CI/CD pipeline, or manually) | API Owner |
-| Update `Kong14` service upstream host from `https://142.34.143.180` to `https://142.34.194.118` | APS Team
-| Decommission OCP3 projects | API Owner |
+| Apply your dev/test/prod Gateway configuration (either in your CI/CD pipeline or manually) | API Owner |
+| Update `Kong14` Service upstream host from `https://142.34.143.180` to `https://142.34.194.118` | APS Team
+| Decommission your OCP3 projects | API Owner |
 
 ### Final big-bang switchover
 
-At the completion of regression testing, a big-bang switchover to the new APS Gateway will be performed by updating the DNS to point to OCP4 Edge.
+At the completion of regression testing, a big-bang switchover to the new APS Gateway will be performed by updating the DNS to point to the `OCP4 Edge`.
 
 | Task                                                     | Responsibility | 
 | -------------------------------------------------------- | -------------- |
