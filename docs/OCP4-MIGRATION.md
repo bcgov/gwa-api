@@ -10,7 +10,7 @@ As part of migrating your service to OCP4, you will need to prepare the Gateway 
 ```
 services:
 - host: <my_ocp4_service>.<my_ocp4_namespace>.svc
-  name: apidata-ocp-https-kirk-jobs
+  name: <my_ocp4_service>
   port: 80
   protocol: http
 ```
@@ -20,11 +20,12 @@ The routes will have a minor change by no longer using the `https` protocol as S
 ```
 services:
 - host: <my_ocp4_service>.<my_ocp4_namespace>.svc
-  name: apidata-ocp-https-kirk-jobs
+  name: <my_ocp4_service>
   port: 80
   protocol: http
   routes:
-  - hosts:
+  - name: <my_ocp4_service>-route-get
+    hosts:
     - kirk.data.gov.bc.ca
     protocols:
     - http
