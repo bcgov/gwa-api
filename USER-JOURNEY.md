@@ -61,6 +61,8 @@ To view optional plugin examples go [here](/docs/samples/service-plugins).
 
 > **Upstream Services on OCP4:** If your service is running on OCP4, you should specify the Kubernetes Service in the `Service.host`.  It must have the format: `<name>.<ocp-namespace>.svc` The Network Security Policies (NSP) will be setup automatically on the API Gateway side.  You will need to create an NSP on your side looking something like this to allow the Gateway's test and prod environments to route traffic to your API:
 
+> **Migrating from OCP3 to OCP4?** Please review the [OCP4-Migration](docs/OCP4-MIGRATION.md) instructions to help with transitioning to OCP4 and the new APS Gateway.
+
 ```
 kind: NetworkSecurityPolicy
 apiVersion: security.devops.gov.bc.ca/v1alpha1
