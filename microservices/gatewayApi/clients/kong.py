@@ -25,5 +25,5 @@ def recurse_get_records (result, url):
     result.extend(data)
 
     if json['next'] is not None:
-        recurse_get_routes (result, json['next'])
+        recurse_get_records (result, json['next'])
     return result
