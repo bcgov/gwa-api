@@ -34,13 +34,13 @@ services:
     - "/"
 ```
 
-The appropriate `tags` need to be added and optionally and  `plugins` added.
+The appropriate `tags` need to be added and optionally any `plugins` added.
 
 Apply your changes to the `APS Gateway` by running the `gwa pg` command (see the [API Provider Flow](/USER-JOURNEY.md) for detailed instructions).
 
 ### Add the NetworkSecurityPolicy (NSP)
 
-The `APS Gateway` needs to be able to route to your service from within the OCP4 cluster.  To do this, add the following NSP to your OCP4 namespace:
+The `APS Gateway` needs to be able to route to your service from within the OCP4 cluster.  To do this, add the following NSP to your OCP4 namespace (update the destination label matching based on your Pod labels):
 
 ```
 kind: NetworkSecurityPolicy
@@ -59,7 +59,9 @@ spec:
 
 ### Remove all Routes/Ingress
 
-In `OCP3` you most likely had routes for `*.api`, `*.data` or `*.apps`.  For `OCP4` your `Pod Service` does not need to have an external route because the `APS Gateway` is acting as the entry point for your service.  So you should ensure that you do not have any routes that have the host as `*.api.gov.bc.ca`, `*.data.gov.bc.ca`, or `*.apps.gov.bc.ca`.  Having routes with these hosts will conflict with the routes that the `APS Gateway` will create automatically based on your configuration.  It is ok to create routes under the `.apps.silver.devops.gov.bc.ca` domain for dev and testing.
+In `OCP3` you most likely had routes for `*.api`, `*.data` or `*.apps`.  For `OCP4` your `Pod Service` does not need to have an external route because the `APS Gateway` is acting as the entry point for your service.
+
+You should ensure that you do not have any routes that have the host as `*.api.gov.bc.ca`, `*.data.gov.bc.ca`, or `*.apps.gov.bc.ca`.  Having routes with these hosts will conflict with the routes that the `APS Gateway` will create automatically based on your configuration.  It is ok to create routes under the `.apps.silver.devops.gov.bc.ca` domain for dev and testing.
 
 ### Regression test your Service
 
@@ -80,7 +82,7 @@ When the Production instance of the `APS Gateway` is ready, communication will g
 
 | Task                                                     | Responsibility | 
 | -------------------------------------------------------- | -------------- |
-| Create namespace and service account on production instance | API Owner |
+| Create namespace and service account on the `APS Gateway` production instance | API Owner |
 | Apply your dev/test/prod Gateway configuration (either in your CI/CD pipeline or manually) | API Owner |
 | Update `Kong14` Service upstream host from `https://142.34.143.180` to `https://142.34.194.118` | APS Team
 | Decommission your OCP3 projects | API Owner |
@@ -94,7 +96,7 @@ At the completion of regression testing, a big-bang switchover to the new APS Ga
 | Ownership of the Gateway configuration transitioned to Service teams | API Owners
 | Regression testing of services complete | API Owners
 | APS Gateway Production Setup completed | API Owners
-| Update DNS for *.api.gov.bc.ca, *.data.gov.bc.ca to point to 142.34.194.118       | APS Team |
+| **Switchover** Update DNS for *.api.gov.bc.ca, *.data.gov.bc.ca to point to 142.34.194.118       | APS Team |
 
 
 At the time of switchover, we expect that there will be a mix of upstream services running on OCP3, running on OCP4, running on DataBC Servers and running on external cloud.  But the expectation is that all the teams will have ownership of the Gateway configuration for their respective Services, and empowered to do ongoing changes.
