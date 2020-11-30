@@ -223,26 +223,32 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+        
     - uses: actions/setup-node@v1
       with:
         node-version: 10
         TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - env:
-        GWA_NAMESPACE: global
-      run: |
-        curl -L -O https://bcgov.github.io/gwa-cli/gwa_v1.0.12_linux_x64.zip
-        unzip gwa_v1.0.12_linux_x64.zip
-        export PATH=$PATH:`pwd`
 
-        cd ../.gwa/{$GWA_NAMESPACE}
+    - name: Get GWA Command Line
+      run: |
+        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.0.14/gwa-cli-linux.zip
+        unzip gwa-cli-linux.zip
+        mv gwa-cli-linux gwa
+        export PATH=`pwd`:$PATH
+
+    - name: Apply Namespace Configuration
+      run: |
+        export NS="platform"
+        export PATH=`pwd`:$PATH
+        cd .gwa/$NS
 
         gwa init -T \
-          --namespace=${GWA_NAMESPACE} \
-          --client-id=${{ secrets.GWA_ACCT_ID }} \
-          --client-secret=${{ secrets.GWA_ACCT_SECRET }}
+          --namespace=$NS \
+          --client-id=${{ secrets.TEST_GWA_ACCT_ID }} \
+          --client-secret=${{ secrets.TEST_GWA_ACCT_SECRET }}
 
         gwa pg
 
         gwa acl --managers acope@idir
-
+       
 ```
