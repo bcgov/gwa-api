@@ -32,11 +32,12 @@ def get_statuses(namespace: str) -> object:
         status = "UP"
         reason = ""
 
-
+        actual_host = None
         host = None
         for route in routes:
             if route['service']['id'] == service['id'] and 'hosts' in route:
-                host = clean_host(route['hosts'][0])
+                actual_host = route['hosts'][0]
+                host = clean_host(actual_host)
 
         try:
             addr = socket.gethostbyname(service['host'])
@@ -112,7 +113,7 @@ def get_statuses(namespace: str) -> object:
                 reason = "UNKNOWN"
 
         log.info("GET %-30s %s" % (url,reason))
-        response.append({"name": service['name'], "upstream": url, "status": status, "reason": reason, "host": host})
+        response.append({"name": service['name'], "upstream": url, "status": status, "reason": reason, "host": host, "test_host": actual_host})
 
     return make_response(jsonify(response))
 
