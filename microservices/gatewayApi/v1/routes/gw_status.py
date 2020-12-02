@@ -50,7 +50,7 @@ def get_statuses(namespace: str) -> object:
             try:
                 headers = {}
                 if host is None or service['host'].endswith('.svc'):
-                    r = requests.get(url, headers=headers, timeout=3.0)
+                    r = requests.get(url, headers=headers, timeout=1.0)
                     status_code = r.status_code
                 else:
                     headers['Host'] = host
@@ -58,7 +58,7 @@ def get_statuses(namespace: str) -> object:
 
                     urllib3.disable_warnings()
                     pool = urllib3.HTTPSConnectionPool(
-                        service['host'],
+                        url,
                         assert_hostname=host,
                         server_hostname=host,
                         cert_reqs='CERT_NONE',
@@ -69,7 +69,7 @@ def get_statuses(namespace: str) -> object:
                         "/",
                         headers={"Host": host},
                         assert_same_host=False,
-                        timeout=3.0,
+                        timeout=1.0,
                         retries=False
                     )
 
