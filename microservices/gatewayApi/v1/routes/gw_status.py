@@ -69,7 +69,7 @@ def get_statuses(namespace: str) -> object:
                         "/",
                         headers={"Host": host},
                         assert_same_host=False,
-                        timeout=1.0,
+                        timeout=3.0,
                         retries=False
                     )
 
