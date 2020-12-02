@@ -27,5 +27,3 @@ services:
       algorithm: RS256
       realm_roles: null
       consumer_match_claim: azp
-  }
-}
