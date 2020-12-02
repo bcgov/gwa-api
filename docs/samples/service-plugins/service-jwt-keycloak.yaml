@@ -17,7 +17,7 @@ services:
       consumer_match_claim_custom_id: false
       cookie_names: []
       scope: null
-      uri_param_names
+      uri_param_names:
       - jwt
       roles: null
       consumer_match: false
