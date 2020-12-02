@@ -4,6 +4,7 @@ import traceback
 import urllib3
 import certifi
 import socket
+from urllib.parse import urlparse
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 
 from v1.auth.auth import admin_jwt, enforce_authorization
@@ -50,23 +51,30 @@ def get_statuses(namespace: str) -> object:
             try:
                 headers = {}
                 if host is None or service['host'].endswith('.svc'):
-                    r = requests.get(url, headers=headers, timeout=1.0)
+                    r = requests.get(url, headers=headers, timeout=3.0)
                     status_code = r.status_code
                 else:
+                    u = urlparse(url)
+
                     headers['Host'] = host
-                    log.info("GET %-30s %s" % (url, headers))
+                    log.info("GET %-30s %s" % ("%s://%s" % (u.scheme, u.netloc), headers))
 
                     urllib3.disable_warnings()
-                    pool = urllib3.HTTPSConnectionPool(
-                        url,
-                        assert_hostname=host,
-                        server_hostname=host,
-                        cert_reqs='CERT_NONE',
-                        ca_certs=certifi.where()
-                    )
+                    if u.scheme == "https":
+                        pool = urllib3.HTTPSConnectionPool(
+                            "%s" % (u.netloc),
+                            assert_hostname=host,
+                            server_hostname=host,
+                            cert_reqs='CERT_NONE',
+                            ca_certs=certifi.where()
+                        )
+                    else:
+                        pool = urllib3.HTTPConnectionPool(
+                            "%s" % (u.netloc)
+                        )
                     req = pool.urlopen(
                         "GET",
-                        "/",
+                        u.path,
                         headers={"Host": host},
                         assert_same_host=False,
                         timeout=1.0,
@@ -119,8 +127,11 @@ def get_statuses(namespace: str) -> object:
 
 def build_url (s):
     schema = default(s, "protocol", "http")
+    defaultPort = 80
+    if schema == "https":
+        defaultPort = 443
     host = s['host']
-    port = default(s, "port", 80)
+    port = default(s, "port", defaultPort)
     path = default(s, "path", "/")
     if 'url' in s:
         return s['url']
