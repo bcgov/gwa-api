@@ -55,6 +55,8 @@ services:
 
 To view optional plugin examples go [here](/docs/samples/service-plugins).
 
+> **Declarative Config** Behind the scenes, DecK is used to sync your configuration with Kong.  For reference: https://docs.konghq.com/deck/overview/
+
 > **Splitting Your Config:** A namespace `tag` with the format `ns.$NS` is mandatory for each service/route/plugin.  But if you have separate pipelines for your environments (i.e./ dev, test and prod), you can split your configuration and update the `tags` with the qualifier.  So for example, you can use a tag `ns.$NS.dev` to sync Kong configuration for `dev` Service and Routes only.
 
 > **Upstream Services on OCP4:** If your service is running on OCP4, you should specify the Kubernetes Service in the `Service.host`.  It must have the format: `<name>.<ocp-namespace>.svc` The Network Security Policies (NSP) will be setup automatically on the API Gateway side.  You will need to create an NSP on your side looking something like this to allow the Gateway's test and prod environments to route traffic to your API:
@@ -69,12 +71,12 @@ spec:
     allow aps gateway to route traffic to your api
   source:
     - - $namespace=264e6f-test
-      - app.kubernetes.io/name=kong
     - - $namespace=264e6f-prod
-      - app.kubernetes.io/name=kong
   destination:
     - - app.kubernetes.io/name=my-upstream-api
 ```
+
+> **Migrating from OCP3 to OCP4?** Please review the [OCP4-Migration](docs/OCP4-MIGRATION.md) instructions to help with transitioning to OCP4 and the new APS Gateway.
 
 
 ### gwa Command Line
@@ -101,12 +103,13 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 **Install (for Linux)**
 
 ```
-curl -L -O https://bcgov.github.io/gwa-cli/gwa_v1.0.10_linux_x64.zip
-unzip gwa_v1.0.10_linux_x64.zip
+GWA_CLI_VERSION=v1.0.14; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/$GWA_CLI_VERSION/gwa-cli-linux.zip
+unzip gwa-cli-linux.zip
+mv gwa-cli-linux gwa
 ./gwa --version
 ```
 
-> MacOS or Windows? For Mac `gwa_v1.0.10_macos_x64.zip` and for Windows `gwa_v1.0.10_win_x64.zip`
+> MacOS or Windows? For Mac `gwa-cli-macos.zip` and for Windows `gwa-cli-win.exe.zip`
 
 **Configure**
 
@@ -166,6 +169,10 @@ ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.apsgw.xyz/headers
 
 ```
 
+To help with troubleshooting, you can use the GWA API to get a health check for each of the upstream services to verify the Gateway is connecting OK.
+
+Go to the <a href="https://gwa-api-264e6f-test.apps.silver.devops.gov.bc.ca/api/doc#/Service%20Status/get_namespaces__namespace__services">GWA API</a>, enter in the new credentials that were generated in step #2, click `Try it out`, enter your namespace and click `Execute`.  The results are returned in a JSON object.
+
 ## 6. View metrics
 
 The following metrics can be viewed in real-time for the Services that you configure on the Gateway:
@@ -183,7 +190,7 @@ You can also access the metrics from the `API Services Portal`.
 
 ## 7. Grant access to others
 
-The `acl` command provides a way to update the access for the namespace.  It expects an all-inclusive membership list, so the `--users` should have the full list of members.  Any user that is a member but not in the `--users` list will be removed from the namespace.
+The `acl` command provides a way to update the access for the namespace.  It expects an all-inclusive membership list, so if a user is not either part of the `--users` list or the `--managers` list, they will be removed from the namespace.
 
 For elevated privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
 
@@ -217,26 +224,32 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+        
     - uses: actions/setup-node@v1
       with:
         node-version: 10
         TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - env:
-        GWA_NAMESPACE: global
-      run: |
-        curl -L -O https://bcgov.github.io/gwa-cli/gwa_v1.0.10_linux_x64.zip
-        unzip gwa_v1.0.10_linux_x64.zip
-        export PATH=$PATH:`pwd`
 
-        cd ../.gwa/{$GWA_NAMESPACE}
+    - name: Get GWA Command Line
+      run: |
+        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.0.14/gwa-cli-linux.zip
+        unzip gwa-cli-linux.zip
+        mv gwa-cli-linux gwa
+        export PATH=`pwd`:$PATH
+
+    - name: Apply Namespace Configuration
+      run: |
+        export NS="platform"
+        export PATH=`pwd`:$PATH
+        cd .gwa/$NS
 
         gwa init -T \
-          --namespace=${GWA_NAMESPACE} \
-          --client-id=${{ secrets.GWA_ACCT_ID }} \
-          --client-secret=${{ secrets.GWA_ACCT_SECRET }}
+          --namespace=$NS \
+          --client-id=${{ secrets.TEST_GWA_ACCT_ID }} \
+          --client-secret=${{ secrets.TEST_GWA_ACCT_SECRET }}
 
         gwa pg
 
-        gwa acl --users acope@idir --managers acope@idir
-
+        gwa acl --managers acope@idir
+       
 ```
