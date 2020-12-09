@@ -82,7 +82,7 @@ def get_ocp_service_namespaces(rootPath):
                 stream = open(full_path, 'r')
                 data = yaml.load(stream, Loader=yaml.SafeLoader)
 
-                if 'services' in data:
+                if data is not None and 'services' in data:
                     for service in data['services']:
                         if 'host' in service and service['host'].endswith('.svc'):
                             h = service['host']

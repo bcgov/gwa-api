@@ -259,7 +259,6 @@ paths:
                 configFile:
                   type: string
                   format: binary          
-
       responses:
         '200':
           description: Success
@@ -267,6 +266,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/status'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+  /namespaces/{namespace}/gateway:
+    delete:
+      summary: Delete the gateway config
+      description: Deletes with optional qualifier
+      tags:
+        - Gateway
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+  /namespaces/{namespace}/gateway/{qualifier}:
+    delete:
+      summary: Delete the gateway config
+      description: Deletes with optional qualifier
+      tags:
+        - Gateway
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: qualifier
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
         '401':
           $ref: '#/components/responses/401Unauthorized'
         '500':
