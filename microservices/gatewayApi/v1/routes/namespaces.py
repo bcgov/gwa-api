@@ -79,8 +79,8 @@ def create_namespace() -> object:
 @admin_jwt(None)
 def delete_namespace(namespace: str) -> object:
     log = app.logger
-    enforce_authorization(namespace)
-    enforce_role_authorization('aps.ns:manage')
+    #enforce_authorization(namespace)
+    #enforce_role_authorization('aps.ns:manage')
 
     keycloak_admin = admin_api()
 

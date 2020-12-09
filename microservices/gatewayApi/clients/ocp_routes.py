@@ -200,7 +200,7 @@ def get_host_list(rootPath):
                 stream = open(full_path, 'r')
                 data = yaml.load(stream, Loader=yaml.SafeLoader)
 
-                if 'services' in data:
+                if data is not None and 'services' in data:
                     for service in data['services']:
                         if 'routes' in service:
                             for route in service['routes']:
