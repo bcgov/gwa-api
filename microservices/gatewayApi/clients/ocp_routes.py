@@ -11,6 +11,12 @@ from string import Template
 
 files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml", "submitted_config.yaml", "submitted_config_secret.yaml"]
 
+host_cert_mapping = {
+    "data.gov.bc.ca" : "data-api.tls",
+    "api.gov.bc.ca" : "data-api.tls",
+    "apps.gov.bc.ca" : "apps.tls"
+}
+
 def read_and_indent(full_path, indent):
     pad = "                    "
     stream = open(full_path, 'r')
@@ -111,7 +117,7 @@ metadata:
 
     return len(delete_list)
 
-def prepare_apply_routes (ns, select_tag, rootPath):
+def prepare_apply_routes (ns, select_tag, is_host_transform_enabled, rootPath):
     log = app.logger
     ssl_key_path = "/ssl/tls.key"
     ssl_crt_path = "/ssl/tls.crt"
@@ -133,6 +139,7 @@ metadata:
     aps-namespace: "${ns}"
     aps-select-tag: "${select_tag}"
     aps-published-ts: "${timestamp}"
+    aps-ssl: "${ssl_ref}"
 spec:
   host: ${host}
   port:
@@ -159,14 +166,23 @@ status:
     ts = int(time.time())
     fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
 
-    ssl_key = read_and_indent(ssl_key_path, 8)
-    ssl_crt = read_and_indent(ssl_crt_path, 8)
-
     with open(out_filename, 'w') as out_file:
         index = 1
         for host in host_list:
+
+            # If host transformation is disabled, then select the appropriate
+            # SSL cert based on the suffix mapping
+            ssl_ref = "tls"
+            if is_host_transform_enabled is False:
+                for host_match, ssl_file_prefix in host_cert_mapping.items():
+                    if host.endswith(host_match):
+                        ssl_ref = ssl_file_prefix
+                        log.debug("[%s] Route A %03d matched ssl cert %s" % (select_tag, index, ssl_ref))
+            ssl_key = read_and_indent("/ssl/%s.key" % ssl_ref, 8)
+            ssl_crt = read_and_indent("/ssl/%s.crt" % ssl_ref, 8)
+
             log.debug("[%s] Route A %03d wild-%s-%s" % (select_tag, index, select_tag.replace('.','-'), host))
-            out_file.write(template.substitute(name="wild-%s-%s" % (select_tag.replace('.','-'), host), ns=ns, select_tag=select_tag, host=host, path='/', ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-kong-proxy', timestamp=ts, fmt_time=fmt_time))
+            out_file.write(template.substitute(name="wild-%s-%s" % (select_tag.replace('.','-'), host), ns=ns, select_tag=select_tag, host=host, path='/', ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-kong-proxy', timestamp=ts, fmt_time=fmt_time))
             out_file.write('\n---\n')
             index = index + 1
 

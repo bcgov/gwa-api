@@ -137,7 +137,7 @@ def write_config(namespace: str) -> object:
 
         elif cmd == "sync":
             try:
-                route_count = prepare_apply_routes (namespace, selectTag, tempFolder)
+                route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
                 if route_count > 0:
                     apply_routes (tempFolder)
                 route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
@@ -225,8 +225,7 @@ def host_transformation (namespace, yaml):
     log = app.logger
 
     transforms = 0
-    conf = app.config['hostTransformation']
-    if conf['enabled'] is True:
+    if is_host_transform_enabled():
         if 'services' in yaml:
             for service in yaml['services']:
                 if 'routes' in service:
@@ -331,3 +330,7 @@ def traverse_get_ns_qualifier (yaml, required_tag):
                 if qualifier is not None:
                     return qualifier
     return None
+
+def is_host_transform_enabled ():
+    conf = app.config['hostTransformation']
+    return conf['enabled'] is True
