@@ -169,7 +169,7 @@ def write_config(namespace: str) -> object:
 
         if gw_config is None:
             continue
-            
+
         #######################
         # Enrichments
         #######################
@@ -221,7 +221,7 @@ def write_config(namespace: str) -> object:
 
     # Call the 'deck' command
     cmd = "sync"
-    if dry_run == 'true':
+    if dry_run == 'true' or dry_run is True:
         cmd = "diff"
 
     log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
