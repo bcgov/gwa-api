@@ -129,145 +129,152 @@ def write_config(namespace: str) -> object:
                 reserved_hosts.append(transform_host(host))
     reserved_hosts = list(set(reserved_hosts))
 
+
+    dfile = None
+
     if 'configFile' in request.files:
         log.debug("[%s] %s" % (namespace, request.files['configFile']))
         dfile = request.files['configFile']
-
-        tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
-        os.makedirs (tempFolder, exist_ok=False)
-
-        # dfile.save("%s/%s" % (tempFolder, 'config.yaml'))
-        
-        # log.debug("Saved to %s" % tempFolder)
-        yaml_documents_iter = yaml.load_all(dfile, Loader=yaml.FullLoader)
-
-        yaml_documents = []
-        for doc in yaml_documents_iter:
-            yaml_documents.append(doc)
-
-        selectTag = "ns.%s" % namespace
-        ns_qualifier = None
-
-        orig_config = prep_submitted_config (yaml_documents)
-
-        for index, gw_config in enumerate(yaml_documents):
-            log.info("[%s] Parsing file %s" % (namespace, index))
-
-            #######################
-            # Enrichments
-            #######################
-
-            # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
-            host_transformation (namespace, gw_config)
-
-            # If there is a tag with a pipeline qualifier (i.e./ ns.<namespace>.dev)
-            # then add to tags automatically the tag: ns.<namespace>
-            tags_transformation (namespace, gw_config)
-
-            #
-            # Enrich the rate-limiting plugin with the appropriate Redis details
-            plugins_transformations (namespace, gw_config)
-
-            with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
-                yaml.dump(gw_config, file)
-
-            #######################
-            # Validations
-            #######################
-
-            # Validate that the every object is tagged with the namespace
-            try:
-                validate_tags (gw_config, selectTag)
-            except Exception as ex:
-                abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
-
-            # Validate that hosts are valid
-            try:
-                validate_hosts (gw_config, reserved_hosts)
-            except Exception as ex:
-                abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
-
-            # Validation #3
-            # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
-
-            # Validate based on DNS 952
-        
-            nsq = traverse_get_ns_qualifier (gw_config, selectTag)
-            if nsq is not None:
-                if ns_qualifier is not None and nsq != ns_qualifier:
-                    abort(make_response(jsonify(error="Validation Errors:\n%s" % ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))), 400))
-                ns_qualifier = nsq
-                log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
-
-        if ns_qualifier is not None:
-            selectTag = ns_qualifier
-
-        # Call the 'deck' command
-        cmd = "sync"
-        if request.values['dryRun'] == 'true':
-            cmd = "diff"
-
-        log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
-        args = [
-            "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
-        ]
-        log.debug("[%s] Running %s" % (namespace, args))
-        deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
-        out, err = deck_run.communicate()
-        if deck_run.returncode != 0:
-            cleanup (tempFolder)
-            log.warn("%s - %s" % (namespace, out.decode('utf-8')))
-            abort(make_response(jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))), 400))
-
-        elif cmd == "sync":
-            try:
-                route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
-                log.debug("%s - Prepared %d routes" % (namespace, route_count))
-                if route_count > 0:
-                    apply_routes (tempFolder)
-                    log.debug("%s - Applied %d routes" % (namespace, route_count))
-                route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
-                log.debug("%s - Prepared %d deletions" % (namespace, route_count))
-                if route_count > 0:
-                    delete_routes (tempFolder)
-            
-                # create Network Security Policies (nsp) for any upstream that
-                # has the format: <name>.<ocp_ns>.svc
-                log.debug("%s - Update NSPs" % (namespace))
-                ocp_ns_list = get_ocp_service_namespaces (tempFolder)
-                for ocp_ns in ocp_ns_list:
-                    if check_nsp (namespace, ocp_ns) is False:
-                        apply_nsp (namespace, ocp_ns, tempFolder)
-
-                # ok all looks good, so update a secret containing the original submitted request
-                log.debug("%s - Update Original Config" % (namespace))
-                write_submitted_config (orig_config, tempFolder)
-                prep_and_apply_secret (namespace, selectTag, tempFolder)
-                log.debug("%s - Updated Original Config" % (namespace))
-            except HTTPException as ex:
-                traceback.print_exc()
-                log.error("Error updating custom routes, nsps and secrets. %s" % ex)
-                abort(make_response(jsonify(error="Partially failed."), 400))
-            except:
-                traceback.print_exc()
-                log.error("Error updating custom routes, nsps and secrets. %s" % sys.exc_info()[0])
-                abort(make_response(jsonify(error="Partially failed."), 400))
-
-        cleanup (tempFolder)
-
-        log.debug("[%s] The exit code was: %d" % (namespace, deck_run.returncode))
-
-        message = "Sync successful."
-        if cmd == 'diff':
-            message = "Dry-run.  No changes applied."
-
-        return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
+        dry_run = request.values['dryRun']
+    elif request.content_type == "application/json":
+        dfile = request.json['configFile']
+        dry_run = request.json['dryRun']
     else:
         log.error("Missing input")
         log.error(request.get_data())
         log.error(request.form)
         log.error(request.headers)
         abort(make_response(jsonify(error="Missing input"), 400))
+
+    tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
+    os.makedirs (tempFolder, exist_ok=False)
+
+    # dfile.save("%s/%s" % (tempFolder, 'config.yaml'))
+    
+    # log.debug("Saved to %s" % tempFolder)
+    yaml_documents_iter = yaml.load_all(dfile, Loader=yaml.FullLoader)
+
+    yaml_documents = []
+    for doc in yaml_documents_iter:
+        yaml_documents.append(doc)
+
+    selectTag = "ns.%s" % namespace
+    ns_qualifier = None
+
+    orig_config = prep_submitted_config (yaml_documents)
+
+    for index, gw_config in enumerate(yaml_documents):
+        log.info("[%s] Parsing file %s" % (namespace, index))
+
+        #######################
+        # Enrichments
+        #######################
+
+        # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
+        host_transformation (namespace, gw_config)
+
+        # If there is a tag with a pipeline qualifier (i.e./ ns.<namespace>.dev)
+        # then add to tags automatically the tag: ns.<namespace>
+        tags_transformation (namespace, gw_config)
+
+        #
+        # Enrich the rate-limiting plugin with the appropriate Redis details
+        plugins_transformations (namespace, gw_config)
+
+        with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
+            yaml.dump(gw_config, file)
+
+        #######################
+        # Validations
+        #######################
+
+        # Validate that the every object is tagged with the namespace
+        try:
+            validate_tags (gw_config, selectTag)
+        except Exception as ex:
+            abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
+
+        # Validate that hosts are valid
+        try:
+            validate_hosts (gw_config, reserved_hosts)
+        except Exception as ex:
+            abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
+
+        # Validation #3
+        # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
+
+        # Validate based on DNS 952
+    
+        nsq = traverse_get_ns_qualifier (gw_config, selectTag)
+        if nsq is not None:
+            if ns_qualifier is not None and nsq != ns_qualifier:
+                abort(make_response(jsonify(error="Validation Errors:\n%s" % ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))), 400))
+            ns_qualifier = nsq
+            log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
+
+    if ns_qualifier is not None:
+        selectTag = ns_qualifier
+
+    # Call the 'deck' command
+    cmd = "sync"
+    if dry_run == 'true':
+        cmd = "diff"
+
+    log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
+    args = [
+        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+    ]
+    log.debug("[%s] Running %s" % (namespace, args))
+    deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
+    out, err = deck_run.communicate()
+    if deck_run.returncode != 0:
+        cleanup (tempFolder)
+        log.warn("%s - %s" % (namespace, out.decode('utf-8')))
+        abort(make_response(jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))), 400))
+
+    elif cmd == "sync":
+        try:
+            route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
+            log.debug("%s - Prepared %d routes" % (namespace, route_count))
+            if route_count > 0:
+                apply_routes (tempFolder)
+                log.debug("%s - Applied %d routes" % (namespace, route_count))
+            route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
+            log.debug("%s - Prepared %d deletions" % (namespace, route_count))
+            if route_count > 0:
+                delete_routes (tempFolder)
+        
+            # create Network Security Policies (nsp) for any upstream that
+            # has the format: <name>.<ocp_ns>.svc
+            log.debug("%s - Update NSPs" % (namespace))
+            ocp_ns_list = get_ocp_service_namespaces (tempFolder)
+            for ocp_ns in ocp_ns_list:
+                if check_nsp (namespace, ocp_ns) is False:
+                    apply_nsp (namespace, ocp_ns, tempFolder)
+
+            # ok all looks good, so update a secret containing the original submitted request
+            log.debug("%s - Update Original Config" % (namespace))
+            write_submitted_config (orig_config, tempFolder)
+            prep_and_apply_secret (namespace, selectTag, tempFolder)
+            log.debug("%s - Updated Original Config" % (namespace))
+        except HTTPException as ex:
+            traceback.print_exc()
+            log.error("Error updating custom routes, nsps and secrets. %s" % ex)
+            abort(make_response(jsonify(error="Partially failed."), 400))
+        except:
+            traceback.print_exc()
+            log.error("Error updating custom routes, nsps and secrets. %s" % sys.exc_info()[0])
+            abort(make_response(jsonify(error="Partially failed."), 400))
+
+    cleanup (tempFolder)
+
+    log.debug("[%s] The exit code was: %d" % (namespace, deck_run.returncode))
+
+    message = "Sync successful."
+    if cmd == 'diff':
+        message = "Dry-run.  No changes applied."
+
+    return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
 
 def cleanup (dir_path):
     log = app.logger
