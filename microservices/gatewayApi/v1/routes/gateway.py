@@ -136,7 +136,7 @@ def write_config(namespace: str) -> object:
         log.debug("[%s] %s" % (namespace, request.files['configFile']))
         dfile = request.files['configFile']
         dry_run = request.values['dryRun']
-    elif request.content_type == "application/json":
+    elif request.content_type.startswith("application/json"):
         dfile = request.json['configFile']
         dry_run = request.json['dryRun']
     else:
