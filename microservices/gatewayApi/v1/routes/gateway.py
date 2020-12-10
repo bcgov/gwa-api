@@ -167,6 +167,9 @@ def write_config(namespace: str) -> object:
     for index, gw_config in enumerate(yaml_documents):
         log.info("[%s] Parsing file %s" % (namespace, index))
 
+        if gw_config is None:
+            continue
+            
         #######################
         # Enrichments
         #######################
