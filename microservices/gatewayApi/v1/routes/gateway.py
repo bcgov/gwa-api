@@ -143,6 +143,7 @@ def write_config(namespace: str) -> object:
         log.error("Missing input")
         log.error(request.get_data())
         log.error(request.form)
+        log.error(request.content_type)
         log.error(request.headers)
         abort(make_response(jsonify(error="Missing input"), 400))
 
