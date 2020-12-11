@@ -271,7 +271,6 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
-  /namespaces/{namespace}/gateway:
     delete:
       summary: Delete the gateway config
       description: Deletes with optional qualifier
