@@ -1,5 +1,8 @@
 # GWA APIs
 
+<img src="https://github.com/bcgov/gwa-api/workflows/Build/badge.svg"></img>
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=gwa-api&metric=alert_status)](https://sonarcloud.io/dashboard?id=gwa-api)
+
 For self-service of APIs, a set of microservices are used to coordinate updates by the providers of APIs.
 
 * `Gateway` : Provides a way for API Owners to update their Kong configuration (and internally the OCP Edge Router)
