@@ -31,8 +31,7 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
             "redis_host": "redis-master",
             "redis_port": 6379,
             "redis_password": "${PLUGINS_RATELIMITING_REDIS_PASSWORD}",
-            "redis_timeout": 2000,
-            "policy": "redis"
+            "redis_timeout": 2000
         }
     }
 }

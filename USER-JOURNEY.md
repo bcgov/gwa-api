@@ -4,7 +4,7 @@
 
 A `namespace` represents a collection of Kong Services and Routes that are managed independently.
 
-To create a new namespace, go to the <a href="https://gwa-264e6f-test.apps.silver.devops.gov.bc.ca/int" target="_blank">API Services Portal</a>.
+To create a new namespace, go to the <a href="https://gwa-apps-gov-bc-ca.test.apsgw.xyz/int" target="_blank">API Services Portal</a>.
 
 After login (and selection of an existing namespace if you have one already assigned), go to the `New Namespace` tab and click the `Create Namespace` button.
 
@@ -103,13 +103,12 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 **Install (for Linux)**
 
 ```
-GWA_CLI_VERSION=v1.0.14; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/$GWA_CLI_VERSION/gwa-cli-linux.zip
-unzip gwa-cli-linux.zip
-mv gwa-cli-linux gwa
+GWA_CLI_VERSION=v1.1.0; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
+unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 ./gwa --version
 ```
 
-> MacOS or Windows? For Mac `gwa-cli-macos.zip` and for Windows `gwa-cli-win.exe.zip`
+> MacOS or Windows? For Mac `gwa_v1.1.0_macos_x64.zip` and for Windows `gwa_v1.1.0_win_x64.zip`
 
 **Configure**
 
@@ -143,7 +142,7 @@ gwa pg --dry-run sample.yaml
 
 ### Swagger Console
 
-Go to <a href="https://gwa-api-264e6f-test.apps.silver.devops.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
+Go to <a href="https://gwa-api-gov-bc-ca.test.apsgw.xyz/api/doc" target="_blank">gwa-api Swagger Console</a>.
 
 Select the `PUT` `/namespaces/{namespace}/gateway` API.
 
@@ -160,7 +159,7 @@ Send the request.
 
 ## 5. Verify routes
 
-In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-264e6f-test.apps.silver.devops.gov.bc.ca//int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
+In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-apps-gov-bc-ca.test.apsgw.xyz/int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
 
 ```
 curl https://${NAME}-api-gov-bc-ca.test.apsgw.xyz/headers
@@ -171,7 +170,7 @@ ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.apsgw.xyz/headers
 
 To help with troubleshooting, you can use the GWA API to get a health check for each of the upstream services to verify the Gateway is connecting OK.
 
-Go to the <a href="https://gwa-api-264e6f-test.apps.silver.devops.gov.bc.ca/api/doc#/Service%20Status/get_namespaces__namespace__services">GWA API</a>, enter in the new credentials that were generated in step #2, click `Try it out`, enter your namespace and click `Execute`.  The results are returned in a JSON object.
+Go to the <a href="https://gwa-api-gov-bc-ca.test.apsgw.xyz/api/doc#/Service%20Status/get_namespaces__namespace__services">GWA API</a>, enter in the new credentials that were generated in step #2, click `Try it out`, enter your namespace and click `Execute`.  The results are returned in a JSON object.
 
 ## 6. View metrics
 
@@ -184,7 +183,7 @@ The following metrics can be viewed in real-time for the Services that you confi
 
 All metrics can be viewed by an arbitrary time window - defaults to `Last 24 Hours`.
 
-Go to <a href="https://grafana-264e6f-test.apps.silver.devops.gov.bc.ca" target="_blank">Grafana</a> to view metrics for your configured services.
+Go to <a href="https://grafana-apps-gov-bc-ca.test.apsgw.xyz" target="_blank">Grafana</a> to view metrics for your configured services.
 
 You can also access the metrics from the `API Services Portal`.
 
@@ -232,9 +231,8 @@ jobs:
 
     - name: Get GWA Command Line
       run: |
-        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.0.14/gwa-cli-linux.zip
-        unzip gwa-cli-linux.zip
-        mv gwa-cli-linux gwa
+        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.1.0/gwa_v1.1.0_linux_x64.zip
+        unzip gwa_v1.1.0_linux_x64.zip
         export PATH=`pwd`:$PATH
 
     - name: Apply Namespace Configuration

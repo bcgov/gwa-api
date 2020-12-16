@@ -18,9 +18,14 @@ def rate_limiting (plugin):
 
     plugin_config = plugin['config']
 
-    for k, v in override_config.items():
-        plugin_config[k] = v
-
+    policy = "redis"
+    if 'policy' in plugin_config and plugin_config['policy'] == 'local':
+        policy = 'local'
+    else:
+        for k, v in override_config.items():
+            plugin_config[k] = v
+    plugin_config['policy'] = policy
+    
     # Add null values to the following if they are not specified
     for nval in ['second', 'minute', 'hour', 'day', 'month', 'year', 'header_name']:
         if nval not in plugin_config:

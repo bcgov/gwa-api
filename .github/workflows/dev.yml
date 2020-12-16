@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Package DEV
+name: Build
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -24,6 +24,12 @@ jobs:
         # Disabling shallow clone is recommended for improving relevancy of reporting
         fetch-depth: 0
 
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        
     - name: Docker Image for gwa-api
       uses: docker/build-push-action@v1
       env:
