@@ -1,6 +1,6 @@
 # API Provider Flow
 
-## 1. Register a new namespace
+## 1. Register a new namespace and more!
 
 A `namespace` represents a collection of Kong Services and Routes that are managed independently.
 
