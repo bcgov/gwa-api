@@ -28,7 +28,6 @@ def create_app(test_config=None):
 
     log = logging.getLogger(__name__)
 
-    discovery = OIDCDiscovery()
 
     # a = connexion.FlaskApp(__name__, specification_dir='v1/spec/')
 
@@ -54,6 +53,7 @@ def create_app(test_config=None):
     Compress(app)
 
     ## Template the spec and write it to a temporary location
+    discovery = OIDCDiscovery(conf.data['oidcBaseUrl'])
     tmpFile = "%s/v1.yaml" % conf.data['workingFolder']
     f = open("v1/spec/v1.yaml", "r")
     t = Template(f.read())

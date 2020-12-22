@@ -6,6 +6,7 @@ from v1.routes.namespaces import ns
 from v1.routes.serviceaccounts import sa
 from v1.routes.whoami import whoami
 from v1.routes.docs import docs
+from v1.routes.dns import dns
 from v1.routes.gw_status import gw_status
 
 v1 = Blueprint('v1', 'v1')
@@ -30,4 +31,5 @@ class Register:
         app.register_blueprint(sa, url_prefix="/v1/namespaces/<string:namespace>/serviceaccounts")
         app.register_blueprint(ns, url_prefix="/v1/namespaces")
         app.register_blueprint(whoami, url_prefix="/v1/whoami")
+        app.register_blueprint(dns, url_prefix="/v1/dns")
         app.register_blueprint(docs, url_prefix="/v1/api-docs")
