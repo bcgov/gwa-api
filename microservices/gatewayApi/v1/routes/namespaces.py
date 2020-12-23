@@ -15,6 +15,8 @@ import yaml
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
 
+from v1.services.namespaces import NamespaceService
+
 from v1.auth.auth import admin_jwt, enforce_authorization, enforce_role_authorization, users_group_root, admins_group_root
 
 from clients.keycloak import admin_api
@@ -28,7 +30,6 @@ ns = Blueprint('namespaces', 'namespaces')
 @admin_jwt(None)
 def create_namespace() -> object:
     log = app.logger
-    enforce_role_authorization('aps.ns:manage')
 
     keycloak_admin = admin_api()
 
@@ -38,29 +39,14 @@ def create_namespace() -> object:
         log.error("Namespace validation failed %s" % namespace)
         abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
 
-    payload = {
-        "name": namespace
-    }
-
     try:
-        for role_name in ['viewer', 'admin']:
+        svc = NamespaceService()
 
-            group_base_path = get_base_group_path(role_name)
-            parent_group = keycloak_admin.get_group_by_path(group_base_path)
-            if parent_group is None:
-                keycloak_admin.create_group ({"name": get_base_group_name(role_name)})
-                parent_group = keycloak_admin.get_group_by_path(group_base_path)
+        username = None
+        if 'preferred_username' in g.principal:
+            username = g.principal['preferred_username']
 
-            response = keycloak_admin.create_group (payload, parent=parent_group['id'])
-            log.debug("[%s] Group %s/%s created!" % (namespace, group_base_path, namespace))
-
-            new_users_group_id = response['id']
-
-            if 'preferred_username' in g.principal:
-                username = g.principal['preferred_username']
-                user_id = keycloak_admin.get_user_id (username)
-                log.debug("[%s] ADDING user %s TO %s" % (namespace, username, group_base_path))
-                keycloak_admin.group_user_add (user_id, new_users_group_id)
+        svc.create_or_get_ns (namespace, username)
 
     except KeycloakGetError as err:
         if err.response_code == 409:
@@ -75,12 +61,38 @@ def create_namespace() -> object:
     return ('', 201)
 
 @ns.route('/<string:namespace>',
+           methods=['PUT'], strict_slashes=False)
+@admin_jwt(None)
+def update_namespace(namespace: str) -> object:
+    log = app.logger
+    enforce_authorization(namespace)
+
+    params = request.get_json(force=True)
+
+    if not namespace_valid(namespace):
+        log.error("Namespace validation failed %s" % namespace)
+        abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
+
+    try:
+        svc = NamespaceService()
+
+        ns_group = svc.get_namespace (namespace)
+
+        svc.update_ns_attributes (ns_group, params)
+
+    except KeycloakGetError as err:
+        log.error("Failed to update namespace %s" % namespace)
+        log.error(err)
+        abort(make_response(jsonify(error="Failed to update namespace"), 400))
+
+    return make_response(jsonify())
+
+@ns.route('/<string:namespace>',
            methods=['DELETE'], strict_slashes=False)
 @admin_jwt(None)
 def delete_namespace(namespace: str) -> object:
     log = app.logger
-    #enforce_authorization(namespace)
-    #enforce_role_authorization('aps.ns:manage')
+    enforce_authorization(namespace)
 
     keycloak_admin = admin_api()
 
@@ -174,16 +186,6 @@ def membership_sync (namespace, role_name, desired_membership_list):
 
     return counts_added, counts_removed, counts_missing
 
-def get_base_group_name(role_name):
-    if role_name == "viewer":
-        return users_group_root()
-    elif role_name == "admin":
-        return admins_group_root()
-    else:
-        raise Exception("Illegal Argument - Role %s" % role_name)
-
-def get_base_group_path(role_name):
-    return "/%s" % get_base_group_name(role_name)
 
 def create_group(namespace, group_base_path, role_name):
     log = app.logger

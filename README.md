@@ -23,11 +23,11 @@ All APIs are protected by an OIDC JWT Token with the following claims:
 | `LOG_LEVEL`       | Log level for the application | `INFO` |
 | `ENVIRONMENT`     | Indicates what environment config to use (development|test|production) | `production` |
 | `CONFIG_PATH`     | Location of the config | `/tmp/production.json` |
-| `OIDC_BASE_URL`   | Base url used for OIDC Discovery for getting the `jwks_uri` for the list of supported keys. | `https://keycloak.domain/auth/realms/abc`
+| `OIDC_BASE_URL`   | External base url used by the Swagger console for an externally available Auth endpoint. | `https://keycloak.domain/auth/realms/abc`
 | `TOKEN_MATCH_AUD` | The `audience` that the token must match. | `gwa`
 | `WORKING_FOLDER`  | Temporary working folder that only exists for the duration of the POD. | `/tmp`
 | `KONG_ADMIN_URL`  | The Kong Admin endpoint. | `http://kong-admin-api:8001`
-| `KC_SERVER_URL`   | Keycloak access for administrative rights to manage groups for namespaces | `https://auth.domain/auth`
+| `KC_SERVER_URL`   | Keycloak access for administrative rights to manage groups for namespaces and for OIDC Discovery for getting the `jwks_uri` for the list of supported keys | `https://auth.domain/auth`
 | `KC_REALM`        | Keycloak access for administrative rights to manage groups for namespaces | `aps`
 | `KC_CLIENT_ID`    | Keycloak access for administrative rights to manage groups for namespaces | `admin-cli`
 | `KC_CLIENT_SECRET`| Keycloak access for administrative rights to manage groups for namespaces | ``

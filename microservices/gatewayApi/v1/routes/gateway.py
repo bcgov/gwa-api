@@ -14,6 +14,8 @@ from io import TextIOWrapper
 
 from v1.auth.auth import admin_jwt, enforce_authorization
 
+from v1.services.namespaces import NamespaceService
+
 from clients.kong import get_routes
 from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
 from clients.ocp_routes import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
@@ -120,6 +122,8 @@ def write_config(namespace: str) -> object:
 
     outFolder = namespace
 
+    # Build a list of existing hosts that are outside this namespace
+    # They become reserved and any conflict will return an error
     reserved_hosts = []
     all_routes = get_routes()
     tag_match = "ns.%s" % namespace
@@ -129,6 +133,9 @@ def write_config(namespace: str) -> object:
                 reserved_hosts.append(transform_host(host))
     reserved_hosts = list(set(reserved_hosts))
 
+
+    ns_svc = NamespaceService()
+    ns_attributes = ns_svc.get_namespace_attributes (namespace)
 
     dfile = None
 
@@ -200,7 +207,7 @@ def write_config(namespace: str) -> object:
 
         # Validate that hosts are valid
         try:
-            validate_hosts (gw_config, reserved_hosts)
+            validate_hosts (gw_config, reserved_hosts, ns_attributes)
         except Exception as ex:
             abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
 
@@ -340,12 +347,19 @@ def host_transformation (namespace, yaml):
     log.debug("[%s] Host transformations %d" % (namespace, transforms))
 
 def transform_host (host):
-    conf = app.config['hostTransformation']
-    return "%s.%s" % (host.replace('.', '-'), conf['baseUrl'])
+    if is_host_transform_enabled():
+        conf = app.config['hostTransformation']
+        return "%s.%s" % (host.replace('.', '-'), conf['baseUrl'])
+    else:
+        return host
 
-def validate_hosts (yaml, reserved_hosts):
+def validate_hosts (yaml, reserved_hosts, ns_attributes):
     log = app.logger
     errors = []
+
+    allowed_domains = []
+    for domain in ns_attributes.get('perm-domains', ['api.gov.bc.ca'] ):
+        allowed_domains.append(".%s" % domain)
 
     ## A host must not exist outside of namespace (reserved_hosts)
     if 'services' in yaml:
@@ -358,11 +372,19 @@ def validate_hosts (yaml, reserved_hosts):
                                 errors.append("service.%s.route.%s The host is already used in another namespace '%s'" % (service['name'], route['name'], host))
                             if host_valid(host) is False:
                                 errors.append("Host not passing DNS-952 validation '%s'" % host)
+                            if host_ends_with_one_of_list (host, allowed_domains) is False:
+                                errors.append("Host invalid: %s.  Route hosts must end with one of [%s] for this namespace." % (route['name'], ','.join(allowed_domains)))
                     else:
                         errors.append("service.%s.route.%s A host must be specified for routes." % (service['name'], route['name']))
 
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
+
+def host_ends_with_one_of_list (a_str, a_list):
+    for item in a_list:
+        if a_str.endswith(transform_host(item)):
+            return True
+    return False
 
 def tags_transformation (namespace, yaml):
     traverse_tags_transform (yaml, namespace, "ns.%s" % namespace)

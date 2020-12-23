@@ -17,9 +17,9 @@ Logout by clicking your username at the top right of the page.  When you login a
 Go to the `Service Accounts` tab and click the `Create Service Account`.  A new credential will be created - make a note of the `ID` and `Secret`.
 
 The credential has the following access:
-* `admin:gateway` : Permission to publish gateway configuration to Kong
-* `admin:acl`     : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
-* `admin:catalog` : Permission to update BC Data Catalog datasets for describing APIs available for consumption
+* `Gateway.Write` : Permission to publish gateway configuration to Kong
+* `Access.Write`  : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
+* `Catalog.Write` : Permission to update BC Data Catalog datasets for describing APIs available for consumption
 
 ## 3. Prepare configuration
 
@@ -103,12 +103,14 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 **Install (for Linux)**
 
 ```
-GWA_CLI_VERSION=v1.1.0; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
+GWA_CLI_VERSION=v1.1.1; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
 unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 ./gwa --version
 ```
 
-> MacOS or Windows? For Mac `gwa_v1.1.0_macos_x64.zip` and for Windows `gwa_v1.1.0_win_x64.zip`
+> **Using MacOS?** Use `gwa_${GWA_CLI_VERSION}_macos_x64.zip` in the above curl command.
+
+> **Using Windows?** From a Browser, download the following and click `Open` from the Browser; a `gwa.exe` file will be available: `https://github.com/bcgov/gwa-cli/releases/download/v1.1.1/gwa_v1.1.1_win_x64.zip`
 
 **Configure**
 
@@ -156,6 +158,19 @@ Select a `configFile` file.
 
 Send the request.
 
+### Postman
+
+From the Postman App, click the `Import` button and go to the `Link` tab.
+
+Enter a URL: https://openapi-to-postman-api-gov-bc-ca.test.apsgw.xyz/?url=https://gwa-api-gov-bc-ca.test.apsgw.xyz/api/doc/swagger.json
+
+After creation, go to `Collections` and right-click on the `Gateway Administration (GWA) API` collection and select `edit`.
+
+Go to the `Authorization` tab, enter in your `Client ID` and `Client Secret` and click `Get New Access Token`.
+
+You should get a successful dialog to proceed.  Click `Proceed` and `Use Token`.
+
+You can then verify that the token works by going to the Collection `Return key information about authenticated identity` and click `Send`.
 
 ## 5. Verify routes
 

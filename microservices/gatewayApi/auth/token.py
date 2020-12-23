@@ -6,13 +6,11 @@ from authlib.oauth2.rfc6750 import BearerTokenValidator
 from flask import current_app, g
 from config import Config
 
-def OIDCDiscovery():
+def OIDCDiscovery(base_url):
     conf = Config()
 
-    baseUrl = conf.data['oidcBaseUrl']
-
     # Fetch the openid metadata so we may know the jwk endpoint uri
-    server_metadata_url = f"{baseUrl}/.well-known/openid-configuration"
+    server_metadata_url = f"{base_url}/.well-known/openid-configuration"
     server_metadata_r = requests.get(server_metadata_url)
     if server_metadata_r.status_code != 200:
         raise Exception(
@@ -30,19 +28,13 @@ class OIDCTokenValidator(BearerTokenValidator):
 
         conf = Config()
 
-        baseUrl = conf.data['oidcBaseUrl']
+        server_url = conf.data['keycloak']['serverUrl']
+        realm = conf.data['keycloak']['realm']
+        baseUrl = "%srealms/%s" % (server_url, realm)
 
         self.aud = conf.data['tokenMatch']['aud']
 
-        # Fetch the openid metadata so we may know the jwk endpoint uri
-        server_metadata_url = f"{baseUrl}/.well-known/openid-configuration"
-        server_metadata_r = requests.get(server_metadata_url)
-        if server_metadata_r.status_code != 200:
-            raise Exception(
-                f"Error getting auth server metadata from url: {server_metadata_url}"
-                + ", status_code: {server_metadata_r.status_code}"
-            )
-        server_metadata = server_metadata_r.json()
+        server_metadata = OIDCDiscovery(baseUrl)
 
         # Fetch the public key for validating Bearer token
         jwk_r = requests.get(server_metadata['jwks_uri'])

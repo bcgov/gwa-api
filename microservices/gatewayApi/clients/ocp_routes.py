@@ -133,7 +133,7 @@ kind: Route
 metadata:
   name: ${name}
   annotations:
-    haproxy.router.openshift.io/timeout: 300s
+    haproxy.router.openshift.io/timeout: 30m
   labels:
     aps-generated-by: "gwa-cli"
     aps-published-on: "${fmt_time}"
