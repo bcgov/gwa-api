@@ -162,7 +162,7 @@ Send the request.
 
 From the Postman App, click the `Import` button and go to the `Link` tab.
 
-Enter a URL: https://openapi-to-postman-api-gov-bc-ca.dev.apsgw.xyz/?url=https://gwa-api-gov-bc-ca.dev.apsgw.xyz/api/doc/swagger.json
+Enter a URL: https://openapi-to-postman-api-gov-bc-ca.test.apsgw.xyz/?url=https://gwa-api-gov-bc-ca.test.apsgw.xyz/api/doc/swagger.json
 
 After creation, go to `Collections` and right-click on the `Gateway Administration (GWA) API` collection and select `edit`.
 
