@@ -149,6 +149,40 @@ paths:
           $ref: '#/components/responses/500InternalServerError'
 
   /namespaces/{namespace}:
+    put:
+      summary: Update namespace attributes
+      description: Update namespace attributes
+      security:
+        - oauth2: [ Namespace.Admin ]
+      tags:
+        - Namespaces
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NamespaceAttributes'
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
+
+
     delete:
       summary: Delete a namespace
       description: Delete a namespace
@@ -399,6 +433,15 @@ components:
         namespace:
           type: string
           description: Namespace the identity has permission to access
+    NamespaceAttributes:
+      type: object
+      properties:
+        perm-domains:
+          type: array
+          items:
+            type: string
+          description: Overrides what domain suffixes are valid
+          example: [ 'api.gov.bc.ca']
 
   securitySchemes:
     oauth2:
@@ -407,7 +450,11 @@ components:
       flows:
         clientCredentials:
           tokenUrl: "{{accesstoken_url}}"
-          scopes: []
+          scopes: {
+            "Namespace.Admin": "Permission to delete Namespaces, updating privileges",
+            "Gateway.Write": "Permission to administer gateway configuration",
+            "Access.Write": "Permission to administer access to users"
+          }
     # authorizationCode:
     #   type: oauth2       
     #   x-tokenInfoUrl: "{{tokeninfo_url}}"
