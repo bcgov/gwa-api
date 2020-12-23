@@ -17,9 +17,9 @@ Logout by clicking your username at the top right of the page.  When you login a
 Go to the `Service Accounts` tab and click the `Create Service Account`.  A new credential will be created - make a note of the `ID` and `Secret`.
 
 The credential has the following access:
-* `admin:gateway` : Permission to publish gateway configuration to Kong
-* `admin:acl`     : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
-* `admin:catalog` : Permission to update BC Data Catalog datasets for describing APIs available for consumption
+* `Gateway.Write` : Permission to publish gateway configuration to Kong
+* `Access.Write`  : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
+* `Catalog.Write` : Permission to update BC Data Catalog datasets for describing APIs available for consumption
 
 ## 3. Prepare configuration
 
@@ -158,6 +158,19 @@ Select a `configFile` file.
 
 Send the request.
 
+### Postman
+
+From the Postman App, click the `Import` button and go to the `Link` tab.
+
+Enter a URL: https://openapi-to-postman-api-gov-bc-ca.dev.apsgw.xyz/?url=https://gwa-api-gov-bc-ca.dev.apsgw.xyz/api/doc/swagger.json
+
+After creation, go to `Collections` and right-click on the `Gateway Administration (GWA) API` collection and select `edit`.
+
+Go to the `Authorization` tab, enter in your `Client ID` and `Client Secret` and click `Get New Access Token`.
+
+You should get a successful dialog to proceed.  Click `Proceed` and `Use Token`.
+
+You can then verify that the token works by going to the Collection `Return key information about authenticated identity` and click `Send`.
 
 ## 5. Verify routes
 
