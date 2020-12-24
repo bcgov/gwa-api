@@ -3,13 +3,14 @@ try:  # Python 3.5+
 except ImportError:
     from http import client as HTTPStatus
 import logging
-
 import os
+import time
 import config
 from authlib.jose.errors import JoseError, ExpiredTokenError
 from flask import Flask, g, jsonify, request, make_response, url_for, Response
 from flask_compress import Compress
 from flask_cors import CORS
+import threading
 
 from auth.token import OIDCDiscovery
 
@@ -23,6 +24,31 @@ def set_cors_headers_on_response(response):
     response.headers['Access-Control-Allow-Headers'] = 'X-Requested-With'
     response.headers['Access-Control-Allow-Methods'] = 'OPTIONS'
     return response
+
+def setup_swagger_docs (app):
+    conf = config.Config()
+    log = logging.getLogger(__name__)
+
+    try:
+        ## Template the spec and write it to a temporary location
+        discovery = OIDCDiscovery(conf.data['oidcBaseUrl'])
+        tmpFile = "%s/v1.yaml" % conf.data['workingFolder']
+        f = open("v1/spec/v1.yaml", "r")
+        t = Template(f.read())
+        f = open(tmpFile, "w")
+        f.write(t.render(
+            server_url = "/v1",
+            tokeninfo_url = discovery["introspection_endpoint"],
+            authorization_url = discovery["authorization_endpoint"],
+            accesstoken_url = discovery["token_endpoint"]
+        ))
+        api_doc(app, config_path=tmpFile, url_prefix='/api/doc', title='API doc')
+        log.info("Configured /api/doc")
+    except:
+        log.error("Failed to do OIDC Discovery, sleeping 5 seconds and trying again.")
+        time.sleep(5)
+        setup_swagger_docs(app)
+    
 
 def create_app(test_config=None):
 
@@ -52,19 +78,10 @@ def create_app(test_config=None):
     v1.Register(app)
     Compress(app)
 
-    ## Template the spec and write it to a temporary location
-    discovery = OIDCDiscovery(conf.data['oidcBaseUrl'])
-    tmpFile = "%s/v1.yaml" % conf.data['workingFolder']
-    f = open("v1/spec/v1.yaml", "r")
-    t = Template(f.read())
-    f = open(tmpFile, "w")
-    f.write(t.render(
-        server_url = "/v1",
-        tokeninfo_url = discovery["introspection_endpoint"],
-        authorization_url = discovery["authorization_endpoint"],
-        accesstoken_url = discovery["token_endpoint"]
-    ))
-    api_doc(app, config_path=tmpFile, url_prefix='/api/doc', title='API doc')
+    t = threading.Thread(name='child procs', target=setup_swagger_docs, args=(app,))
+    t.start()
+    # p = Process(target=setup_swagger_docs, args=(app))
+    # p.start()
 
     @app.before_request
     def before_request():
