@@ -155,6 +155,8 @@ def membership_sync (namespace, role_name, desired_membership_list):
         create_group (namespace, base_group_path, role_name)
         group = keycloak_admin.get_group_by_path("%s/%s" % (base_group_path, namespace), search_in_subgroups=True)
 
+    group = keycloak_admin.get_group (group['id'])
+
     membership = keycloak_admin.get_group_members (group['id'])
 
     counts_removed = 0
