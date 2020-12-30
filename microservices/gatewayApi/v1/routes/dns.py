@@ -26,11 +26,17 @@ def dns_route() -> object:
 
     all_routes = get_routes()
 
-    result = []
-
+    hosts = []
     for route in all_routes:
         if 'hosts' in route:
             for host in route['hosts']:
-                result.append(host)
-    return Response(response="%s %s\n\n" % (fixed_ip, " ".join(result)), status=200, mimetype="text/plain")
+                if host not in hosts:
+                    hosts.append(host)
+
+    hosts.sort()
+
+    result = []
+    for host in hosts:
+        result.append("%s %s" % (fixed_ip, host))
+    return Response(response="%s\n\n" % "\n".join(result), status=200, mimetype="text/plain")
 
