@@ -380,6 +380,7 @@ def validate_hosts (yaml, reserved_hosts, ns_attributes):
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
 
+
 def host_ends_with_one_of_list (a_str, a_list):
     for item in a_list:
         if a_str.endswith(transform_host(item)):
