@@ -52,7 +52,7 @@ class NamespaceService:
             new_users_group_id = response['id']
 
             if initial_username is not None:
-                user_id = keycloak_admin.get_user_id (initial_username)
+                user_id = self.keycloak_admin.get_user_id (initial_username)
                 log.debug("[%s] ADDING user %s TO %s" % (namespace, initial_username, group_base_path))
                 self.keycloak_admin.group_user_add (user_id, new_users_group_id)
 
