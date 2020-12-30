@@ -358,8 +358,8 @@ def validate_hosts (yaml, reserved_hosts, ns_attributes):
     errors = []
 
     allowed_domains = []
-    for domain in ns_attributes.get('perm-domains', ['api.gov.bc.ca'] ):
-        allowed_domains.append(".%s" % domain)
+    for domain in ns_attributes.get('perm-domains', ['.api.gov.bc.ca'] ):
+        allowed_domains.append("%s" % domain)
 
     ## A host must not exist outside of namespace (reserved_hosts)
     if 'services' in yaml:
