@@ -15,7 +15,7 @@ import yaml
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
 
-from v1.services.namespaces import NamespaceService
+from v1.services.namespaces import NamespaceService, get_base_group_path
 
 from v1.auth.auth import admin_jwt, enforce_authorization, enforce_role_authorization, users_group_root, admins_group_root
 
@@ -101,6 +101,7 @@ def delete_namespace(namespace: str) -> object:
             group = keycloak_admin.get_group_by_path("%s/%s" % (get_base_group_path(role_name), namespace), search_in_subgroups=True)
             if group is not None:
                 keycloak_admin.delete_group (group['id'])
+
     except KeycloakGetError as err:
         log.error(err)
         abort(make_response(jsonify(error="Failed to delete namespace"), 400))
