@@ -40,3 +40,11 @@ def dns_route() -> object:
         result.append("%s %s" % (fixed_ip, host))
     return Response(response="%s\n\n" % "\n".join(result), status=200, mimetype="text/plain")
 
+
+@dns.route('/headers',
+           methods=['GET'], strict_slashes=False)
+def req_route() -> object:
+
+    out = dict(request.headers)
+    out['ip'] = request.remote_addr
+    return Response(response=yaml.dump(out, indent=4), status=200, mimetype="text/plain")
