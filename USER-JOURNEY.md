@@ -230,9 +230,12 @@ In the repository that you maintain your CI/CD Pipeline configuration, use the S
 
 Add a `.gwa` folder (can be called anything) that will be used to hold your gateway configuration.
 
-The below example Github Workflow is for updating the `global` namespace:
+An example Github Workflow:
 
 ```
+env:
+  NS: "<your namespace>"
+  
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -248,13 +251,12 @@ jobs:
 
     - name: Get GWA Command Line
       run: |
-        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.1.0/gwa_v1.1.0_linux_x64.zip
-        unzip gwa_v1.1.0_linux_x64.zip
+        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.1.1/gwa_v1.1.1_linux_x64.zip
+        unzip gwa_v1.1.1_linux_x64.zip
         export PATH=`pwd`:$PATH
 
     - name: Apply Namespace Configuration
       run: |
-        export NS="platform"
         export PATH=`pwd`:$PATH
         cd .gwa/$NS
 
