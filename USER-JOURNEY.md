@@ -174,6 +174,8 @@ You can then verify that the token works by going to the Collection `Return key 
 
 ## 5. Verify routes
 
+To verify that the Gateway can access the upstream services, run the command: `gwa status`.
+
 In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-apps-gov-bc-ca.test.apsgw.xyz/int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
 
 ```
