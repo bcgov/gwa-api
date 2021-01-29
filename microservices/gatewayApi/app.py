@@ -108,7 +108,6 @@ def create_app(test_config=None):
 
     @app.errorhandler(HTTPStatus.INTERNAL_SERVER_ERROR)
     def internal_server_error(error):
-        log = app.logger
         log.error("Internal Error %s - %s" % (request.remote_addr, str(error)))
         content = jsonify({
             "error": "{error}",
@@ -121,7 +120,6 @@ def create_app(test_config=None):
 
     @app.errorhandler(HTTPStatus.BAD_REQUEST)
     def bad_request_error(error):
-        log = app.logger
         log.error("Bad Request %s - %s" % (request.remote_addr, str(error)))
         content = jsonify({
             "error": "Bad Request",

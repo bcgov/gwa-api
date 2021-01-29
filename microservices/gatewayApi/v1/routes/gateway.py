@@ -354,7 +354,6 @@ def transform_host (host):
         return host
 
 def validate_hosts (yaml, reserved_hosts, ns_attributes):
-    log = app.logger
     errors = []
 
     allowed_domains = []
