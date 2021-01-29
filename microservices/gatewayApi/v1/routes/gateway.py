@@ -203,12 +203,16 @@ def write_config(namespace: str) -> object:
         try:
             validate_tags (gw_config, selectTag)
         except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Tag Validation Errors: %s" % ex))
             abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
 
         # Validate that hosts are valid
         try:
             validate_hosts (gw_config, reserved_hosts, ns_attributes)
         except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Host Validation Errors: %s" % ex))
             abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
 
         # Validation #3
