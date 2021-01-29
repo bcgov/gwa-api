@@ -33,6 +33,7 @@ gw = Blueprint('gwa', 'gateway')
            methods=['DELETE'], strict_slashes=False)
 @admin_jwt(None)
 def delete_config(namespace: str, qualifier = "") -> object:
+    enforce_authorization(namespace)
     log = app.logger
 
     outFolder = namespace
@@ -132,7 +133,6 @@ def write_config(namespace: str) -> object:
             for host in route['hosts']:
                 reserved_hosts.append(transform_host(host))
     reserved_hosts = list(set(reserved_hosts))
-
 
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes (namespace)
