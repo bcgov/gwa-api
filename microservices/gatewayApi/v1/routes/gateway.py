@@ -33,6 +33,7 @@ gw = Blueprint('gwa', 'gateway')
            methods=['DELETE'], strict_slashes=False)
 @admin_jwt(None)
 def delete_config(namespace: str, qualifier = "") -> object:
+    enforce_authorization(namespace)
     log = app.logger
 
     outFolder = namespace
@@ -133,7 +134,6 @@ def write_config(namespace: str) -> object:
                 reserved_hosts.append(transform_host(host))
     reserved_hosts = list(set(reserved_hosts))
 
-
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes (namespace)
 
@@ -203,12 +203,16 @@ def write_config(namespace: str) -> object:
         try:
             validate_tags (gw_config, selectTag)
         except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Tag Validation Errors: %s" % ex))
             abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
 
         # Validate that hosts are valid
         try:
             validate_hosts (gw_config, reserved_hosts, ns_attributes)
         except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Host Validation Errors: %s" % ex))
             abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
 
         # Validation #3
@@ -240,41 +244,41 @@ def write_config(namespace: str) -> object:
     out, err = deck_run.communicate()
     if deck_run.returncode != 0:
         cleanup (tempFolder)
-        log.warn("%s - %s" % (namespace, out.decode('utf-8')))
+        log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
         abort(make_response(jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))), 400))
 
     elif cmd == "sync":
         try:
             route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
-            log.debug("%s - Prepared %d routes" % (namespace, route_count))
+            log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
             if route_count > 0:
                 apply_routes (tempFolder)
-                log.debug("%s - Applied %d routes" % (namespace, route_count))
+                log.debug("[%s] - Applied %d routes" % (namespace, route_count))
             route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
-            log.debug("%s - Prepared %d deletions" % (namespace, route_count))
+            log.debug("[%s] - Prepared %d deletions" % (namespace, route_count))
             if route_count > 0:
                 delete_routes (tempFolder)
         
             # create Network Security Policies (nsp) for any upstream that
             # has the format: <name>.<ocp_ns>.svc
-            log.debug("%s - Update NSPs" % (namespace))
+            log.debug("[%s] - Update NSPs" % (namespace))
             ocp_ns_list = get_ocp_service_namespaces (tempFolder)
             for ocp_ns in ocp_ns_list:
                 if check_nsp (namespace, ocp_ns) is False:
                     apply_nsp (namespace, ocp_ns, tempFolder)
 
             # ok all looks good, so update a secret containing the original submitted request
-            log.debug("%s - Update Original Config" % (namespace))
+            log.debug("[%s] - Update Original Config" % (namespace))
             write_submitted_config (orig_config, tempFolder)
             prep_and_apply_secret (namespace, selectTag, tempFolder)
-            log.debug("%s - Updated Original Config" % (namespace))
+            log.debug("[%s] - Updated Original Config" % (namespace))
         except HTTPException as ex:
             traceback.print_exc()
-            log.error("Error updating custom routes, nsps and secrets. %s" % ex)
+            log.error("[%s] Error updating custom routes, nsps and secrets. %s" % (namespace, ex))
             abort(make_response(jsonify(error="Partially failed."), 400))
         except:
             traceback.print_exc()
-            log.error("Error updating custom routes, nsps and secrets. %s" % sys.exc_info()[0])
+            log.error("[%s] Error updating custom routes, nsps and secrets. %s" % (namespace, sys.exc_info()[0]))
             abort(make_response(jsonify(error="Partially failed."), 400))
 
     cleanup (tempFolder)
@@ -311,10 +315,10 @@ def validate_tags (yaml, required_tag):
         raise Exception('\n'.join(errors))
 
 def traverse (source, errors, yaml, required_tag, qualifiers):
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'caCertificates']
     for k in yaml:
         if k in traversables:
-            for item in yaml[k]:
+            for index, item in enumerate(yaml[k]):
                 if 'tags' in item:
                     if required_tag not in item['tags']:
                         errors.append("%s.%s.%s missing required tag %s" % (source, k, item['name'], required_tag))
@@ -327,7 +331,10 @@ def traverse (source, errors, yaml, required_tag, qualifiers):
                             qualifiers.append(tag)
                 else:
                     errors.append("%s.%s.%s no tags found" % (source, k, item['name']))
-                traverse ("%s.%s.%s" % (source, k, item['name']), errors, item, required_tag, qualifiers)
+                nm = "[%d]" % index
+                if 'name' in item:
+                    nm = item['name']
+                traverse ("%s.%s.%s" % (source, k, nm), errors, item, required_tag, qualifiers)
 
 def host_transformation (namespace, yaml):
     log = app.logger
@@ -354,7 +361,6 @@ def transform_host (host):
         return host
 
 def validate_hosts (yaml, reserved_hosts, ns_attributes):
-    log = app.logger
     errors = []
 
     allowed_domains = []
@@ -391,7 +397,7 @@ def tags_transformation (namespace, yaml):
 
 def traverse_tags_transform (yaml, namespace, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'caCertificates']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -408,7 +414,7 @@ def traverse_tags_transform (yaml, namespace, required_tag):
 
 def traverse_has_ns_qualifier (yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'caCertificates']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -422,7 +428,7 @@ def traverse_has_ns_qualifier (yaml, required_tag):
 
 def traverse_has_ns_tag_only (yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'caCertificates']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -441,7 +447,7 @@ def has_ns_qualifier (tags, required_tag):
 
 def traverse_get_ns_qualifier (yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'caCertificates']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
