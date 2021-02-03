@@ -82,21 +82,20 @@ spec:
 
 ```
 services:
-- name: emu-api-tls
-  host: my-upstream-service.io
+- name: my-upstream-service
+  host: my-upstream.site
   tags: [ _NS_ ]
   port: 443
   protocol: https
   tls_verify: true
   ca_certificates: [ 0a780ee0-626c-11eb-ae93-0242ac130012 ]
-  client_certificate: 28cee516-6268-11eb-ae93-0242ac130012
-  retries: 5
+  client_certificate: 8fc131ef-9752-43a4-ba70-eb10ba442d4e
   routes: [ ... ]
 certificates:
 - cert: "<PEM FORMAT>"
   key: "<PEM FORMAT>"
   tags: [ _NS_ ]
-  id: 28cee516-6268-11eb-ae93-0242ac130012
+  id: 8fc131ef-9752-43a4-ba70-eb10ba442d4e
 ca_certificates:
 - cert: "<PEM FORMAT>"
   tags: [ _NS_ ]
