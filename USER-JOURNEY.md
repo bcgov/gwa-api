@@ -128,14 +128,14 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 **Install (for Linux)**
 
 ```
-GWA_CLI_VERSION=v1.1.1; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
+GWA_CLI_VERSION=v1.1.2; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
 unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 ./gwa --version
 ```
 
 > **Using MacOS?** Use `gwa_${GWA_CLI_VERSION}_macos_x64.zip` in the above curl command.
 
-> **Using Windows?** From a Browser, download the following and click `Open` from the Browser; a `gwa.exe` file will be available: `https://github.com/bcgov/gwa-cli/releases/download/v1.1.1/gwa_v1.1.1_win_x64.zip`
+> **Using Windows?** From a Browser, download the following and click `Open` from the Browser; a `gwa.exe` file will be available: `https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_win_x64.zip`
 
 **Configure**
 
@@ -276,8 +276,8 @@ jobs:
 
     - name: Get GWA Command Line
       run: |
-        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.1.1/gwa_v1.1.1_linux_x64.zip
-        unzip gwa_v1.1.1_linux_x64.zip
+        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.1.2/gwa_v1.1.2_linux_x64.zip
+        unzip gwa_v1.1.2_linux_x64.zip
         export PATH=`pwd`:$PATH
 
     - name: Apply Namespace Configuration
