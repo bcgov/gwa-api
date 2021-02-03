@@ -78,6 +78,32 @@ spec:
 
 > **Migrating from OCP3 to OCP4?** Please review the [OCP4-Migration](docs/OCP4-MIGRATION.md) instructions to help with transitioning to OCP4 and the new APS Gateway.
 
+> **Require mTLS between Gateway and your Upstream Service?** To support mTLS on your Upstream Service, you will need to provide client certificate details and if you want to verify the upstream endpoint then the `ca_certificates` and `tls_verify` is required as well.  An example:
+
+```
+services:
+- name: emu-api-tls
+  host: my-upstream-service.io
+  tags: [ _NS_ ]
+  port: 443
+  protocol: https
+  tls_verify: true
+  ca_certificates: [ 0a780ee0-626c-11eb-ae93-0242ac130012 ]
+  client_certificate: 28cee516-6268-11eb-ae93-0242ac130012
+  retries: 5
+  routes: [ ... ]
+certificates:
+- cert: "<PEM FORMAT>"
+  key: "<PEM FORMAT>"
+  tags: [ _NS_ ]
+  id: 28cee516-6268-11eb-ae93-0242ac130012
+ca_certificates:
+- cert: "<PEM FORMAT>"
+  tags: [ _NS_ ]
+  id: 0a780ee0-626c-11eb-ae93-0242ac130012
+```
+
+> NOTE: You must generate a UUID (`python -c 'import uuid; print(uuid.uuid4())'`) for each certificate and ca_certificate you create (set the `id`) and reference it in your `services` details.
 
 ### gwa Command Line
 
