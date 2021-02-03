@@ -1,4 +1,4 @@
-# API Provider Flow
+# API Owner Flow
 
 ## 1. Register a new namespace
 
