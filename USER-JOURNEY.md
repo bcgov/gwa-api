@@ -25,7 +25,7 @@ The credential has the following access:
 
 The gateway configuration can be hand-crafted or you can use a command line interface that we developed called `gwa` to convert your Openapi v3 spec to a Kong configuration.
 
-### Hand-crafted (recommended if you don't have an Openapi spec)
+### 3.1. Hand-crafted (recommended if you don't have an Openapi spec)
 
 **Simple Example**
 
@@ -78,7 +78,7 @@ spec:
 
 > **Migrating from OCP3 to OCP4?** Please review the [OCP4-Migration](docs/OCP4-MIGRATION.md) instructions to help with transitioning to OCP4 and the new APS Gateway.
 
-> **Require mTLS between Gateway and your Upstream Service?** To support mTLS on your Upstream Service, you will need to provide client certificate details and if you want to verify the upstream endpoint then the `ca_certificates` and `tls_verify` is required as well.  An example:
+> **Require mTLS between the Gateway and your Upstream Service?** To support mTLS on your Upstream Service, you will need to provide client certificate details and if you want to verify the upstream endpoint then the `ca_certificates` and `tls_verify` is required as well.  An example:
 
 ```
 services:
@@ -104,7 +104,7 @@ ca_certificates:
 
 > NOTE: You must generate a UUID (`python -c 'import uuid; print(uuid.uuid4())'`) for each certificate and ca_certificate you create (set the `id`) and reference it in your `services` details.
 
-### gwa Command Line
+### 3.2. gwa Command Line
 
 Run: `gwa new` and follow the prompts.
 
@@ -123,7 +123,7 @@ gwa new -o sample.yaml \
 
 The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa Command Line` can be used.
 
-### gwa Command Line (recommended)
+### 4.1. gwa Command Line (recommended)
 
 **Install (for Linux)**
 
@@ -167,7 +167,7 @@ If you want to see the expected changes but not actually apply them, you can run
 gwa pg --dry-run sample.yaml
 ```
 
-### Swagger Console
+### 4.2. Swagger Console
 
 Go to <a href="https://gwa-api-gov-bc-ca.test.apsgw.xyz/api/doc" target="_blank">gwa-api Swagger Console</a>.
 
@@ -183,7 +183,7 @@ Select a `configFile` file.
 
 Send the request.
 
-### Postman
+### 4.3. Postman
 
 From the Postman App, click the `Import` button and go to the `Link` tab.
 
@@ -245,7 +245,7 @@ The result will show the ACL changes.  The Add/Delete counts represent the membe
 
 Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated on the gateway.
 
-### Github Actions Example
+### 8.1. Github Actions Example
 
 In the repository that you maintain your CI/CD Pipeline configuration, use the Service Account details from `Step 2` to set up two `Secrets`:
 
@@ -295,3 +295,9 @@ jobs:
         gwa acl --managers acope@idir
        
 ```
+
+## 9. Share your API for Discovery
+
+Package your APIs and make them available for discovery through the API Portal and BC Data Catalog.
+
+**Coming soon!**
