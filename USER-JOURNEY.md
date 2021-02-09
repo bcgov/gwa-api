@@ -1,4 +1,4 @@
-# API Provider Flow
+# API Owner Flow
 
 ## 1. Register a new namespace
 
@@ -25,7 +25,7 @@ The credential has the following access:
 
 The gateway configuration can be hand-crafted or you can use a command line interface that we developed called `gwa` to convert your Openapi v3 spec to a Kong configuration.
 
-### Hand-crafted (recommended if you don't have an Openapi spec)
+### 3.1. Hand-crafted (recommended if you don't have an Openapi spec)
 
 **Simple Example**
 
@@ -78,8 +78,33 @@ spec:
 
 > **Migrating from OCP3 to OCP4?** Please review the [OCP4-Migration](docs/OCP4-MIGRATION.md) instructions to help with transitioning to OCP4 and the new APS Gateway.
 
+> **Require mTLS between the Gateway and your Upstream Service?** To support mTLS on your Upstream Service, you will need to provide client certificate details and if you want to verify the upstream endpoint then the `ca_certificates` and `tls_verify` is required as well.  An example:
 
-### gwa Command Line
+```
+services:
+- name: my-upstream-service
+  host: my-upstream.site
+  tags: [ _NS_ ]
+  port: 443
+  protocol: https
+  tls_verify: true
+  ca_certificates: [ 0a780ee0-626c-11eb-ae93-0242ac130012 ]
+  client_certificate: 8fc131ef-9752-43a4-ba70-eb10ba442d4e
+  routes: [ ... ]
+certificates:
+- cert: "<PEM FORMAT>"
+  key: "<PEM FORMAT>"
+  tags: [ _NS_ ]
+  id: 8fc131ef-9752-43a4-ba70-eb10ba442d4e
+ca_certificates:
+- cert: "<PEM FORMAT>"
+  tags: [ _NS_ ]
+  id: 0a780ee0-626c-11eb-ae93-0242ac130012
+```
+
+> NOTE: You must generate a UUID (`python -c 'import uuid; print(uuid.uuid4())'`) for each certificate and ca_certificate you create (set the `id`) and reference it in your `services` details.
+
+### 3.2. gwa Command Line
 
 Run: `gwa new` and follow the prompts.
 
@@ -98,19 +123,19 @@ gwa new -o sample.yaml \
 
 The Swagger console for the `gwa-api` can be used to publish Kong Gateway configuration, or the `gwa Command Line` can be used.
 
-### gwa Command Line (recommended)
+### 4.1. gwa Command Line (recommended)
 
 **Install (for Linux)**
 
 ```
-GWA_CLI_VERSION=v1.1.1; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
+GWA_CLI_VERSION=v1.1.2; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
 unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 ./gwa --version
 ```
 
 > **Using MacOS?** Use `gwa_${GWA_CLI_VERSION}_macos_x64.zip` in the above curl command.
 
-> **Using Windows?** From a Browser, download the following and click `Open` from the Browser; a `gwa.exe` file will be available: `https://github.com/bcgov/gwa-cli/releases/download/v1.1.1/gwa_v1.1.1_win_x64.zip`
+> **Using Windows?** From a Browser, download the following and click `Open` from the Browser; a `gwa.exe` file will be available: `https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_win_x64.zip`
 
 **Configure**
 
@@ -142,7 +167,7 @@ If you want to see the expected changes but not actually apply them, you can run
 gwa pg --dry-run sample.yaml
 ```
 
-### Swagger Console
+### 4.2. Swagger Console
 
 Go to <a href="https://gwa-api-gov-bc-ca.test.apsgw.xyz/api/doc" target="_blank">gwa-api Swagger Console</a>.
 
@@ -158,7 +183,7 @@ Select a `configFile` file.
 
 Send the request.
 
-### Postman
+### 4.3. Postman
 
 From the Postman App, click the `Import` button and go to the `Link` tab.
 
@@ -220,7 +245,7 @@ The result will show the ACL changes.  The Add/Delete counts represent the membe
 
 Update your CI/CD pipelines to run the `gwa-cli` to keep your services updated on the gateway.
 
-### Github Actions Example
+### 8.1. Github Actions Example
 
 In the repository that you maintain your CI/CD Pipeline configuration, use the Service Account details from `Step 2` to set up two `Secrets`:
 
@@ -251,8 +276,8 @@ jobs:
 
     - name: Get GWA Command Line
       run: |
-        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.1.1/gwa_v1.1.1_linux_x64.zip
-        unzip gwa_v1.1.1_linux_x64.zip
+        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.1.2/gwa_v1.1.2_linux_x64.zip
+        unzip gwa_v1.1.2_linux_x64.zip
         export PATH=`pwd`:$PATH
 
     - name: Apply Namespace Configuration
@@ -270,3 +295,9 @@ jobs:
         gwa acl --managers acope@idir
        
 ```
+
+## 9. Share your API for Discovery
+
+Package your APIs and make them available for discovery through the API Portal and BC Data Catalog.
+
+**Coming soon!**
