@@ -106,6 +106,8 @@ ca_certificates:
 
 > NOTE: You must generate a UUID (`python -c 'import uuid; print(uuid.uuid4())'`) for each certificate and ca_certificate you create (set the `id`) and reference it in your `services` details.
 
+> HELPER: Python command to get a PEM file on one line: `python -c 'import sys; import json; print(json.dumps(open(sys.argv[1]).read()))' my.pem`
+
 ### 3.2. gwa Command Line
 
 Run: `gwa new` and follow the prompts.
