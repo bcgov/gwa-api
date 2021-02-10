@@ -55,7 +55,9 @@ services:
 " > sample.yaml
 ```
 
-To view optional plugin examples go [here](/docs/samples/service-plugins).
+> To view common plugin config go to [COMMON-CONFIG.md](/docs/COMMON-CONFIG.md)
+
+> To view some other plugin examples go [here](/docs/samples/service-plugins).
 
 > **Declarative Config** Behind the scenes, DecK is used to sync your configuration with Kong.  For reference: https://docs.konghq.com/deck/overview/
 
