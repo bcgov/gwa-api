@@ -29,6 +29,8 @@ plugins:
       - "Content-Security-Policy: script-src 'self'"
 ```
 
+> For further information on individual headers, see: https://owasp.org/www-project-secure-headers/
+
 ## Rate Limit
 
 ### Option 1 - Using a Distributed Cache
