@@ -1,0 +1,12 @@
+services:
+- name: MY_REST_API
+  tags: [ _NS_ ]
+  plugins:
+  - name: acl
+    tags: [ _NS_ ]
+    config:
+      allow:
+      - pir-dev
+      deny: null
+      hide_groups_header: true
+ 
