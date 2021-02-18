@@ -43,7 +43,7 @@ def list_service_accounts(namespace: str) -> object:
         response = raise_error_from_response(data_raw, KeycloakGetError)
         result = []
         for r in response:
-            if client_id_valid(namespace, clientId):
+            if client_id_valid(namespace, r['clientId']):
                 result.append(r['clientId'])
         return (json.dumps(result), 200)
     except KeycloakGetError as err:
