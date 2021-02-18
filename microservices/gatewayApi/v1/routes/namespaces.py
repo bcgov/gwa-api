@@ -31,12 +31,10 @@ ns = Blueprint('namespaces', 'namespaces')
 def create_namespace() -> object:
     log = app.logger
 
-    keycloak_admin = admin_api()
-
     namespace = request.get_json(force=True)['name']
 
     if not namespace_valid(namespace):
-        log.error("Namespace validation failed %s" % namespace)
+        log.error("Namespace validation failed %s", namespace)
         abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
 
     try:
@@ -70,7 +68,7 @@ def update_namespace(namespace: str) -> object:
     params = request.get_json(force=True)
 
     if not namespace_valid(namespace):
-        log.error("Namespace validation failed %s" % namespace)
+        log.error("Namespace validation failed %s", namespace)
         abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
 
     try:
@@ -81,7 +79,7 @@ def update_namespace(namespace: str) -> object:
         svc.update_ns_attributes (ns_group, params)
 
     except KeycloakGetError as err:
-        log.error("Failed to update namespace %s" % namespace)
+        log.error("Failed to update namespace %s", namespace)
         log.error(err)
         abort(make_response(jsonify(error="Failed to update namespace"), 400))
 
@@ -165,7 +163,7 @@ def membership_sync (namespace, role_name, desired_membership_list):
     # Remove users that are not part of the provided membership
     for member in membership:
         if member['username'] not in desired_membership:
-            log.debug("[%s] REMOVE user %s from %s" % (namespace, member['username'], base_group_path))
+            log.debug("[%s] REMOVE user %s from %s", namespace, member['username'], base_group_path)
             keycloak_admin.group_user_remove (member['id'], group['id'])
             counts_removed = counts_removed + 1
         else:
@@ -176,11 +174,11 @@ def membership_sync (namespace, role_name, desired_membership_list):
     for username in desired_membership:
         user_id = keycloak_admin.get_user_id (username)
         if user_id is None:
-            log.debug("[%s] UNREGISTERED user %s FROM %s" % (namespace, username, base_group_path))
+            log.debug("[%s] UNREGISTERED user %s FROM %s", namespace, username, base_group_path)
             counts_missing = counts_missing + 1
             unregistered_users.append(username)
         else:
-            log.debug("[%s] ADDING user %s TO %s" % (namespace, username, base_group_path))
+            log.debug("[%s] ADDING user %s TO %s", namespace, username, base_group_path)
             keycloak_admin.group_user_add (user_id, group['id'])
             counts_added = counts_added + 1
 
@@ -199,6 +197,6 @@ def create_group(namespace, group_base_path, role_name):
         keycloak_admin.create_group ({"name": get_base_group_name(role_name)})
         parent_group = keycloak_admin.get_group_by_path(group_base_path)
 
-    response = keycloak_admin.create_group ({"name": namespace}, parent=parent_group['id'])
-    log.debug("[%s] Group %s/%s created!" % (namespace, group_base_path, namespace))
+    keycloak_admin.create_group ({"name": namespace}, parent=parent_group['id'])
+    log.debug("[%s] Group %s/%s created!", namespace, group_base_path, namespace)
 

@@ -1,5 +1,7 @@
 # API Owner Flow
 
+The following steps walk an API Owner through setting up an API on the BC Gov API Gateway in our Test instance.  If you are ready to deploy to our Production instance, use the links [here](#production-links).
+
 ## 1. Register a new namespace
 
 A `namespace` represents a collection of Kong Services and Routes that are managed independently.
@@ -53,7 +55,9 @@ services:
 " > sample.yaml
 ```
 
-To view optional plugin examples go [here](/docs/samples/service-plugins).
+> To view common plugin config go to [COMMON-CONFIG.md](/docs/COMMON-CONFIG.md)
+
+> To view some other plugin examples go [here](/docs/samples/service-plugins).
 
 > **Declarative Config** Behind the scenes, DecK is used to sync your configuration with Kong.  For reference: https://docs.konghq.com/deck/overview/
 
@@ -103,6 +107,8 @@ ca_certificates:
 ```
 
 > NOTE: You must generate a UUID (`python -c 'import uuid; print(uuid.uuid4())'`) for each certificate and ca_certificate you create (set the `id`) and reference it in your `services` details.
+
+> HELPER: Python command to get a PEM file on one line: `python -c 'import sys; import json; print(json.dumps(open(sys.argv[1]).read()))' my.pem`
 
 ### 3.2. gwa Command Line
 
@@ -154,6 +160,8 @@ OR run:
 gwa init -T --namespace=$NS --client-id=<YOUR SERVICE ACCOUNT ID> --client-secret=<YOUR SERVICE ACCOUNT SECRET>
 
 ```
+
+> NOTE: The `-T` indicates our Test environment.  For production use `-P`.
 
 **Publish**
 
@@ -301,3 +309,10 @@ jobs:
 Package your APIs and make them available for discovery through the API Portal and BC Data Catalog.
 
 **Coming soon!**
+
+# Production Links
+
+* <a href="https://gwa2.apps.gov.bc.ca/int" target="_blank">API Services Portal</a>
+* <a href="https://gwa.api.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>
+* OpenAPI to Postman Converter: https://openapi-to-postman.api.gov.bc.ca/?url=https://gwa.api.gov.bc.ca/api/doc/swagger.json
+* <a href="https://grafana.apps.gov.bc.ca" target="_blank">APS Metrics - Grafana</a>

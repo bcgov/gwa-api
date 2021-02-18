@@ -1,6 +1,6 @@
 FROM golang:1.15.2 AS build
 WORKDIR /deck
-RUN git clone -b feature/issue-268 https://github.com/ikethecoder/deck.git
+RUN git clone https://github.com/kong/deck.git
 RUN cd deck \
  && go mod download \
  && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o deck \
