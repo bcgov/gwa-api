@@ -140,7 +140,7 @@ def write_config(namespace: str) -> object:
     dfile = None
 
     if 'configFile' in request.files:
-        log.debug("[%s] %s" % (namespace, request.files['configFile']))
+        log.debug("[%s] %s", namespace, request.files['configFile'])
         dfile = request.files['configFile']
         dry_run = request.values['dryRun']
     elif request.content_type.startswith("application/json"):
@@ -148,7 +148,7 @@ def write_config(namespace: str) -> object:
         dry_run = request.json['dryRun']
     else:
         log.error("Missing input")
-        log.error(request.get_data())
+        log.error("%s", request.get_data())
         log.error(request.form)
         log.error(request.content_type)
         log.error(request.headers)
