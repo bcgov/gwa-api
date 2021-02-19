@@ -9,6 +9,8 @@ openssl s_client -showcerts -verify 5 -connect gwa.api.gov.bc.ca:443 -servername
 openssl x509 -in gw.crt -fingerprint -serial -dates -noout
 ```
 
+## *.api.gov.bc.ca
+
 | Issue Date  | Expires     | Deployed    | SHA1 Fingerprint                                            | Serial No.                       |
 |-------------|-------------|-------------|-------------------------------------------------------------|----------------------------------|
 | Oct 6 2020  | Oct 16 2020 | Oct 6 2020  | 20:7D:15:9D:42:BE:CC:BC:FD:EF:DF:13:77:C7:25:A3:A4:72:45:05 | 7876EB597E14F728C8455504177D3BC9 |
