@@ -31,7 +31,7 @@ The gateway configuration can be hand-crafted or you can use a command line inte
 
 **Simple Example**
 
-```
+``` bash
 export NS="my_namespace"
 export NAME="a-service-for-$NS"
 echo "
@@ -65,7 +65,7 @@ services:
 
 > **Upstream Services on OCP4:** If your service is running on OCP4, you should specify the Kubernetes Service in the `Service.host`.  It must have the format: `<name>.<ocp-namespace>.svc` The Network Security Policies (NSP) will be setup automatically on the API Gateway side.  You will need to create an NSP on your side looking something like this to allow the Gateway's test and prod environments to route traffic to your API:
 
-```
+``` yaml
 kind: NetworkSecurityPolicy
 apiVersion: security.devops.gov.bc.ca/v1alpha1
 metadata:
@@ -84,7 +84,7 @@ spec:
 
 > **Require mTLS between the Gateway and your Upstream Service?** To support mTLS on your Upstream Service, you will need to provide client certificate details and if you want to verify the upstream endpoint then the `ca_certificates` and `tls_verify` is required as well.  An example:
 
-```
+``` yaml
 services:
 - name: my-upstream-service
   host: my-upstream.site
@@ -116,7 +116,7 @@ Run: `gwa new` and follow the prompts.
 
 Example:
 
-```
+``` bash
 gwa new -o sample.yaml \
   --route-host myapi.api.gov.bc.ca \
   --service-url https://httpbin.org \
@@ -133,7 +133,7 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 
 **Install (for Linux)**
 
-```
+``` bash
 GWA_CLI_VERSION=v1.1.2; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
 unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 ./gwa --version
@@ -147,7 +147,7 @@ unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 
 Create a `.env` file and update the CLIENT_ID and CLIENT_SECRET with the new credentials that were generated in step #2:
 
-```
+``` bash
 echo "
 GWA_NAMESPACE=$NS
 CLIENT_ID=<YOUR SERVICE ACCOUNT ID>
@@ -165,13 +165,13 @@ gwa init -T --namespace=$NS --client-id=<YOUR SERVICE ACCOUNT ID> --client-secre
 
 **Publish**
 
-```
+``` bash
 gwa pg sample.yaml 
 ```
 
 If you want to see the expected changes but not actually apply them, you can run:
 
-```
+``` bash
 gwa pg --dry-run sample.yaml
 ```
 
@@ -211,7 +211,7 @@ To verify that the Gateway can access the upstream services, run the command: `g
 
 In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-apps-gov-bc-ca.test.apsgw.xyz/int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
 
-```
+``` bash
 curl https://${NAME}-api-gov-bc-ca.test.apsgw.xyz/headers
 
 ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.apsgw.xyz/headers
@@ -243,7 +243,7 @@ The `acl` command provides a way to update the access for the namespace.  It exp
 
 For elevated privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
 
-```
+``` bash
 gwa acl --users jjones@idir --managers acope@idir
 ```
 
@@ -265,7 +265,7 @@ Add a `.gwa` folder (can be called anything) that will be used to hold your gate
 
 An example Github Workflow:
 
-```
+``` yaml
 env:
   NS: "<your namespace>"
   
