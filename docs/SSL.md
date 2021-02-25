@@ -5,7 +5,7 @@ If you would like to verify the SSL endpoint, you can run the following two comm
 
 ```
 export A_HOST=httpbin-regression.api.gov.bc.ca
-openssl s_client -showcerts -verify 5 -connect ${A_HOST}:443 -servername ${A_HOST} < /dev/null | awk '/BEGIN/,/END/{ if(/BEGIN/){a++}; print}' > gw.crt
+openssl s_client -showcerts -verify 5 -connect 142.34.194.118:443 -servername ${A_HOST} < /dev/null | awk '/BEGIN/,/END/{ if(/BEGIN/){a++}; print}' > gw.crt
 
 openssl x509 -in gw.crt -fingerprint -serial -dates -noout
 
