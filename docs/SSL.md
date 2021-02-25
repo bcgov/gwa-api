@@ -4,7 +4,8 @@
 If you would like to verify the SSL endpoint, you can run the following two commands and compare the fingerprint and serial no.
 
 ```
-openssl s_client -showcerts -verify 5 -connect gwa.api.gov.bc.ca:443 -servername gwa.api.gov.bc.ca < /dev/null | awk '/BEGIN/,/END/{ if(/BEGIN/){a++}; print}' > gw.crt
+export A_HOST=httpbin-regression.api.gov.bc.ca
+openssl s_client -showcerts -verify 5 -connect ${A_HOST}:443 -servername ${A_HOST} < /dev/null | awk '/BEGIN/,/END/{ if(/BEGIN/){a++}; print}' > gw.crt
 
 openssl x509 -in gw.crt -fingerprint -serial -dates -noout
 ```
