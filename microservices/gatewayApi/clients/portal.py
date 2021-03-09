@@ -36,13 +36,15 @@ def record_activity (activity):
     log = app.logger
     portal_url = app.config['portal']['url']
 
+    log.debug("record_activity %s : %s %s" % (portal_url, activity['id'], activity['result'])
+
     if portal_url != "":
         headers = {
             "Content-Type": "application/json"
         }
         try:
             r = requests.put("%s/feed/Activity" % portal_url, headers=headers, json=activity)
-            print("Request Record Activity %s : %d" % (portal_url, r.status_code))
+            log.info("Request Record Activity %s : %d" % (portal_url, r.status_code))
         except Exception as ex:
-            print("Error recording activity %s : %s" % (portal_url, str(ex)))
+            log.error("Error recording activity %s : %s" % (portal_url, str(ex)))
             traceback.print_exc(file=sys.stdout)
