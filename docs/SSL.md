@@ -11,6 +11,20 @@ openssl x509 -in gw.crt -fingerprint -serial -dates -noout
 
 ```
 
+**Individual File Verification**
+
+```
+openssl x509 -in data-api-wildcard-2020.crt -fingerprint -serial -dates -noout
+openssl x509 -in data-api-wildcard-2021.crt -fingerprint -serial -dates -noout
+```
+
+**Cert/Key Verification**
+
+```
+openssl x509 -noout -modulus -in data-api-wildcard.crt | openssl md5
+openssl rsa -noout -modulus -in data-api-wildcard.key | openssl md5
+```
+
 ## *.api.gov.bc.ca
 
 | Issue Date  | Expires     | Deployed    | SHA1 Fingerprint                                            | Serial No.                       |
