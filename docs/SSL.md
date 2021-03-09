@@ -11,20 +11,6 @@ openssl x509 -in gw.crt -fingerprint -serial -dates -noout
 
 ```
 
-**Individual File Verification**
-
-```
-openssl x509 -in data-api-wildcard-2020.crt -fingerprint -serial -dates -noout
-openssl x509 -in data-api-wildcard-2021.crt -fingerprint -serial -dates -noout
-```
-
-**Cert/Key Verification**
-
-```
-openssl x509 -noout -modulus -in data-api-wildcard.crt | openssl md5
-openssl rsa -noout -modulus -in data-api-wildcard.key | openssl md5
-```
-
 ## *.api.gov.bc.ca
 
 | Issue Date  | Expires     | Deployed    | SHA1 Fingerprint                                            | Serial No.                       |
@@ -37,4 +23,19 @@ You can run the above as one line:
 
 ```
 A_HOST=httpbin-regression.api.gov.bc.ca; openssl s_client -showcerts -verify 5 -connect ${A_HOST}:443 -servername ${A_HOST} < /dev/null | awk '/BEGIN/,/END/{ if(/BEGIN/){a++}; print}' | openssl x509 -fingerprint -serial -dates -noout
+```
+
+
+**Individual File Verification**
+
+```
+openssl x509 -in data-api-wildcard-2020.crt -fingerprint -serial -dates -noout
+openssl x509 -in data-api-wildcard-2021.crt -fingerprint -serial -dates -noout
+```
+
+**Cert/Key Verification**
+
+```
+openssl x509 -noout -modulus -in data-api-wildcard.crt | openssl md5
+openssl rsa -noout -modulus -in data-api-wildcard.key | openssl md5
 ```
