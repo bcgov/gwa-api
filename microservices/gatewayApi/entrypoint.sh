@@ -21,9 +21,15 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
         "username": "$KC_USERNAME",
         "password": "$KC_PASSWORD"
     },
+    "applyAporetoNSP": ${NSP_ENABLED:-true},
+    "protectedKubeNamespaces": "${PROTECTED_KUBE_NAMESPACES:-[]}",
     "hostTransformation": {
         "enabled": ${HOST_TRANSFORM_ENABLED:-false},
         "baseUrl": "${HOST_TRANSFORM_BASE_URL}"
+    },
+    "portal": {
+        "url": "${PORTAL_ACTIVITY_URL:-""}",
+        "token": "${PORTAL_ACTIVITY_TOKEN}"
     },
     "plugins": {
         "rate_limiting": {

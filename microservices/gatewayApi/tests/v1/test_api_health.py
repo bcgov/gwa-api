@@ -8,7 +8,7 @@ import yaml
 import pytest
 from v1.routes.gateway import validate_tags
 
-# def test_validate_tags_good_scenario():
+# def test_validate_tags_good_scenario(app):
 #     payload = '''
 # services:
 #   - name: my-service
@@ -21,9 +21,10 @@ from v1.routes.gateway import validate_tags
 #         tags: ["ns.mytest"]
 # '''
 #     y = yaml.load(payload, Loader=yaml.FullLoader)
-#     validate_tags (y, "ns.mytest")
+#     with app.app_context():
+#         validate_tags (y, "ns.mytest")
 
-# def test_validate_tags_illegal_tag():
+# def test_validate_tags_illegal_tag(app):
 #     payload = '''
 # services:
 #   - name: my-service
@@ -33,10 +34,11 @@ from v1.routes.gateway import validate_tags
 #       tags: ["ns.mytest", "another2"]
 # '''
 #     y = yaml.load(payload, Loader=yaml.FullLoader)
-#     with pytest.raises(Exception, match=r"^.services.my-service missing required tag ns.mytest,.services.my-service invalid ns tag ns.mytest-bad"):
-#         result = validate_tags (y, "ns.mytest")
+#     with app.app_context():
+#         with pytest.raises(Exception, match=r"^.services.my-service missing required tag ns.mytest,.services.my-service invalid ns tag ns.mytest-bad"):
+#             result = validate_tags (y, "ns.mytest")
 
-# def test_validate_tags_missing_required_tag():
+# def test_validate_tags_missing_required_tag(app):
 #     payload = '''
 # services:
 #   - name: my-service
@@ -46,10 +48,11 @@ from v1.routes.gateway import validate_tags
 #       tags: ["ns.mytest", "another2"]
 # '''
 #     y = yaml.load(payload, Loader=yaml.FullLoader)
-#     with pytest.raises(Exception, match=r"^.services.my-service missing required tag ns.mytest"):
-#         result = validate_tags (y, "ns.mytest")
+#     with app.app_context():
+#         with pytest.raises(Exception, match=r"^.services.my-service missing required tag ns.mytest"):
+#             result = validate_tags (y, "ns.mytest")
 
-# def test_validate_tags_missing_required_route_tag():
+# def test_validate_tags_missing_required_route_tag(app):
 #     payload = '''
 # services:
 #   - name: my-service
@@ -59,10 +62,11 @@ from v1.routes.gateway import validate_tags
 #       tags: ["another2"]
 # '''
 #     y = yaml.load(payload, Loader=yaml.FullLoader)
-#     with pytest.raises(Exception, match=r"^.services.my-service.routes.route-1 missing required tag ns.mytest"):
-#         result = validate_tags (y, "ns.mytest")
+#     with app.app_context():
+#         with pytest.raises(Exception, match=r"^.services.my-service.routes.route-1 missing required tag ns.mytest"):
+#             result = validate_tags (y, "ns.mytest")
 
-# def test_validate_tags_missing_plugin_tag():
+# def test_validate_tags_missing_plugin_tag(app):
 #     payload = '''
 # services:
 #   - name: my-service
@@ -74,5 +78,6 @@ from v1.routes.gateway import validate_tags
 #       - name: acl-auth
 # '''
 #     y = yaml.load(payload, Loader=yaml.FullLoader)
-#     with pytest.raises(Exception, match=r"^.services.my-service.routes.route-1.plugins.acl-auth no tags found"):
-#         result = validate_tags (y, "ns.mytest")
+#     with app.app_context():
+#         with pytest.raises(Exception, match=r"^.services.my-service.routes.route-1.plugins.acl-auth no tags found"):
+#             result = validate_tags (y, "ns.mytest")

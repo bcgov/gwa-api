@@ -11,9 +11,12 @@ from gevent.pywsgi import WSGIServer
 # from server import app
 from timeit import default_timer as timer
 from app import create_app
+import threading
 
 import config
 from logging.config import dictConfig
+
+from swagger import setup_swagger_docs
 
 conf = config.Config()
 
@@ -36,6 +39,9 @@ dictConfig({
 log = logging.getLogger(__name__)
 
 app = create_app()
+
+t = threading.Thread(name='child procs', target=setup_swagger_docs, args=(app,))
+t.start()
 
 def signal_handler(sig, frame):
     log.info('You pressed Ctrl+C - exiting!')
