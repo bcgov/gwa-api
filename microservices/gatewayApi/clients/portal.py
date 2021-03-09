@@ -36,7 +36,7 @@ def record_activity (activity):
     log = app.logger
     portal_url = app.config['portal']['url']
 
-    log.debug("record_activity %s : %s %s" % (portal_url, activity['id'], activity['result'])
+    log.debug("record_activity %s : %s %s" % (portal_url, activity['id'], activity['result']))
 
     if portal_url != "":
         headers = {
