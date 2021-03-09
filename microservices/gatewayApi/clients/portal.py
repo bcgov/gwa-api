@@ -43,7 +43,7 @@ def record_activity (activity):
             "Content-Type": "application/json"
         }
         try:
-            r = requests.put("%s/feed/Activity" % portal_url, headers=headers, json=activity)
+            r = requests.put("%s/feed/Activity" % portal_url, headers=headers, json=activity, timeout=5)
             log.info("Request Record Activity %s : %d" % (portal_url, r.status_code))
         except Exception as ex:
             log.error("Error recording activity %s : %s" % (portal_url, str(ex)))
