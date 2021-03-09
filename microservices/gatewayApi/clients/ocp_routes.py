@@ -117,6 +117,25 @@ metadata:
 
     return len(delete_list)
 
+def prepare_route_last_version (ns, select_tag):
+    log = app.logger
+
+    args = [
+        "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
+    ]
+    run = Popen(args, stdout=PIPE, stderr=PIPE)
+    out, err = run.communicate()
+    if run.returncode != 0:
+        log.error("Failed to get existing routes", out, err)
+        raise Exception("Failed to get existing routes")
+
+    resource_versions = {}
+
+    existing = json.loads(out)
+    for route in existing['items']:
+        resource_versions[ route['metadata']['name'] ] = route['metadata']['resourceVersion']
+    return resource_versions
+
 def prepare_apply_routes (ns, select_tag, is_host_transform_enabled, rootPath):
     log = app.logger
     ssl_key_path = "/ssl/tls.key"
@@ -132,6 +151,7 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: ${name}
+  resourceVersion: "${resource_version}"
   annotations:
     haproxy.router.openshift.io/timeout: 30m
   labels:
@@ -167,6 +187,8 @@ status:
     ts = int(time.time())
     fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
 
+    resource_versions = prepare_route_last_version(ns, select_tag)
+
     with open(out_filename, 'w') as out_file:
         index = 1
         for host in host_list:
@@ -182,8 +204,14 @@ status:
             ssl_key = read_and_indent("/ssl/%s.key" % ssl_ref, 8)
             ssl_crt = read_and_indent("/ssl/%s.crt" % ssl_ref, 8)
 
-            log.debug("[%s] Route A %03d wild-%s-%s" % (select_tag, index, select_tag.replace('.','-'), host))
-            out_file.write(template.substitute(name="wild-%s-%s" % (select_tag.replace('.','-'), host), ns=ns, select_tag=select_tag, host=host, path='/', ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-kong-proxy', timestamp=ts, fmt_time=fmt_time))
+            name = "wild-%s-%s" % (select_tag.replace('.','-'), host)
+
+            resource_version = ""
+            if name in resource_versions:
+                resource_version = resource_versions[name]
+
+            log.debug("[%s] Route A %03d wild-%s-%s (ver.%s)" % (select_tag, index, select_tag.replace('.','-'), host, resource_version))
+            out_file.write(template.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/', ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-kong-proxy', timestamp=ts, fmt_time=fmt_time))
             out_file.write('\n---\n')
             index = index + 1
 
