@@ -46,6 +46,7 @@ setup(
         'pyyaml',
         'mongoengine',
         'pyhcl',
+        'python-keycloak',
         'requests',
         'swagger-ui-py==0.3.0',
         'flask-jwt-simple',

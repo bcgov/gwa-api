@@ -3,6 +3,7 @@ import shutil
 import sys
 import http
 import traceback
+from urllib.parse import urlparse
 from subprocess import Popen, PIPE, STDOUT
 import uuid
 import logging
@@ -16,6 +17,7 @@ from v1.auth.auth import admin_jwt, enforce_authorization
 
 from v1.services.namespaces import NamespaceService
 
+from clients.portal import record_gateway_event
 from clients.kong import get_routes
 from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
 from clients.ocp_routes import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
@@ -27,6 +29,10 @@ from utils.masking import mask
 
 gw = Blueprint('gwa', 'gateway')
 
+def abort_early (event_id, action, namespace, response):
+    record_gateway_event(event_id, action, 'failed', namespace, json.dumps(response.get_json()))
+    abort(make_response(response, 400))
+
 @gw.route('/',
            methods=['DELETE'], strict_slashes=False)
 @gw.route('/<string:qualifier>',
@@ -34,6 +40,10 @@ gw = Blueprint('gwa', 'gateway')
 @admin_jwt(None)
 def delete_config(namespace: str, qualifier = "") -> object:
     enforce_authorization(namespace)
+
+    event_id = str(uuid.uuid4())
+    record_gateway_event(event_id, 'delete', 'received', namespace)
+
     log = app.logger
 
     outFolder = namespace
@@ -63,7 +73,7 @@ def delete_config(namespace: str, qualifier = "") -> object:
     if deck_run.returncode != 0:
         cleanup (tempFolder)
         log.warn("%s - %s" % (namespace, out.decode('utf-8')))
-        abort(make_response(jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))), 400))
+        abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))) )
 
     elif cmd == "sync":
         try:
@@ -93,11 +103,11 @@ def delete_config(namespace: str, qualifier = "") -> object:
         except HTTPException as ex:
             traceback.print_exc()
             log.error("Error updating custom routes, nsps and secrets. %s" % ex)
-            abort(make_response(jsonify(error="Partially failed."), 400))
+            abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed.") )
         except:
             traceback.print_exc()
             log.error("Error updating custom routes, nsps and secrets. %s" % sys.exc_info()[0])
-            abort(make_response(jsonify(error="Partially failed."), 400))
+            abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed.") )
 
     cleanup (tempFolder)
 
@@ -107,6 +117,7 @@ def delete_config(namespace: str, qualifier = "") -> object:
     if cmd == 'diff':
         message = "Dry-run.  No changes applied."
 
+    record_gateway_event(event_id, 'delete', 'completed', namespace)
     return make_response('', http.HTTPStatus.NO_CONTENT)
 
 
@@ -119,6 +130,10 @@ def write_config(namespace: str) -> object:
     :return: JSON of success message or error message
     """
     enforce_authorization(namespace)
+
+    event_id = str(uuid.uuid4())
+    record_gateway_event(event_id, 'publish', 'received', namespace)
+
     log = app.logger
 
     outFolder = namespace
@@ -152,7 +167,7 @@ def write_config(namespace: str) -> object:
         log.error(request.form)
         log.error(request.content_type)
         log.error(request.headers)
-        abort(make_response(jsonify(error="Missing input"), 400))
+        abort_early(event_id, 'publish', namespace, jsonify(error="Missing input"))
 
     tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
     os.makedirs (tempFolder, exist_ok=False)
@@ -205,7 +220,7 @@ def write_config(namespace: str) -> object:
         except Exception as ex:
             traceback.print_exc()
             log.error("%s - %s" % (namespace, " Tag Validation Errors: %s" % ex))
-            abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
 
         # Validate that hosts are valid
         try:
@@ -213,7 +228,16 @@ def write_config(namespace: str) -> object:
         except Exception as ex:
             traceback.print_exc()
             log.error("%s - %s" % (namespace, " Host Validation Errors: %s" % ex))
-            abort(make_response(jsonify(error="Validation Errors:\n%s" % ex), 400))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
+
+        # Validate upstream URLs are valid
+        try:
+            protected_kube_namespaces = json.loads(app.config['protectedKubeNamespaces'])
+            validate_upstream (gw_config, ns_attributes, protected_kube_namespaces)
+        except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Upstream Validation Errors: %s" % ex))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
 
         # Validation #3
         # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
@@ -223,7 +247,7 @@ def write_config(namespace: str) -> object:
         nsq = traverse_get_ns_qualifier (gw_config, selectTag)
         if nsq is not None:
             if ns_qualifier is not None and nsq != ns_qualifier:
-                abort(make_response(jsonify(error="Validation Errors:\n%s" % ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))), 400))
+                abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))))
             ns_qualifier = nsq
             log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
 
@@ -245,7 +269,7 @@ def write_config(namespace: str) -> object:
     if deck_run.returncode != 0:
         cleanup (tempFolder)
         log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
-        abort(make_response(jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))), 400))
+        abort_early(event_id, 'publish', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
 
     elif cmd == "sync":
         try:
@@ -261,11 +285,12 @@ def write_config(namespace: str) -> object:
         
             # create Network Security Policies (nsp) for any upstream that
             # has the format: <name>.<ocp_ns>.svc
-            log.debug("[%s] - Update NSPs" % (namespace))
-            ocp_ns_list = get_ocp_service_namespaces (tempFolder)
-            for ocp_ns in ocp_ns_list:
-                if check_nsp (namespace, ocp_ns) is False:
-                    apply_nsp (namespace, ocp_ns, tempFolder)
+            if should_we_apply_nsp_policies():
+                log.debug("[%s] - Update NSPs" % (namespace))
+                ocp_ns_list = get_ocp_service_namespaces (tempFolder)
+                for ocp_ns in ocp_ns_list:
+                    if check_nsp (namespace, ocp_ns) is False:
+                        apply_nsp (namespace, ocp_ns, tempFolder)
 
             # ok all looks good, so update a secret containing the original submitted request
             log.debug("[%s] - Update Original Config" % (namespace))
@@ -275,11 +300,11 @@ def write_config(namespace: str) -> object:
         except HTTPException as ex:
             traceback.print_exc()
             log.error("[%s] Error updating custom routes, nsps and secrets. %s" % (namespace, ex))
-            abort(make_response(jsonify(error="Partially failed."), 400))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Partially failed."))
         except:
             traceback.print_exc()
             log.error("[%s] Error updating custom routes, nsps and secrets. %s" % (namespace, sys.exc_info()[0]))
-            abort(make_response(jsonify(error="Partially failed."), 400))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Partially failed."))
 
     cleanup (tempFolder)
 
@@ -289,6 +314,7 @@ def write_config(namespace: str) -> object:
     if cmd == 'diff':
         message = "Dry-run.  No changes applied."
 
+    record_gateway_event(event_id, 'publish', 'completed', namespace)
     return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
 
 def cleanup (dir_path):
@@ -359,6 +385,55 @@ def transform_host (host):
         return "%s.%s" % (host.replace('.', '-'), conf['baseUrl'])
     else:
         return host
+
+
+def validate_upstream (yaml, ns_attributes, protected_kube_namespaces):
+    errors = []
+
+    allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'] )[0] == 'allow'
+
+    ## A host must not contain a list of protected
+    if 'services' in yaml:
+        for service in yaml['services']:
+            if 'url' in service:
+                try:
+                    u = urlparse(service["url"])
+                    if u.hostname is None:
+                        errors.append("service upstream has invalid url specified (e1)")
+                    else:
+                        validate_upstream_host (u.hostname, errors, allow_protected_ns, protected_kube_namespaces)
+                except Exception as e:
+                    errors.append("service upstream has invalid url specified (e2)")
+                    
+            if 'host' in service:
+                host = service["host"]
+                validate_upstream_host (host, errors, allow_protected_ns, protected_kube_namespaces)
+
+    if len(errors) != 0:
+        raise Exception('\n'.join(errors))
+
+def validate_upstream_host (_host, errors, allow_protected_ns, protected_kube_namespaces):
+    host = _host.lower()
+
+    restricted = [ 'localhost', '127.0.0.1', '0.0.0.0' ]
+
+    if host in restricted:
+        errors.append("service upstream is invalid (e1)")
+    if host.endswith('svc'):
+        partials = host.split('.')
+        # get the namespace, and make sure it is not in the protected_kube_namespaces list
+        if len(partials) != 3:
+            errors.append("service upstream is invalid (e2)")
+        elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
+            errors.append("service upstream is invalid (e3)")
+    if host.endswith('svc.cluster.local'):
+        partials = host.split('.')
+        # get the namespace, and make sure it is not in the protected_kube_namespaces list
+        if len(partials) != 5:
+            errors.append("service upstream is invalid (e4)")
+        elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
+            errors.append("service upstream is invalid (e5)")
+
 
 def validate_hosts (yaml, reserved_hosts, ns_attributes):
     errors = []
@@ -463,3 +538,7 @@ def traverse_get_ns_qualifier (yaml, required_tag):
 def is_host_transform_enabled ():
     conf = app.config['hostTransformation']
     return conf['enabled'] is True
+
+def should_we_apply_nsp_policies ():
+    conf = app.config['applyAporetoNSP']
+    return conf is True

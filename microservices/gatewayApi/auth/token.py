@@ -1,7 +1,8 @@
 import requests
+import time
 from authlib.jose import jwt
 from authlib.jose.errors import JoseError, ExpiredTokenError
-from authlib.oauth2.rfc6749 import TokenMixin, time
+from authlib.oauth2.rfc6749 import TokenMixin
 from authlib.oauth2.rfc6750 import BearerTokenValidator
 from flask import current_app, g
 from config import Config
