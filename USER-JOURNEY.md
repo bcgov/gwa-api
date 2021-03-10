@@ -63,21 +63,29 @@ services:
 
 > **Splitting Your Config:** A namespace `tag` with the format `ns.$NS` is mandatory for each service/route/plugin.  But if you have separate pipelines for your environments (i.e./ dev, test and prod), you can split your configuration and update the `tags` with the qualifier.  So for example, you can use a tag `ns.$NS.dev` to sync Kong configuration for `dev` Service and Routes only.
 
-> **Upstream Services on OCP4:** If your service is running on OCP4, you should specify the Kubernetes Service in the `Service.host`.  It must have the format: `<name>.<ocp-namespace>.svc` The Network Security Policies (NSP) will be setup automatically on the API Gateway side.  You will need to create an NSP on your side looking something like this to allow the Gateway's test and prod environments to route traffic to your API:
+> **Upstream Services on OCP4:** If your service is running on OCP4, you should specify the Kubernetes Service in the `Service.host`.  It must have the format: `<name>.<ocp-namespace>.svc`.  Also make sure your `Service.port` matches your Kubernetes Service Port.  Any Security Policies for egress from the Gateway will be setup automatically on the API Gateway side.
+> The Aporeto Network Security Policies are being removed in favor of the Kubernetes Security Policies (KSP).  You will need to create a KSP on your side looking something like this to allow the Gateway's test and prod environments to route traffic to your API:
 
 ``` yaml
-kind: NetworkSecurityPolicy
-apiVersion: security.devops.gov.bc.ca/v1alpha1
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
 metadata:
-  name: aps-gateway-to-your-upstream-api
+  name: allow-traffic-from-gateway-to-your-api
 spec:
-  description: |
-    allow aps gateway to route traffic to your api
-  source:
-    - - $namespace=264e6f-test
-    - - $namespace=264e6f-prod
-  destination:
-    - - app.kubernetes.io/name=my-upstream-api
+  podSelector:
+    matchLabels:
+      name: my-upstream-api
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              environment: test
+              name: 264e6f
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              environment: prod
+              name: 264e6f
 ```
 
 > **Migrating from OCP3 to OCP4?** Please review the [OCP4-Migration](docs/OCP4-MIGRATION.md) instructions to help with transitioning to OCP4 and the new APS Gateway.
