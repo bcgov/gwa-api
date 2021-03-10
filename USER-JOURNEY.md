@@ -314,5 +314,5 @@ Package your APIs and make them available for discovery through the API Portal a
 
 * <a href="https://gwa2.apps.gov.bc.ca/int" target="_blank">API Services Portal</a>
 * <a href="https://gwa.api.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>
-* OpenAPI to Postman Converter: https://openapi-to-postman.api.gov.bc.ca/?url=https://gwa.api.gov.bc.ca/api/doc/swagger.json
+* OpenAPI to Postman Converter: https://openapi-to-postman.api.gov.bc.ca/?u=https://gwa.api.gov.bc.ca/api/doc/swagger.json
 * <a href="https://grafana.apps.gov.bc.ca" target="_blank">APS Metrics - Grafana</a>
