@@ -147,9 +147,7 @@ unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 ./gwa --version
 ```
 
-> **Using MacOS?** Use `gwa_${GWA_CLI_VERSION}_macos_x64.zip` in the above curl command.
-
-> **Using Windows?** From a Browser, download the following and click `Open` from the Browser; a `gwa.exe` file will be available: `https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_win_x64.zip`
+> **Using MacOS or Windows?** Download here: https://github.com/bcgov/gwa-cli/releases/tag/v1.1.3
 
 **Configure**
 
