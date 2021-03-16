@@ -6,7 +6,7 @@ The following steps walk an API Owner through setting up an API on the BC Gov AP
 
 A `namespace` represents a collection of Kong Services and Routes that are managed independently.
 
-To create a new namespace, go to the <a href="https://gwa-apps-gov-bc-ca.test.api.gov.bc.ca/int">API Services Portal</a>.
+To create a new namespace, go to the [API Services Portal](https://gwa-apps-gov-bc-ca.test.api.gov.bc.ca/int).
 
 After login (and selection of an existing namespace if you have one already assigned), go to the `New Namespace` tab and click the `Create Namespace` button.
 
