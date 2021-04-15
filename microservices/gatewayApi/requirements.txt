@@ -1,7 +1,7 @@
 ply==3.10
 cryptography==3.1.1
 authlib==0.15.3
-swagger-ui-py==0.3.0
+flask-swagger-ui==3.36.0
 Jinja2==2.11.2
 PyYAML==5.3.1
 munch==2.3.2

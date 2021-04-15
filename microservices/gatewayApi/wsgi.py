@@ -40,8 +40,7 @@ log = logging.getLogger(__name__)
 
 app = create_app()
 
-t = threading.Thread(name='child procs', target=setup_swagger_docs, args=(app,))
-t.start()
+threading.Thread(name='swagger docs', target=setup_swagger_docs, args=(app,["v1", "v2"])).start()
 
 def signal_handler(sig, frame):
     log.info('You pressed Ctrl+C - exiting!')
