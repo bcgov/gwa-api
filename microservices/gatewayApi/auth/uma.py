@@ -1,14 +1,8 @@
 from functools import wraps
 from flask import request, abort, make_response, Response, jsonify, g
-from config import Config
-
-from authlib.integrations.flask_oauth2 import ResourceProtector
-from auth.token import RemoteToken, OIDCTokenValidator
-
 from clients.kcprotect import check_permissions, map_res_name_to_id, get_token
 
 def enforce (resource, scope):
-    print("[enforce] %s %s" % (resource, scope))
     pat = get_token()
     rsid = map_res_name_to_id (pat['access_token'], resource)
     return check_permissions (g.token_string, [("permission", "%s#%s" % ( rsid, scope ))])
