@@ -7,11 +7,9 @@ import yaml
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
 
-from v1.auth.auth import admin_jwt, ns_claim
+from v2.auth.auth import admin_jwt
 
-_ns_claim = ns_claim()
-
-whoami = Blueprint('whoami', 'whoami')
+whoami = Blueprint('whoami.v2', 'whoami')
 
 @whoami.route('',
            methods=['GET'], strict_slashes=False)
@@ -20,14 +18,10 @@ def who_am_i() -> object:
     """
     :return: JSON of some key information about the authenticated principal
     """
-    if _ns_claim not in g.principal:
-        abort(make_response(jsonify(error="Missing Claims."), 500))
-
     output = {
         "authorized-party": g.principal['azp'],
         "scope": g.principal['scope'],
-        "issuer": g.principal['iss'],
-        "namespace": g.principal[_ns_claim],
+        "issuer": g.principal['iss']
     }
     if ('aud' in g.principal):
         output['audience'] = g.principal['aud']

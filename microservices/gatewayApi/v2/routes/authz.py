@@ -8,7 +8,8 @@ from flask import Blueprint, jsonify, request, Response, make_response, abort, g
 from io import TextIOWrapper
 
 from v2.auth.auth import admin_jwt, uma_enforce
-from clients.kcprotect import check_permissions, map_res_name_to_id, get_token
+from clients.uma.kcprotect import check_permissions, get_token
+from clients.uma.resourceset import map_res_name_to_id
 
 authz = Blueprint('authz', 'authz')
 

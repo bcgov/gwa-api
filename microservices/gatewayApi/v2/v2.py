@@ -2,6 +2,10 @@ import os
 from flask import Blueprint, jsonify, request
 from functools import reduce
 from v2.routes.authz import authz
+from v2.routes.gateway import gw
+from v2.routes.gw_status import gw_status
+from v2.routes.namespaces import ns
+from v2.routes.whoami import whoami
 
 v2 = Blueprint('v2', 'v2')
 
@@ -17,3 +21,7 @@ class Register:
     def __init__(self, app):
         app.register_blueprint(v2, url_prefix="/v2")
         app.register_blueprint(authz, url_prefix="/v2/authz")
+        app.register_blueprint(ns, url_prefix="/v2/namespaces")
+        app.register_blueprint(gw, url_prefix="/v2/namespaces/<string:namespace>/gateway")
+        app.register_blueprint(gw_status, url_prefix="/v2/namespaces/<string:namespace>/services")
+        app.register_blueprint(whoami, url_prefix="/v2/whoami")

@@ -21,33 +21,12 @@ def get_token ():
         "Content-Type": "application/x-www-form-urlencoded"
     }
 
+    print(tokenUrl)
     r = requests.post(tokenUrl, headers=headers, data=data)
     log.debug("[get_token] %s" % r.status_code)
     json = r.json()
     return json
 
-def map_res_name_to_id (pat_token, name):
-    conf = app.config['keycloak']
-
-    log = app.logger
-
-    tokenUrl = "%srealms/%s/authz/protection/resource_set?name=%s" % (conf['serverUrl'],conf['realm'], name)
-
-    headers = {
-        "Authorization": "Bearer %s" % pat_token,
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-
-    log.debug("[map_res_name_to_id] %s" % name)
-
-    r = requests.get(tokenUrl, headers=headers)
-    log.debug("[map_res_name_to_id] %s" % r.status_code)
-    json = r.json()
-    log.debug("[map_res_name_to_id] %s" % json)
-    if len(json) == 0:
-        return None
-    else:
-        return json[0]
 
 
 def check_permissions (access_token, permissions):
@@ -69,6 +48,8 @@ def check_permissions (access_token, permissions):
         ("response_mode", "decision"),
     ] + permissions
 
+    log.debug("[check_permissions] %s" % permissions)
+    log.debug("[check_permissions] %s" % tokenUrl)
     r = requests.post(tokenUrl, headers=headers, data=data)
     log.debug("[check_permissions] %s" % r.status_code)
     json = r.json()

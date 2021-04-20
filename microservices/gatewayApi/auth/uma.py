@@ -1,6 +1,7 @@
 from functools import wraps
 from flask import request, abort, make_response, Response, jsonify, g
-from clients.kcprotect import check_permissions, map_res_name_to_id, get_token
+from clients.uma.kcprotect import check_permissions, get_token
+from clients.uma.resourceset import map_res_name_to_id
 
 def enforce (resource, scope):
     pat = get_token()

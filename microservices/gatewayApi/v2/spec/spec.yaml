@@ -45,230 +45,230 @@ paths:
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
-  /namespaces/{namespace}/serviceaccounts:
-    get:
-      summary: Get service accounts
-      description: Get service accounts
-      tags:
-        - Service Accounts
-      parameters:
-        - name: namespace
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '400':
-          $ref: '#/components/responses/400BadRequest'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+  # /namespaces/{namespace}/serviceaccounts:
+  #   get:
+  #     summary: Get service accounts
+  #     description: Get service accounts
+  #     tags:
+  #       - Service Accounts
+  #     parameters:
+  #       - name: namespace
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #     responses:
+  #       '200':
+  #         description: Success
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '400':
+  #         $ref: '#/components/responses/400BadRequest'
+  #       '500':
+  #         $ref: '#/components/responses/500InternalServerError'
 
-    post:
-      summary: Add a new service account
-      description: Add a new service account
-      tags:
-        - Service Accounts
-      parameters:
-        - name: namespace
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '201':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status'
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '400':
-          $ref: '#/components/responses/400BadRequest'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+  #   post:
+  #     summary: Add a new service account
+  #     description: Add a new service account
+  #     tags:
+  #       - Service Accounts
+  #     parameters:
+  #       - name: namespace
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #     responses:
+  #       '201':
+  #         description: Success
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/status'
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '400':
+  #         $ref: '#/components/responses/400BadRequest'
+  #       '500':
+  #         $ref: '#/components/responses/500InternalServerError'
 
-  /namespaces/{namespace}/serviceaccounts/{accountId}:
-    put:
-      summary: Update service account credentials
-      description: Update service account credentials
-      tags:
-        - Service Accounts
-      parameters:
-        - name: namespace
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: accountId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '201':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status'
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '400':
-          $ref: '#/components/responses/400BadRequest'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
-    delete:
-      summary: Delete service account
-      description: Delete service account
-      tags:
-        - Service Accounts
-      parameters:
-        - name: namespace
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: accountId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Success
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '400':
-          $ref: '#/components/responses/400BadRequest'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+  # /namespaces/{namespace}/serviceaccounts/{accountId}:
+  #   put:
+  #     summary: Update service account credentials
+  #     description: Update service account credentials
+  #     tags:
+  #       - Service Accounts
+  #     parameters:
+  #       - name: namespace
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #       - name: accountId
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #     responses:
+  #       '201':
+  #         description: Success
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/status'
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '400':
+  #         $ref: '#/components/responses/400BadRequest'
+  #       '500':
+  #         $ref: '#/components/responses/500InternalServerError'
+  #   delete:
+  #     summary: Delete service account
+  #     description: Delete service account
+  #     tags:
+  #       - Service Accounts
+  #     parameters:
+  #       - name: namespace
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #       - name: accountId
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #     responses:
+  #       '204':
+  #         description: Success
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '400':
+  #         $ref: '#/components/responses/400BadRequest'
+  #       '500':
+  #         $ref: '#/components/responses/500InternalServerError'
 
-  /namespaces/{namespace}:
-    put:
-      summary: Update namespace attributes
-      description: Update namespace attributes
-      security:
-        - oauth2: [ Namespace.Admin ]
-      tags:
-        - Namespaces
-      parameters:
-        - name: namespace
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NamespaceAttributes'
+  # /namespaces/{namespace}:
+  #   put:
+  #     summary: Update namespace attributes
+  #     description: Update namespace attributes
+  #     security:
+  #       - oauth2: [ Namespace.Admin ]
+  #     tags:
+  #       - Namespaces
+  #     parameters:
+  #       - name: namespace
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/NamespaceAttributes'
 
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status'
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '400':
-          $ref: '#/components/responses/400BadRequest'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+  #     responses:
+  #       '200':
+  #         description: Success
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/status'
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '400':
+  #         $ref: '#/components/responses/400BadRequest'
+  #       '500':
+  #         $ref: '#/components/responses/500InternalServerError'
 
 
-    delete:
-      summary: Delete a namespace
-      description: Delete a namespace
-      tags:
-        - Namespaces
-      parameters:
-        - name: namespace
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Success
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '400':
-          $ref: '#/components/responses/400BadRequest'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+  #   delete:
+  #     summary: Delete a namespace
+  #     description: Delete a namespace
+  #     tags:
+  #       - Namespaces
+  #     parameters:
+  #       - name: namespace
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #     responses:
+  #       '204':
+  #         description: Success
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '400':
+  #         $ref: '#/components/responses/400BadRequest'
+  #       '500':
+  #         $ref: '#/components/responses/500InternalServerError'
 
-  /namespaces:
-    post:
-      summary: Add a new namespace
-      description: Add a new namespace
-      tags:
-        - Namespaces
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
+  # /namespaces:
+  #   post:
+  #     summary: Add a new namespace
+  #     description: Add a new namespace
+  #     tags:
+  #       - Namespaces
+  #     parameters: []
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               name:
+  #                 type: string
 
-      responses:
-        '201':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status'
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '400':
-          $ref: '#/components/responses/400BadRequest'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+  #     responses:
+  #       '201':
+  #         description: Success
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/status'
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '400':
+  #         $ref: '#/components/responses/400BadRequest'
+  #       '500':
+  #         $ref: '#/components/responses/500InternalServerError'
 
-  /namespaces/{namespace}/membership:
-    put:
-      summary: Update full membership
-      description: Update the full membership
-      tags:
-        - ACL
-      parameters:
-        - name: namespace
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: object
-                properties:
-                  username:
-                    type: string
-      responses:
-        '201':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/status'
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '400':
-          $ref: '#/components/responses/400BadRequest'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+  # /namespaces/{namespace}/membership:
+  #   put:
+  #     summary: Update full membership
+  #     description: Update the full membership
+  #     tags:
+  #       - ACL
+  #     parameters:
+  #       - name: namespace
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: array
+  #             items:
+  #               type: object
+  #               properties:
+  #                 username:
+  #                   type: string
+  #     responses:
+  #       '201':
+  #         description: Success
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/status'
+  #       '401':
+  #         $ref: '#/components/responses/401Unauthorized'
+  #       '400':
+  #         $ref: '#/components/responses/400BadRequest'
+  #       '500':
+  #         $ref: '#/components/responses/500InternalServerError'
 
   /namespaces/{namespace}/gateway:
     put:
