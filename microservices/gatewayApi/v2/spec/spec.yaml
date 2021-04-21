@@ -9,7 +9,6 @@ info:
     This set of APIs are responsible for:
       * validating Kong Declarative Config and applying it to Kong
       * managing namespaces to segment services
-      * managing membership to namespaces for access control
 servers:
   - url: {{server_url}}
 tags:
@@ -450,11 +449,11 @@ components:
       flows:
         clientCredentials:
           tokenUrl: "{{accesstoken_url}}"
-          scopes: {
-            "Namespace.Admin": "Permission to delete Namespaces, updating privileges",
-            "Gateway.Write": "Permission to administer gateway configuration",
-            "Access.Write": "Permission to administer access to users"
-          }
+          # scopes: {
+          #   "Namespace.Admin": "Permission to delete Namespaces, updating privileges",
+          #   "Gateway.Write": "Permission to administer gateway configuration",
+          #   "Access.Write": "Permission to administer access to users"
+          # }
     # authorizationCode:
     #   type: oauth2       
     #   x-tokenInfoUrl: "{{tokeninfo_url}}"
