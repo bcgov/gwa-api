@@ -4,7 +4,7 @@ import urllib.parse
 import base64
 
 def get_resource (pat_token, id):
-    conf = app.config['keycloak']
+    conf = app.config['resourceAuthServer']
 
     log = app.logger
 
@@ -24,7 +24,7 @@ def get_resource (pat_token, id):
     return json
 
 def list_resources (pat_token, owner):
-    conf = app.config['keycloak']
+    conf = app.config['resourceAuthServer']
 
     log = app.logger
 
@@ -47,7 +47,7 @@ def list_resources (pat_token, owner):
     return result
 
 def create_resource (pat_token, owner, resName, resType, scopes):
-    conf = app.config['keycloak']
+    conf = app.config['resourceAuthServer']
 
     log = app.logger
 
@@ -75,7 +75,7 @@ def create_resource (pat_token, owner, resName, resType, scopes):
     return json
 
 def delete_resource (pat_token, id):
-    conf = app.config['keycloak']
+    conf = app.config['resourceAuthServer']
 
     log = app.logger
 
@@ -92,7 +92,7 @@ def delete_resource (pat_token, id):
     log.debug("[delete_resource] %s" % r.status_code)
 
 def map_res_name_to_id (pat_token, name):
-    conf = app.config['keycloak']
+    conf = app.config['resourceAuthServer']
 
     log = app.logger
 

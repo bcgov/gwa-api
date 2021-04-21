@@ -4,7 +4,7 @@ import urllib.parse
 import base64
 
 def get_token ():
-    conf = app.config['keycloak']
+    conf = app.config['resourceAuthServer']
 
     log = app.logger
 
@@ -30,7 +30,7 @@ def get_token ():
 
 
 def check_permissions (access_token, permissions):
-    conf = app.config['keycloak']
+    conf = app.config['resourceAuthServer']
 
     log = app.logger
 
