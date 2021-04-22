@@ -188,6 +188,9 @@ def write_config(namespace: str) -> object:
 
     update_routes_flag = False
 
+    if len(yaml_documents) == 0:
+        update_routes_flag = True
+
     for index, gw_config in enumerate(yaml_documents):
         log.info("[%s] Parsing file %s" % (namespace, index))
 
