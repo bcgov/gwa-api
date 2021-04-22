@@ -186,6 +186,8 @@ def write_config(namespace: str) -> object:
 
     orig_config = prep_submitted_config (yaml_documents)
 
+    update_routes_flag = False
+
     for index, gw_config in enumerate(yaml_documents):
         log.info("[%s] Parsing file %s" % (namespace, index))
 
@@ -251,6 +253,9 @@ def write_config(namespace: str) -> object:
             ns_qualifier = nsq
             log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
 
+        if update_routes_check(gw_config):
+            update_routes_flag = True
+
     if ns_qualifier is not None:
         selectTag = ns_qualifier
 
@@ -273,16 +278,17 @@ def write_config(namespace: str) -> object:
 
     elif cmd == "sync":
         try:
-            route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
-            log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
-            if route_count > 0:
-                apply_routes (tempFolder)
-                log.debug("[%s] - Applied %d routes" % (namespace, route_count))
-            route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
-            log.debug("[%s] - Prepared %d deletions" % (namespace, route_count))
-            if route_count > 0:
-                delete_routes (tempFolder)
-        
+            if update_routes_flag:
+                route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
+                log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
+                if route_count > 0:
+                    apply_routes (tempFolder)
+                    log.debug("[%s] - Applied %d routes" % (namespace, route_count))
+                route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
+                log.debug("[%s] - Prepared %d deletions" % (namespace, route_count))
+                if route_count > 0:
+                    delete_routes (tempFolder)
+            
             # create Network Security Policies (nsp) for any upstream that
             # has the format: <name>.<ocp_ns>.svc
             if should_we_apply_nsp_policies():
@@ -434,6 +440,15 @@ def validate_upstream_host (_host, errors, allow_protected_ns, protected_kube_na
         elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
             errors.append("service upstream is invalid (e5)")
 
+# Handle the two cases:
+# - pass in an empty config expecting all routes to be deleted ('upstreams' not in yaml)
+# - pass in a config with services ('services' in yaml)
+#
+def update_routes_check (yaml):
+    if 'services' in yaml or 'upstreams' not in yaml:
+        return True
+    else:
+        return False
 
 def validate_hosts (yaml, reserved_hosts, ns_attributes):
     errors = []
