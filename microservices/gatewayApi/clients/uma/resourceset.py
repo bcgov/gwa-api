@@ -20,6 +20,7 @@ def get_resource (pat_token, id):
     r = requests.get(url, headers=headers)
     log.debug("[get_resource] %s" % r.status_code)
     json = r.json()
+    json["id"] = id
     log.debug("[v] %s" % json)
     return json
 
