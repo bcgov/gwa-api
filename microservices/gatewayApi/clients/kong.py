@@ -8,8 +8,17 @@ import urllib.parse
 def get_routes ():
     return recurse_get_records ([], "/routes")
 
+def get_plugins ():
+    return recurse_get_records ([], "/plugins")
+
 def get_services_by_ns (ns):
     return recurse_get_records ([], "/services?tags=ns.%s" % ns)
+
+def get_plugins_by_service (svc):
+    return recurse_get_records ([], "/services/%s/plugins" % svc)
+
+def get_plugins_by_route (route):
+    return recurse_get_records ([], "/routes/%s/plugins" % route)
 
 def get_routes_by_ns (ns):
     return recurse_get_records ([], "/routes?tags=ns.%s" % ns)
