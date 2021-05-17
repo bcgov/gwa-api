@@ -4,6 +4,9 @@
 # This involves:
 # * exporting namespaces, service accounts, and users list
 
+import sys
+import traceback
+
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 
 from v2.auth.auth import admin_jwt, uma_enforce
@@ -21,35 +24,41 @@ mg = Blueprint('migration.v2', 'migration')
            methods=['GET'], strict_slashes=False)
 @admin_jwt('Namespace.Admin')
 def export_details() -> object:
-    keycloak_admin = admin_api()
+    log = app.logger
+    try:
+        keycloak_admin = admin_api()
 
-    response = []
-    all_plugins = get_plugins()
-    acl_namespaces = get_acl_namespaces(keycloak_admin)
-    namespaces = get_namespaces(keycloak_admin)
-    for namespace in namespaces:
-        ns_name = namespace['name']
-        ns_id = namespace['id']
-        ns = {
-            "namespace": ns_name,
-            "attributes": {},
-            "view_membership": [],
-            "admin_membership": [],
-            "service_accounts": [],
-            "acl_protected": []
-        }
-        for acln in acl_namespaces:
-            if acln['name'] == ns_name:
-                ns['admin_membership'] = get_group_membership(keycloak_admin, acln['id'])
-                break
-        
-        ns['view_membership'] = get_group_membership(keycloak_admin, ns_id)
-        ns['attributes'] = get_group_attributes(keycloak_admin, ns_id)
-        ns['service_accounts'] = get_service_accounts(keycloak_admin, ns_name)
-        ns['acl_protected'] = get_acl_protected_services_by_ns(ns_name, all_plugins)
-        response.append(ns)
+        response = []
+        all_plugins = get_plugins()
+        acl_namespaces = get_acl_namespaces(keycloak_admin)
+        namespaces = get_namespaces(keycloak_admin)
+        for namespace in namespaces:
+            ns_name = namespace['name']
+            ns_id = namespace['id']
+            ns = {
+                "namespace": ns_name,
+                "attributes": {},
+                "view_membership": [],
+                "admin_membership": [],
+                "service_accounts": [],
+                "acl_protected": []
+            }
+            for acln in acl_namespaces:
+                if acln['name'] == ns_name:
+                    ns['admin_membership'] = get_group_membership(keycloak_admin, acln['id'])
+                    break
+            
+            ns['view_membership'] = get_group_membership(keycloak_admin, ns_id)
+            ns['attributes'] = get_group_attributes(keycloak_admin, ns_id)
+            ns['service_accounts'] = get_service_accounts(keycloak_admin, ns_name)
+            ns['acl_protected'] = get_acl_protected_services_by_ns(ns_name, all_plugins)
+            response.append(ns)
 
-    return make_response(jsonify(response))
+        return make_response(jsonify(response))
+    except:
+        traceback.print_exc()
+        log.error("Error generating report. %s" % sys.exc_info()[0])
+        abort(make_response(jsonify(error="Failed to generate report"), 400))
 
 
 def get_acl_protected_services_by_ns(ns, all_plugins):
