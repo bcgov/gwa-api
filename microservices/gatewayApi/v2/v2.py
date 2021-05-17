@@ -5,6 +5,7 @@ from v2.routes.authz import authz
 from v2.routes.gateway import gw
 from v2.routes.gw_status import gw_status
 from v2.routes.namespaces import ns
+from v2.routes.migrate_v1 import mg
 from v2.routes.whoami import whoami
 
 v2 = Blueprint('v2', 'v2')
@@ -25,3 +26,4 @@ class Register:
         app.register_blueprint(gw, url_prefix="/v2/namespaces/<string:namespace>/gateway")
         app.register_blueprint(gw_status, url_prefix="/v2/namespaces/<string:namespace>/services")
         app.register_blueprint(whoami, url_prefix="/v2/whoami")
+        app.register_blueprint(mg, url_prefix="/v2/migration")
