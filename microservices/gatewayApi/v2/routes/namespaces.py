@@ -65,15 +65,19 @@ def create_namespace() -> object:
 
     try:
 
-
+        # Resource owners will be the Resource Server - this is because it is quite difficult to manage
+        # user-level resources in Keycloak due to the tight permission model around it.
+        # For example, the Resource Server can not delete/change policies or permissions for a resource
+        # owned by a different user.
+        #
         #svc = NamespaceService()
 
         username = None
         if 'preferred_username' in g.principal:
             username = g.principal['preferred_username']
 
-        scopes = [ 'Namespace.Manage', 'Namespace.View', 'GatewayConfig.Publish', 'Access.Manage' ]
-        create_resource (pat['access_token'], username, namespace, 'namespace', scopes)
+        scopes = [ 'Namespace.Manage', 'Namespace.View', 'GatewayConfig.Publish', 'Access.Manage', 'Content.Publish' ]
+        create_resource (pat['access_token'], namespace, 'namespace', scopes)
         print("Resource created")
         #svc.create_or_get_ns (namespace, username)
 

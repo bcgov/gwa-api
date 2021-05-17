@@ -47,7 +47,7 @@ def list_resources (pat_token, owner):
     log.debug("[list_resources] %s" % json)
     return result
 
-def create_resource (pat_token, owner, resName, resType, scopes):
+def create_resource (pat_token, resName, resType, scopes, owner = None):
     conf = app.config['resourceAuthServer']
 
     log = app.logger
@@ -55,10 +55,11 @@ def create_resource (pat_token, owner, resName, resType, scopes):
     resource = {
         "name" : resName,
         "type" : resType,
-        "owner" : owner,
-        "ownerManagedAccess" : True,
         "resource_scopes": scopes
     }
+    if owner is not None:
+        resource["owner"] = owner,
+        resource["ownerManagedAccess"] = True
 
     postUrl = "%srealms/%s/authz/protection/resource_set" % (conf['serverUrl'],conf['realm'])
 
