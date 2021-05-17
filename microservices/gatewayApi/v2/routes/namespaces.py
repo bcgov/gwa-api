@@ -23,7 +23,7 @@ from flask import Blueprint, jsonify, request, Response, make_response, abort, g
 
 from v2.auth.auth import admin_jwt, uma_enforce
 
-from clients.uma.kcprotect import get_token
+from clients.uma.kcprotect import get_token, create_permission
 from clients.uma.resourceset import list_resources, create_resource, delete_resource, map_res_name_to_id
 
 from keycloak.exceptions import KeycloakGetError
@@ -77,8 +77,18 @@ def create_namespace() -> object:
             username = g.principal['preferred_username']
 
         scopes = [ 'Namespace.Manage', 'Namespace.View', 'GatewayConfig.Publish', 'Access.Manage', 'Content.Publish' ]
-        create_resource (pat['access_token'], namespace, 'namespace', scopes)
+        res = create_resource (pat['access_token'], namespace, 'namespace', scopes)
         print("Resource created")
+        print("Assigning Namespace.Manage to", g.principal['sub'])
+
+        permission = {
+            "resource": res['_id'],
+            "requester": g.principal['sub'],
+            "granted": True,
+            "scopeName": 'Namespace.Manage'
+        }
+
+        create_permission (pat['access_token'], permission)
         #svc.create_or_get_ns (namespace, username)
 
     except KeycloakGetError as err:

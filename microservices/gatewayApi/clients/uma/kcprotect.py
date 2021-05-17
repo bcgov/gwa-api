@@ -55,3 +55,22 @@ def check_permissions (access_token, permissions):
     json = r.json()
     log.debug("[check_permissions] %s" % json)
     return ('error' in json or json['result'] == False) == False
+
+
+def create_permission (access_token, permission):
+    conf = app.config['resourceAuthServer']
+
+    log = app.logger
+
+    permUrl = "%srealms/%s/authz/protection/permission/ticket" % (conf['serverUrl'],conf['realm'])
+
+    headers = {
+        "Authorization": "Bearer %s" % access_token,
+        "Content-Type": "application/json"
+    }
+
+    r = requests.post(permUrl, headers=headers, json=permission)
+    log.debug("[create_permission] %s" % r.status_code)
+    json = r.json()
+    log.debug("[create_permission] %s" % json)
+    return ('error' in json) == False

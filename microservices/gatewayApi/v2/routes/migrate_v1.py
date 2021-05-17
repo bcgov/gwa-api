@@ -95,7 +95,7 @@ def get_group_membership(keycloak_admin, id):
     members = []
     _members = keycloak_admin.get_group_members(group_id=id)
     for member in _members:
-        members.append(member['username'])
+        members.append({"username":member['username'], "id":member['id']})
     return members
 
 def get_group_attributes(keycloak_admin, id):
