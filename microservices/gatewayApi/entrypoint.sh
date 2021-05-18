@@ -21,6 +21,12 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
         "username": "$KC_USERNAME",
         "password": "$KC_PASSWORD"
     },
+    "resourceAuthServer": {
+        "serverUrl": "$KC_SERVER_URL",
+        "realm": "$KC_REALM",
+        "clientId": "$KC_RES_SVR_CLIENT_ID",
+        "clientSecret": "$KC_RES_SVR_CLIENT_SECRET"
+    },
     "applyAporetoNSP": ${NSP_ENABLED:-true},
     "protectedKubeNamespaces": "${PROTECTED_KUBE_NAMESPACES:-[]}",
     "hostTransformation": {

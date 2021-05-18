@@ -50,6 +50,7 @@ class OIDCTokenValidator(BearerTokenValidator):
         token = jwt.decode(token_string, self.jwk)
         token.validate()
 
+        g.token_string = token_string
         g.principal = token
 
         #if self.aud not in token.get("aud"):
