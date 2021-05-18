@@ -72,16 +72,15 @@ def get_acl_protected_services_by_ns(ns, all_plugins):
         for rte in get_routes_by_ns(ns):
             for plugin in get_plugins_by_route(all_plugins, rte['id']):
                 if plugin['name'] == 'acl':
-                    definition['acl_allow'] = definition['acl_allow'] + plugin['config']['allow']
+                    definition['acl_allow'] = definition['acl_allow'] + [{"type":"route","name":rte['name'],"allow":plugin['config']['allow']}]
                     print("   ", plugin['config']['allow'])
         for plugin in get_plugins_by_service(all_plugins, svc['id']):
             if plugin['name'] == 'acl':
-                definition['acl_allow'] = definition['acl_allow'] + plugin['config']['allow']
+                definition['acl_allow'] = definition['acl_allow'] + [{"type":"service","allow":plugin['config']['allow']}]
                 print("   ", plugin['config']['allow'])
 
         if len(definition['acl_allow']) > 0:
             items = definition['acl_allow']
-            definition['acl_allow'] = list(dict.fromkeys(items))
             result.append(definition)
     
     return result
