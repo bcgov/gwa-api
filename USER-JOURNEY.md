@@ -6,7 +6,7 @@ The following steps walk an API Owner through setting up an API on the BC Gov AP
 
 A `namespace` represents a collection of Kong Services and Routes that are managed independently.
 
-To create a new namespace, go to the <a href="https://gwa-apps-gov-bc-ca.test.apsgw.xyz/int" target="_blank">API Services Portal</a>.
+To create a new namespace, go to the [API Services Portal](https://gwa-apps-gov-bc-ca.test.api.gov.bc.ca/int).
 
 After login (and selection of an existing namespace if you have one already assigned), go to the `New Namespace` tab and click the `Create Namespace` button.
 
@@ -63,21 +63,29 @@ services:
 
 > **Splitting Your Config:** A namespace `tag` with the format `ns.$NS` is mandatory for each service/route/plugin.  But if you have separate pipelines for your environments (i.e./ dev, test and prod), you can split your configuration and update the `tags` with the qualifier.  So for example, you can use a tag `ns.$NS.dev` to sync Kong configuration for `dev` Service and Routes only.
 
-> **Upstream Services on OCP4:** If your service is running on OCP4, you should specify the Kubernetes Service in the `Service.host`.  It must have the format: `<name>.<ocp-namespace>.svc` The Network Security Policies (NSP) will be setup automatically on the API Gateway side.  You will need to create an NSP on your side looking something like this to allow the Gateway's test and prod environments to route traffic to your API:
+> **Upstream Services on OCP4:** If your service is running on OCP4, you should specify the Kubernetes Service in the `Service.host`.  It must have the format: `<name>.<ocp-namespace>.svc`.  Also make sure your `Service.port` matches your Kubernetes Service Port.  Any Security Policies for egress from the Gateway will be setup automatically on the API Gateway side.
+> The Aporeto Network Security Policies are being removed in favor of the Kubernetes Security Policies (KSP).  You will need to create a KSP on your side looking something like this to allow the Gateway's test and prod environments to route traffic to your API:
 
 ``` yaml
-kind: NetworkSecurityPolicy
-apiVersion: security.devops.gov.bc.ca/v1alpha1
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
 metadata:
-  name: aps-gateway-to-your-upstream-api
+  name: allow-traffic-from-gateway-to-your-api
 spec:
-  description: |
-    allow aps gateway to route traffic to your api
-  source:
-    - - $namespace=264e6f-test
-    - - $namespace=264e6f-prod
-  destination:
-    - - app.kubernetes.io/name=my-upstream-api
+  podSelector:
+    matchLabels:
+      name: my-upstream-api
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              environment: test
+              name: 264e6f
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              environment: prod
+              name: 264e6f
 ```
 
 > **Migrating from OCP3 to OCP4?** Please review the [OCP4-Migration](docs/OCP4-MIGRATION.md) instructions to help with transitioning to OCP4 and the new APS Gateway.
@@ -134,14 +142,12 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 **Install (for Linux)**
 
 ``` bash
-GWA_CLI_VERSION=v1.1.2; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
+GWA_CLI_VERSION=v1.1.3; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
 unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 ./gwa --version
 ```
 
-> **Using MacOS?** Use `gwa_${GWA_CLI_VERSION}_macos_x64.zip` in the above curl command.
-
-> **Using Windows?** From a Browser, download the following and click `Open` from the Browser; a `gwa.exe` file will be available: `https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_win_x64.zip`
+> **Using MacOS or Windows?** Download here: https://github.com/bcgov/gwa-cli/releases/tag/v1.1.3
 
 **Configure**
 
@@ -177,7 +183,7 @@ gwa pg --dry-run sample.yaml
 
 ### 4.2. Swagger Console
 
-Go to <a href="https://gwa-api-gov-bc-ca.test.apsgw.xyz/api/doc" target="_blank">gwa-api Swagger Console</a>.
+Go to <a href="https://gwa-api-gov-bc-ca.test.api.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
 
 Select the `PUT` `/namespaces/{namespace}/gateway` API.
 
@@ -195,7 +201,7 @@ Send the request.
 
 From the Postman App, click the `Import` button and go to the `Link` tab.
 
-Enter a URL: https://openapi-to-postman-api-gov-bc-ca.test.apsgw.xyz/?url=https://gwa-api-gov-bc-ca.test.apsgw.xyz/api/doc/swagger.json
+Enter a URL: https://openapi-to-postman-api-gov-bc-ca.test.api.gov.bc.ca/?url=https://gwa-api-gov-bc-ca.test.api.gov.bc.ca/api/doc/swagger.json
 
 After creation, go to `Collections` and right-click on the `Gateway Administration (GWA) API` collection and select `edit`.
 
@@ -209,18 +215,18 @@ You can then verify that the token works by going to the Collection `Return key 
 
 To verify that the Gateway can access the upstream services, run the command: `gwa status`.
 
-In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-apps-gov-bc-ca.test.apsgw.xyz/int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
+In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-apps-gov-bc-ca.test.api.gov.bc.ca/int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
 
 ``` bash
-curl https://${NAME}-api-gov-bc-ca.test.apsgw.xyz/headers
+curl https://${NAME}-api-gov-bc-ca.test.api.gov.bc.ca/headers
 
-ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.apsgw.xyz/headers
+ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.api.gov.bc.ca/headers
 
 ```
 
 To help with troubleshooting, you can use the GWA API to get a health check for each of the upstream services to verify the Gateway is connecting OK.
 
-Go to the <a href="https://gwa-api-gov-bc-ca.test.apsgw.xyz/api/doc#/Service%20Status/get_namespaces__namespace__services">GWA API</a>, enter in the new credentials that were generated in step #2, click `Try it out`, enter your namespace and click `Execute`.  The results are returned in a JSON object.
+Go to the <a href="https://gwa-api-gov-bc-ca.test.api.gov.bc.ca/api/doc#/Service%20Status/get_namespaces__namespace__services">GWA API</a>, enter in the new credentials that were generated in step #2, click `Try it out`, enter your namespace and click `Execute`.  The results are returned in a JSON object.
 
 ## 6. View metrics
 
@@ -233,7 +239,7 @@ The following metrics can be viewed in real-time for the Services that you confi
 
 All metrics can be viewed by an arbitrary time window - defaults to `Last 24 Hours`.
 
-Go to <a href="https://grafana-apps-gov-bc-ca.test.apsgw.xyz" target="_blank">Grafana</a> to view metrics for your configured services.
+Go to <a href="https://grafana-apps-gov-bc-ca.test.api.gov.bc.ca" target="_blank">Grafana</a> to view metrics for your configured services.
 
 You can also access the metrics from the `API Services Portal`.
 
@@ -284,8 +290,8 @@ jobs:
 
     - name: Get GWA Command Line
       run: |
-        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.1.2/gwa_v1.1.2_linux_x64.zip
-        unzip gwa_v1.1.2_linux_x64.zip
+        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.1.3/gwa_v1.1.3_linux_x64.zip
+        unzip gwa_v1.1.3_linux_x64.zip
         export PATH=`pwd`:$PATH
 
     - name: Apply Namespace Configuration
@@ -314,5 +320,5 @@ Package your APIs and make them available for discovery through the API Portal a
 
 * <a href="https://gwa2.apps.gov.bc.ca/int" target="_blank">API Services Portal</a>
 * <a href="https://gwa.api.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>
-* OpenAPI to Postman Converter: https://openapi-to-postman.api.gov.bc.ca/?url=https://gwa.api.gov.bc.ca/api/doc/swagger.json
+* OpenAPI to Postman Converter: https://openapi-to-postman.api.gov.bc.ca/?u=https://gwa.api.gov.bc.ca/api/doc/swagger.json
 * <a href="https://grafana.apps.gov.bc.ca" target="_blank">APS Metrics - Grafana</a>

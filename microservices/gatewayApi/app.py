@@ -13,7 +13,7 @@ from flask_cors import CORS
 import threading
 
 import v1.v1 as v1
-
+import v2.v2 as v2
 
 
 def set_cors_headers_on_response(response):
@@ -50,8 +50,8 @@ def create_app(test_config=None):
 
     ##Routes##
     v1.Register(app)
+    v2.Register(app)
     Compress(app)
-
 
     @app.before_request
     def before_request():

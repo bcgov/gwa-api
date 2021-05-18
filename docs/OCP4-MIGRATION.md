@@ -39,23 +39,30 @@ The appropriate `tags` need to be added and optionally any `plugins` added.
 
 Apply your changes to the `APS Gateway` by running the `gwa pg` command (see the [API Provider Flow](/USER-JOURNEY.md) for detailed instructions).
 
-### Add the NetworkSecurityPolicy (NSP)
+### Add the Kubernetes Security Policy (KSP)
 
-The `APS Gateway` needs to be able to route to your service from within the OCP4 cluster.  To do this, add the following NSP to your OCP4 namespace (update the destination label matching based on your Pod labels):
+The `APS Gateway` needs to be able to route to your service from within the OCP4 cluster.  To do this, add the following KSP to your OCP4 namespace (update the `podSelector` label matching based on your Pod labels):
 
 ```
-kind: NetworkSecurityPolicy
-apiVersion: security.devops.gov.bc.ca/v1alpha1
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
 metadata:
-  name: aps-gateway-to-your-upstream-api
+  name: allow-traffic-from-gateway-to-your-api
 spec:
-  description: |
-    allow the aps gateway to route traffic to your api
-  source:
-    - - $namespace=264e6f-test
-    - - $namespace=264e6f-prod
-  destination:
-    - - app.kubernetes.io/name=my-upstream-api
+  podSelector:
+    matchLabels:
+      name: my-upstream-api
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              environment: test
+              name: 264e6f
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              environment: prod
+              name: 264e6f
 ```
 
 ### Remove all Routes/Ingress
