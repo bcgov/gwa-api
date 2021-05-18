@@ -61,3 +61,4 @@ def setup_swagger_docs (app, versions):
         log.error("Failed to do OIDC Discovery for %s, sleeping 5 seconds and trying again." % version)
         time.sleep(5)
         setup_swagger_docs(app, version)
+

@@ -16,7 +16,6 @@ import v1.v1 as v1
 import v2.v2 as v2
 
 
-
 def set_cors_headers_on_response(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'X-Requested-With'
