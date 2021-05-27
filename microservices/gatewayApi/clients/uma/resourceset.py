@@ -55,11 +55,11 @@ def create_resource (pat_token, resName, resType, scopes, owner = None):
     resource = {
         "name" : resName,
         "type" : resType,
-        "resource_scopes": scopes
+        "resource_scopes": scopes,
+        "ownerManagedAccess": True
     }
     if owner is not None:
-        resource["owner"] = owner,
-        resource["ownerManagedAccess"] = True
+        resource["owner"] = owner
 
     postUrl = "%srealms/%s/authz/protection/resource_set" % (conf['serverUrl'],conf['realm'])
 
