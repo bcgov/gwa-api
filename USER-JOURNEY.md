@@ -343,7 +343,7 @@ View the Directory API in the [Swagger Console](https://openapi-apps-gov-bc-ca.t
 
 Example configuration:
 
-```
+``` yaml
 kind: CredentialIssuer
 name: "MoH Resource Server"
 namespace: moh-proto
@@ -376,7 +376,7 @@ y2j draft/moh-proto/issuer.yaml | restish my_api put-issuer moh-proto
 
 Example configuration:
 
-```    
+``` yaml  
 kind: DraftDataset
 name: pharmanet-draft
 organization: ministry-of-health
@@ -412,7 +412,7 @@ y2j draft/platform/sample-product.yaml | restish my_api put-product platform
 
 ### 9.3 Publish Documentation
 
-```
+``` yaml
 kind: Content
 title: "The PharmaNet API"
 description: "Getting Started with Electronic Prescribing"
