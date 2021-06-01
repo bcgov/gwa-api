@@ -2,26 +2,43 @@
 
 The following steps walk an API Owner through setting up an API on the BC Gov API Gateway in our Test instance.  If you are ready to deploy to our Production instance, use the links [here](#production-links).
 
+## Prerequisites
+
+If you have not requested access to the API Gateway Services, then you must first go to the [API Services Portal](https://api-gov-bc-ca.test.api.gov.bc.ca), and:
+
+* login using your IDIR or Github account
+* go to the `Directory` tab and select the "API Gateway Services"
+* on the "API Gateway Services" detail page, there will be a button in the top right "Request Access"
+* select your Application (you need to create one if you have not already)
+* select the "test" environment and click "Submit"
+
+You will be provided with credentials for accessing the Gateway Services API, but you will need to wait until the request has been approved for the credential to be active and authorized.
+
+
 ## 1. Register a new namespace
 
 A `namespace` represents a collection of Kong Services and Routes that are managed independently.
 
-To create a new namespace, go to the [API Services Portal](https://gwa-apps-gov-bc-ca.test.api.gov.bc.ca/int).
+To create a new namespace, go to the [API Services Portal](https://api-gov-bc-ca.test.api.gov.bc.ca).
 
-After login (and selection of an existing namespace if you have one already assigned), go to the `New Namespace` tab and click the `Create Namespace` button.
+After login, click the namespace dropdown in the top right next to your user name, then click `Create New Namespace`.
 
 The namespace must be an alphanumeric string between 5 and 15 characters (RegExp reference: `^[a-z][a-z0-9-]{4,14}$`).
 
-Logout by clicking your username at the top right of the page.  When you login again, you should be able to select the new namespace from the `API Programme Services` project selector.
+You can select and manage namespaces by clicking the namespace dropdown in the top right next to your user name.
 
 ## 2. Generate a Service Account
 
-Go to the `Service Accounts` tab and click the `Create Service Account`.  A new credential will be created - make a note of the `ID` and `Secret`.
+Go to the `Namespaces` tab, click the `Service Accounts` link, and click the `New Service Account`.  A new credential will be created - make a note of the `ID` and `Secret`.
 
-The credential has the following access:
-* `Gateway.Write` : Permission to publish gateway configuration to Kong
-* `Access.Write`  : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
-* `Catalog.Write` : Permission to update BC Data Catalog datasets for describing APIs available for consumption
+Before the credential can be used, you need to grant it the appropriate Scopes.  This can be done by going to the `API Access` tab and click the "Manage Resources" for the `Gateway Administration API` product.  Click the link that corresponds to your newly created namespace.  Click the `Grant Service Account Access` and enter in the `ID` and the scopes you want to grant to the Service Account, then click the `Share` button to grant the permissions.
+
+The available Scopes are:
+* `GatewayConfig.Publish` : Permission to publish gateway configuration to Kong and to view the status of the upstreams
+* `Namespace.Manage`  : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
+* `Namespace.View`   : Read-only access to the namespace
+* `Content.Publish`  : Permission to update the documentation on the portal
+* `Access.Manage`    : Permission to approve/reject access requests to your APIs that you make discoverable
 
 ## 3. Prepare configuration
 
@@ -142,12 +159,12 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 **Install (for Linux)**
 
 ``` bash
-GWA_CLI_VERSION=v1.1.3; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
+GWA_CLI_VERSION=v1.2.0; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
 unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 ./gwa --version
 ```
 
-> **Using MacOS or Windows?** Download here: https://github.com/bcgov/gwa-cli/releases/tag/v1.1.3
+> **Using MacOS or Windows?** Download here: [https://github.com/bcgov/gwa-cli/releases/tag/v1.2.0](https://github.com/bcgov/gwa-cli/releases/tag/v1.2.0)
 
 **Configure**
 
@@ -159,6 +176,7 @@ GWA_NAMESPACE=$NS
 CLIENT_ID=<YOUR SERVICE ACCOUNT ID>
 CLIENT_SECRET=<YOUR SERVICE ACCOUNT SECRET>
 GWA_ENV=test
+API_VERSION=2
 " > .env
 
 OR run:
@@ -183,7 +201,7 @@ gwa pg --dry-run sample.yaml
 
 ### 4.2. Swagger Console
 
-Go to <a href="https://gwa-api-gov-bc-ca.test.api.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>.
+Go to [gwa-api Swagger Console](https://gwa-api-gov-bc-ca.test.api.gov.bc.ca/docs).
 
 Select the `PUT` `/namespaces/{namespace}/gateway` API.
 
@@ -201,7 +219,7 @@ Send the request.
 
 From the Postman App, click the `Import` button and go to the `Link` tab.
 
-Enter a URL: https://openapi-to-postman-api-gov-bc-ca.test.api.gov.bc.ca/?url=https://gwa-api-gov-bc-ca.test.api.gov.bc.ca/api/doc/swagger.json
+Enter a URL: https://openapi-to-postman-api-gov-bc-ca.test.api.gov.bc.ca/?u=https://gwa-api-gov-bc-ca.test.api.gov.bc.ca/doc/v2/swagger.json
 
 After creation, go to `Collections` and right-click on the `Gateway Administration (GWA) API` collection and select `edit`.
 
@@ -215,7 +233,7 @@ You can then verify that the token works by going to the Collection `Return key 
 
 To verify that the Gateway can access the upstream services, run the command: `gwa status`.
 
-In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the <a href="https://gwa-apps-gov-bc-ca.test.api.gov.bc.ca/int" target="_blank">API Services Portal</a> and view the hosts under `Services`.
+In our test environment, the hosts that you defined in the routes get altered; to see the actual hosts, log into the [API Services Portal](https://api-gov-bc-ca.test.api.gov.bc.ca), go to the `Namespaces` tab, go to `Gateway Services` and select your particular service to get the routing details.
 
 ``` bash
 curl https://${NAME}-api-gov-bc-ca.test.api.gov.bc.ca/headers
@@ -226,7 +244,7 @@ ab -n 20 -c 2 https://${NAME}-api-gov-bc-ca.test.api.gov.bc.ca/headers
 
 To help with troubleshooting, you can use the GWA API to get a health check for each of the upstream services to verify the Gateway is connecting OK.
 
-Go to the <a href="https://gwa-api-gov-bc-ca.test.api.gov.bc.ca/api/doc#/Service%20Status/get_namespaces__namespace__services">GWA API</a>, enter in the new credentials that were generated in step #2, click `Try it out`, enter your namespace and click `Execute`.  The results are returned in a JSON object.
+Go to the [GWA API](https://gwa-api-gov-bc-ca.test.api.gov.bc.ca/docs#/Service%20Status/get_namespaces__namespace__services), enter in the new credentials that were generated in step #2, click `Try it out`, enter your namespace and click `Execute`.  The results are returned in a JSON object.
 
 ## 6. View metrics
 
@@ -239,9 +257,9 @@ The following metrics can be viewed in real-time for the Services that you confi
 
 All metrics can be viewed by an arbitrary time window - defaults to `Last 24 Hours`.
 
-Go to <a href="https://grafana-apps-gov-bc-ca.test.api.gov.bc.ca" target="_blank">Grafana</a> to view metrics for your configured services.
+Go to [Grafana](https://grafana-apps-gov-bc-ca.test.api.gov.bc.ca) to view metrics for your configured services.
 
-You can also access the metrics from the `API Services Portal`.
+You can also access summarized metrics from the `API Services Portal` by going to the `Namespaces` tab and clicking the `Gateway Services` link.
 
 ## 7. Grant access to others
 
