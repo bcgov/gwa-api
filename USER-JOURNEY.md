@@ -342,7 +342,9 @@ View the Directory API in the [Swagger Console](https://openapi-apps-gov-bc-ca.t
 > NOTE: The steps below use `restish`, but we will be working on upgrading the `gwa` command line interface to support these APIs
 
 > Can use `y2j` to convert from YAML to JSON
+>
 > `echo '#!/usr/bin/env python\nimport sys,yaml,json\nprint(json.dumps(yaml.safe_load(open(sys.argv[1]).read())))' > /usr/local/bin/y2j`
+>
 > chmod +x /usr/local/bin/y2j
 
 **Restish Setup**
