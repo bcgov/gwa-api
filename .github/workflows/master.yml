@@ -1,6 +1,6 @@
 name: Draft release from master
 
-on: 
+on:
   push:
     branches:
       - master
@@ -20,10 +20,10 @@ jobs:
         uses: sonarsource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - id: release
-        uses: rymndhng/release-on-push-action@v0.15.0
+        uses: rymndhng/release-on-push-action@v0.20.0
         with:
           bump_version_scheme: patch
 
