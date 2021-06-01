@@ -345,15 +345,18 @@ View the Directory API in the [Swagger Console](https://openapi-apps-gov-bc-ca.t
 >
 > `echo '#!/usr/bin/env python\nimport sys,yaml,json\nprint(json.dumps(yaml.safe_load(open(sys.argv[1]).read())))' > /usr/local/bin/y2j`
 >
-> chmod +x /usr/local/bin/y2j
+> `chmod +x /usr/local/bin/y2j`
 
 **Restish Setup**
 
 ```
+export NS=""
 restish api configure my_api
 ```
 
 Base URI : https://api-gov-bc-ca.test.api.gov.bc.ca/ds/api
+
+`Edit Profile default`
 
 Select `Setup Auth` > `oauth-client-credentials`
 
@@ -363,22 +366,11 @@ Enter the `client_id` and `client_secret` for your Service Account.
 
 `scopes` : openid
 
-Select `Finished with Profile` and then `Save and exit`
+Select `Finished with profile` and then `Save and exit`
 
 To verify that restish is working, run:
 
 `restish my_api list` or `restish my_api get-new-id product`
-
-You may need to get the `openapi.yaml` manually, and edit `~/.restish/apis.json` with:
-
-curl -O https://api-gov-bc-ca.test.api.gov.bc.ca/ds/api/openapi.yaml
-
-```
-    "spec_files": [
-      "openapi.yaml"
-    ],
-```
-
 
 ### 9.1 Setup Authorization Profiles
 
@@ -450,6 +442,7 @@ y2j prod.yaml | restish my_api put-product $NS
 ### 9.3 Publish Documentation
 
 ``` yaml
+kind: Content
 title: Getting Started with $NS
 description: Getting Started with $NS
 externalLink: https://github.com/bcgov/$NS/getting_started.md
@@ -457,13 +450,13 @@ order: 1
 tags: [ ns.$NS ]
 isComplete: true
 isPublic: true
-publishDate: '2021-05-22T12:00:00.000-08:00'
+publishDate: '2021-06-02T08:00:00.000-08:00'
 ```
 
 ```
 y2j content.yaml | restish my_api put-content $NS 
 
-echo "# here is some markdown!" > doc.md
+echo "# here is some markdown and more!" > doc.md
 
 restish my_api put-content $NS \
   externalLink: "https://github.com/bcgov/$NS/getting_started.md", \
