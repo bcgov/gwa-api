@@ -330,6 +330,8 @@ To use the Directory API, the service account must have the `Namespace.Manage` s
 
 To use the Documentation API, the service account must have the `Content.Publish` scope.
 
+View the APIs in the [Swagger Console](https://openapi-apps-gov-bc-ca.test.api.gov.bc.ca/?url=https://api-gov-bc-ca.test.api.gov.bc.ca/ds/api/openapi.yaml)
+
 ### 9.1 Setup Authorization Profiles
 
 Example configuration:
@@ -423,6 +425,11 @@ restish my_api put-content -v platform \
   content: @draft/platform/press-release.md
 ```
 
+### 9.4 View your product in the API Directory
+
+Find your API in the [API Services Portal Directory](https://api-gov-bc-ca.test.api.gov.bc.ca/devportal/api-discovery)
+
+It is now ready to receive access requests from the community.
 
 # Production Links
 
