@@ -34,11 +34,14 @@ Go to the `Namespaces` tab, click the `Service Accounts` link, and click the `Ne
 Before the credential can be used, you need to grant it the appropriate Scopes.  This can be done by going to the `API Access` tab and click the "Manage Resources" for the `Gateway Administration API` product.  Click the link that corresponds to your newly created namespace.  Click the `Grant Service Account Access` and enter in the `ID` and the scopes you want to grant to the Service Account, then click the `Share` button to grant the permissions.
 
 The available Scopes are:
-* `GatewayConfig.Publish` : Permission to publish gateway configuration to Kong and to view the status of the upstreams
-* `Namespace.Manage`  : Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management
-* `Namespace.View`   : Read-only access to the namespace
-* `Content.Publish`  : Permission to update the documentation on the portal
-* `Access.Manage`    : Permission to approve/reject access requests to your APIs that you make discoverable
+| Scope | Permission |
+| ----- | ---------- |
+| `Namespace.Manage`  | Permission to update the Access Control List for controlling access to viewing metrics, service configuration and service account management (effectively a superuser for the namespace) |
+| `Namespace.View`   | Read-only access to the namespace |
+| `GatewayConfig.Publish` | Permission to publish gateway configuration to Kong and to view the status of the upstreams |
+| `Content.Publish`  | Permission to update the documentation on the portal |
+| `CredentialIssuer.Admin`    | Permission to create Authorization Profiles so that they are available to be used when configuring Product Environments |
+| `Access.Manage`    | Permission to approve/reject access requests to your APIs that you make discoverable |
 
 ## 3. Prepare configuration
 
