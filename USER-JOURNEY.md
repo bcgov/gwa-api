@@ -263,7 +263,7 @@ You can also access summarized metrics from the `API Services Portal` by going t
 
 ## 7. Grant access to others
 
-To grant access to others, you need to grant them the appropriate Scopes.  This can be done by going to the `API Access` tab and click the "Manage Resources" for the `Gateway Administration API` product.  Click the link that corresponds to your namespace.  Click the `Grant User Access` and enter in the username (i.e./ `jsmith@idir`) and the scopes you want to grant to the User, then click the `Share` button to grant the permissions.
+To grant access to others, you need to grant them the appropriate Scopes.  This can be done from the `API Services Portal`, going to the `API Access` tab and clicking the "Manage Resources" for the `Gateway Administration API` product.  Click the link that corresponds to your namespace.  Click the `Grant User Access` and enter in a username (i.e./ `jsmith@idir`) and the scopes you want to grant to the User, then click the `Share` button to grant the permissions.
 
 ## 8. Add to your CI/CD Pipeline
 
@@ -324,7 +324,105 @@ jobs:
 
 Package your APIs and make them available for discovery through the API Portal and BC Data Catalog.
 
-**Coming soon!**
+The portal directory organizes your APIs by Products and Environments.  You can manage them via an API or through the `API Services Portal` UI.
+
+To use the Directory API, the service account must have the `Namespace.Manage` scope.
+
+To use the Documentation API, the service account must have the `Content.Publish` scope.
+
+### 9.1 Setup Authorization Profiles
+
+Example configuration:
+
+```
+kind: CredentialIssuer
+name: "MoH Resource Server"
+namespace: moh-proto
+description: "Authorization Profile for protecting Ministry of Health Services"
+flow: client-credentials
+mode: auto
+authPlugin: jwt-keycloak
+clientAuthenticator: client-secret
+clientRoles: []
+availableScopes: ["System/Patient.*", "System/MedicationRequest.*"]
+owner: acope@idir
+environmentDetails:
+  - environment: conformance
+    issuerUrl: https://dev.oidc.gov.bc.ca/auth/realms/xtmke7ky
+    clientId: moh-proto
+    clientRegistration: managed
+    clientSecret: ""
+  - environment: prod
+    issuerUrl: https://dev.oidc.gov.bc.ca/auth/realms/xtmke7ky
+    clientId: moh-proto
+    clientRegistration: managed
+    clientSecret: ""    
+```
+
+```
+y2j draft/moh-proto/issuer.yaml | restish my_api put-issuer moh-proto
+```
+
+### 9.2 Publish your Product, Environments and link your Services
+
+Example configuration:
+
+```    
+kind: DraftDataset
+name: pharmanet-draft
+organization: ministry-of-health
+organizationUnit: planning-and-innovation-division
+title: "BC Ministry of Health PharmaNet Electronic Prescribing API"
+notes: "The PharmaNet API is a secure, modern, RESTful interface that allows developers to access PharmaNet services. These APIs aim to replace the need for HNSecure networking, a network being decommissioned by 2022."
+tags: ["health", "hl7v2", "FHIR"]
+sector: "Service"
+license_title: "Access Only"
+view_audience: "Government"
+security_class: "LOW-PUBLIC"
+record_publish_date: "2021-05-27"
+
+kind: Product
+appId: 7B04C28E08AD
+name: PharmaNet Electronic Prescribing
+dataset: pharmanet-draft
+environments:
+  - id: 2F7CA927
+    name: conformance
+    active: true
+    approval: true
+    flow: client-credentials
+    credentialIssuer: MoH Resource Server
+    additionalDetailsToRequest: "Access to this API requires a BCeID.  Your request will be rejected if you did not log into the Portal with a valid Business BCeID.  To continue, please provide your contact phone number below."
+    services: []
+```
+
+```
+y2j draft/platform/sample-dataset.yaml | restish my_api put-dataset platform
+y2j draft/platform/sample-product.yaml | restish my_api put-product platform
+```
+
+### 9.3 Publish Documentation
+
+```
+kind: Content
+title: "The PharmaNet API"
+description: "Getting Started with Electronic Prescribing"
+externalLink: https://github.com/bcgov/moh-eRx/wiki
+order: 1
+tags: ["ns.moh-proto"]
+isComplete: true
+isPublic: true
+publishDate: "2021-05-22T12:00:00.000-08:00"
+```
+
+```
+y2j draft/platform/press-release.yaml | restish my_api put-content -v platform
+
+restish my_api put-content -v platform \
+  externalLink: "https://github.com/bcgov-dss/api-serv-infra/docs/news-portal-release-1.md", \
+  content: @draft/platform/press-release.md
+```
+
 
 # Production Links
 
