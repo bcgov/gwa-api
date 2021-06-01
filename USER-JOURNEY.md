@@ -395,16 +395,11 @@ clientRoles: []
 availableScopes: [System/Patient.*, System/MedicationRequest.*]
 owner: acope@idir
 environmentDetails:
-  - environment: conformance
-    issuerUrl: https://dev.oidc.gov.bc.ca/auth/realms/xtmke7ky
-    clientId: moh-proto
-    clientRegistration: managed
-    clientSecret: ''
   - environment: prod
     issuerUrl: https://dev.oidc.gov.bc.ca/auth/realms/xtmke7ky
-    clientId: moh-proto
+    clientId: abc-client
     clientRegistration: managed
-    clientSecret: ''   
+    clientSecret: ''
 ```
 
 ```
@@ -447,7 +442,7 @@ environments:
   flow: client-credentials
   credentialIssuer: Resource Server $NS
   additionalDetailsToRequest: Please provider a bit more of this
-  services: [a-service-for-$NS]
+  services: []
 ```
 
 ```
