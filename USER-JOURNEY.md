@@ -327,9 +327,9 @@ jobs:
 
 ## 9. Share your API for Discovery
 
-Package your APIs and make them available for discovery through the API Portal and BC Data Catalog.
+Package your APIs and make them available for discovery through the API Services Portal and BC Data Catalog.
 
-The portal directory organizes your APIs by Products and Environments.  You can manage them via an API or through the `API Services Portal` UI.
+The `API Services Portal` Directory organizes your APIs by Products and Environments.  You can manage them via an API or through the UI.
 
 To use the Directory API, the following scopes are required:
 
