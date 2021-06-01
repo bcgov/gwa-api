@@ -70,13 +70,13 @@ def create_namespace() -> object:
         # For example, the Resource Server can not delete/change policies or permissions for a resource
         # owned by a different user.
         #
-        #svc = NamespaceService()
+        svc = NamespaceService()
 
-        username = None
-        if 'preferred_username' in g.principal:
-            username = g.principal['preferred_username']
+        # username = None
+        # if 'preferred_username' in g.principal:
+        #     username = g.principal['preferred_username']
 
-        scopes = [ 'Namespace.Manage', 'Namespace.View', 'GatewayConfig.Publish', 'Access.Manage', 'Content.Publish' ]
+        scopes = [ 'Namespace.Manage', 'Namespace.View', 'GatewayConfig.Publish', 'Access.Manage', 'Content.Publish', 'CredentialIssuer.Admin' ]
         res = create_resource (pat['access_token'], namespace, 'namespace', scopes)
         print("Resource created")
         print("Assigning Namespace.Manage to", g.principal['sub'])
@@ -89,7 +89,7 @@ def create_namespace() -> object:
         }
 
         create_permission (pat['access_token'], permission)
-        #svc.create_or_get_ns (namespace, username)
+        svc.create_or_get_ns (namespace, None)
 
     except KeycloakGetError as err:
         if err.response_code == 409:

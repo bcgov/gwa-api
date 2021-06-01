@@ -16,7 +16,7 @@ gw_status = Blueprint('gw_status.v2', 'gw_status')
 @gw_status.route('',
            methods=['GET'], strict_slashes=False)
 @admin_jwt(None)
-@uma_enforce('namespace', 'Namespace.View')
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 def get_statuses(namespace: str) -> object:
 
     log = app.logger
