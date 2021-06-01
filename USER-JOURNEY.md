@@ -339,37 +339,76 @@ To use the Directory API, the following scopes are required:
 
 View the Directory API in the [Swagger Console](https://openapi-apps-gov-bc-ca.test.api.gov.bc.ca/?url=https://api-gov-bc-ca.test.api.gov.bc.ca/ds/api/openapi.yaml)
 
+> NOTE: The steps below use `restish`, but we will be working on upgrading the `gwa` command line interface to support these APIs
+
+> Can use `y2j` to convert from YAML to JSON
+> `echo '#!/usr/bin/env python\nimport sys,yaml,json\nprint(json.dumps(yaml.safe_load(open(sys.argv[1]).read())))' > /usr/local/bin/y2j`
+> chmod +x /usr/local/bin/y2j
+
+**Restish Setup**
+
+```
+restish api configure my_api
+```
+
+Base URI : https://api-gov-bc-ca.test.api.gov.bc.ca/ds/api
+
+Select `Setup Auth` > `oauth-client-credentials`
+
+Enter the `client_id` and `client_secret` for your Service Account.
+
+`token_url` : Provided to you when you created the Service Account
+
+`scopes` : openid
+
+Select `Finished with Profile` and then `Save and exit`
+
+To verify that restish is working, run:
+
+`restish my_api list` or `restish my_api get-new-id product`
+
+You may need to get the `openapi.yaml` manually, and edit `~/.restish/apis.json` with:
+
+curl -O https://api-gov-bc-ca.test.api.gov.bc.ca/ds/api/openapi.yaml
+
+```
+    "spec_files": [
+      "openapi.yaml"
+    ],
+```
+
+
 ### 9.1 Setup Authorization Profiles
 
 Example configuration:
 
 ``` yaml
 kind: CredentialIssuer
-name: "MoH Resource Server"
-namespace: moh-proto
-description: "Authorization Profile for protecting Ministry of Health Services"
+name: Resource Server $NS
+namespace: $NS
+description: Authorization Profile for protecting Ministry of Health Services
 flow: client-credentials
 mode: auto
 authPlugin: jwt-keycloak
 clientAuthenticator: client-secret
 clientRoles: []
-availableScopes: ["System/Patient.*", "System/MedicationRequest.*"]
+availableScopes: [System/Patient.*, System/MedicationRequest.*]
 owner: acope@idir
 environmentDetails:
   - environment: conformance
     issuerUrl: https://dev.oidc.gov.bc.ca/auth/realms/xtmke7ky
     clientId: moh-proto
     clientRegistration: managed
-    clientSecret: ""
+    clientSecret: ''
   - environment: prod
     issuerUrl: https://dev.oidc.gov.bc.ca/auth/realms/xtmke7ky
     clientId: moh-proto
     clientRegistration: managed
-    clientSecret: ""    
+    clientSecret: ''   
 ```
 
 ```
-y2j draft/moh-proto/issuer.yaml | restish my_api put-issuer moh-proto
+y2j issuer.yaml | restish my_api put-issuer $NS
 ```
 
 ### 9.2 Publish your Product, Environments and link your Services
@@ -378,58 +417,64 @@ Example configuration:
 
 ``` yaml  
 kind: DraftDataset
-name: pharmanet-draft
+name: $NS-draft
 organization: ministry-of-health
 organizationUnit: planning-and-innovation-division
-title: "BC Ministry of Health PharmaNet Electronic Prescribing API"
-notes: "The PharmaNet API is a secure, modern, RESTful interface that allows developers to access PharmaNet services. These APIs aim to replace the need for HNSecure networking, a network being decommissioned by 2022."
-tags: ["health", "hl7v2", "FHIR"]
-sector: "Service"
-license_title: "Access Only"
-view_audience: "Government"
-security_class: "LOW-PUBLIC"
-record_publish_date: "2021-05-27"
+title: $NS API
+notes: Some information about this API
+tags: [health, standards, openapi]
+sector: Service
+license_title: Access Only
+view_audience: Government
+security_class: LOW-PUBLIC
+record_publish_date: '2021-05-27'
+```
 
+```
+y2j dataset.yaml | restish my_api put-dataset $NS
+```
+
+```
 kind: Product
-appId: 7B04C28E08AD
-name: PharmaNet Electronic Prescribing
-dataset: pharmanet-draft
+appId: 2B04C28E08AW
+name: My $NS API
+dataset: $NS-draft
 environments:
-  - id: 2F7CA927
-    name: conformance
-    active: true
-    approval: true
-    flow: client-credentials
-    credentialIssuer: MoH Resource Server
-    additionalDetailsToRequest: "Access to this API requires a BCeID.  Your request will be rejected if you did not log into the Portal with a valid Business BCeID.  To continue, please provide your contact phone number below."
-    services: []
+- id: 1F7CA929
+  name: prod
+  active: true
+  approval: true
+  flow: client-credentials
+  credentialIssuer: Resource Server $NS
+  additionalDetailsToRequest: Please provider a bit more of this
+  services: [a-service-for-$NS]
 ```
 
 ```
-y2j draft/platform/sample-dataset.yaml | restish my_api put-dataset platform
-y2j draft/platform/sample-product.yaml | restish my_api put-product platform
+y2j prod.yaml | restish my_api put-product $NS
 ```
 
 ### 9.3 Publish Documentation
 
 ``` yaml
-kind: Content
-title: "The PharmaNet API"
-description: "Getting Started with Electronic Prescribing"
-externalLink: https://github.com/bcgov/moh-eRx/wiki
+title: Getting Started with $NS
+description: Getting Started with $NS
+externalLink: https://github.com/bcgov/$NS/getting_started.md
 order: 1
-tags: ["ns.moh-proto"]
+tags: [ ns.$NS ]
 isComplete: true
 isPublic: true
-publishDate: "2021-05-22T12:00:00.000-08:00"
+publishDate: '2021-05-22T12:00:00.000-08:00'
 ```
 
 ```
-y2j draft/platform/press-release.yaml | restish my_api put-content -v platform
+y2j content.yaml | restish my_api put-content $NS 
 
-restish my_api put-content -v platform \
-  externalLink: "https://github.com/bcgov-dss/api-serv-infra/docs/news-portal-release-1.md", \
-  content: @draft/platform/press-release.md
+echo "# here is some markdown!" > doc.md
+
+restish my_api put-content $NS \
+  externalLink: "https://github.com/bcgov/$NS/getting_started.md", \
+  content: @doc.md
 ```
 
 ### 9.4 View your product in the API Directory
