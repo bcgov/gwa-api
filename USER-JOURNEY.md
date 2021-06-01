@@ -69,6 +69,8 @@ services:
     - $NAME.api.gov.bc.ca
     paths:
     - /
+    methods:
+    - GET
     strip_path: false
     https_redirect_status_code: 426
     path_handling: v0
