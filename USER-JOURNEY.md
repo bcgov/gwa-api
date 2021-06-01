@@ -326,11 +326,13 @@ Package your APIs and make them available for discovery through the API Portal a
 
 The portal directory organizes your APIs by Products and Environments.  You can manage them via an API or through the `API Services Portal` UI.
 
-To use the Directory API, the service account must have the `Namespace.Manage` scope.
+To use the Directory API, the following scopes are required:
 
-To use the Documentation API, the service account must have the `Content.Publish` scope.
+* For `contents` (documentation), the service account must have the `Content.Publish` scope
+* For `datasets` and `products`, the service account must have the `Namespace.Manage` scope
+* For `issuers`, the service account must have the `CredentialIssuer.Admin` scope
 
-View the APIs in the [Swagger Console](https://openapi-apps-gov-bc-ca.test.api.gov.bc.ca/?url=https://api-gov-bc-ca.test.api.gov.bc.ca/ds/api/openapi.yaml)
+View the Directory API in the [Swagger Console](https://openapi-apps-gov-bc-ca.test.api.gov.bc.ca/?url=https://api-gov-bc-ca.test.api.gov.bc.ca/ds/api/openapi.yaml)
 
 ### 9.1 Setup Authorization Profiles
 
