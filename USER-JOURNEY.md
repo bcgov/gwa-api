@@ -382,8 +382,6 @@ curl -O https://api-gov-bc-ca.test.api.gov.bc.ca/ds/api/openapi.yaml
 
 ### 9.1 Setup Authorization Profiles
 
-Example configuration:
-
 ``` yaml
 kind: CredentialIssuer
 name: Resource Server $NS
@@ -410,8 +408,6 @@ y2j issuer.yaml | restish my_api put-issuer $NS
 
 ### 9.2 Publish your Product, Environments and link your Services
 
-Example configuration:
-
 ``` yaml  
 kind: DraftDataset
 name: $NS-draft
@@ -431,7 +427,7 @@ record_publish_date: '2021-05-27'
 y2j dataset.yaml | restish my_api put-dataset $NS
 ```
 
-```
+``` yaml  
 kind: Product
 appId: 2B04C28E08AW
 name: My $NS API
