@@ -426,9 +426,28 @@ name: My $NS API
 dataset: $NS-draft
 environments:
 - id: 1F7CA929
+  name: dev
+  active: true
+  approval: false
+  legal: terms-of-use-for-api-gateway-1
+  flow: kong-api-key-acl
+  credentialIssuer: null
+  additionalDetailsToRequest: Please provider a bit more of this
+  services: []
+- id: 2F7CA929
+  name: test
+  active: true
+  approval: true
+  legal: terms-of-use-for-api-gateway-1
+  flow: kong-api-key-acl
+  credentialIssuer: null
+  additionalDetailsToRequest: Please provider a bit more of this
+  services: []
+- id: 3F7CA929
   name: prod
   active: true
   approval: true
+  legal: terms-of-use-for-api-gateway-1
   flow: client-credentials
   credentialIssuer: Resource Server $NS
   additionalDetailsToRequest: Please provider a bit more of this
