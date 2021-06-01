@@ -38,7 +38,7 @@ class NamespaceService:
             "name": namespace
         }
 
-        for role_name in ['viewer', 'admin']:
+        for role_name in ['viewer']:
 
             group_base_path = get_base_group_path(role_name)
             parent_group = self.keycloak_admin.get_group_by_path(group_base_path)

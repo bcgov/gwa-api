@@ -38,7 +38,7 @@ def abort_early (event_id, action, namespace, response):
 @gw.route('/<string:qualifier>',
            methods=['DELETE'], strict_slashes=False)
 @admin_jwt(None)
-@uma_enforce('namespace', 'GatewayConfig.Delete')
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 def delete_config(namespace: str, qualifier = "") -> object:
 
     event_id = str(uuid.uuid4())
@@ -124,7 +124,7 @@ def delete_config(namespace: str, qualifier = "") -> object:
 @gw.route('',
            methods=['PUT'], strict_slashes=False)
 @admin_jwt(None)
-@uma_enforce('namespace', 'GatewayConfig.Update')
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 def write_config(namespace: str) -> object:
     """
     (Over)write
