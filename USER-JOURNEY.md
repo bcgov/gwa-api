@@ -263,15 +263,7 @@ You can also access summarized metrics from the `API Services Portal` by going t
 
 ## 7. Grant access to others
 
-The `acl` command provides a way to update the access for the namespace.  It expects an all-inclusive membership list, so if a user is not either part of the `--users` list or the `--managers` list, they will be removed from the namespace.
-
-For elevated privileges (such as managing Service Accounts), add the usernames to the `--managers` argument.
-
-``` bash
-gwa acl --users jjones@idir --managers acope@idir
-```
-
-The result will show the ACL changes.  The Add/Delete counts represent the membership changes of registered users.  The Missing count represents the users that will automatically be added to the namespace once they have logged into the `APS Services Portal`.
+To grant access to others, you need to grant them the appropriate Scopes.  This can be done by going to the `API Access` tab and click the "Manage Resources" for the `Gateway Administration API` product.  Click the link that corresponds to your namespace.  Click the `Grant User Access` and enter in the username (i.e./ `jsmith@idir`) and the scopes you want to grant to the User, then click the `Share` button to grant the permissions.
 
 ## 8. Add to your CI/CD Pipeline
 
@@ -308,8 +300,8 @@ jobs:
 
     - name: Get GWA Command Line
       run: |
-        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.1.3/gwa_v1.1.3_linux_x64.zip
-        unzip gwa_v1.1.3_linux_x64.zip
+        curl -L -O https://github.com/bcgov/gwa-cli/releases/download/v1.2.0/gwa_v1.2.0_linux_x64.zip
+        unzip gwa_v1.2.0_linux_x64.zip
         export PATH=`pwd`:$PATH
 
     - name: Apply Namespace Configuration
@@ -336,7 +328,7 @@ Package your APIs and make them available for discovery through the API Portal a
 
 # Production Links
 
-* <a href="https://gwa2.apps.gov.bc.ca/int" target="_blank">API Services Portal</a>
-* <a href="https://gwa.api.gov.bc.ca/api/doc" target="_blank">gwa-api Swagger Console</a>
+* [API Services Portal](https://api.gov.bc.ca)
+* [gwa-api Swagger Console](https://gwa.api.gov.bc.ca/docs)
 * OpenAPI to Postman Converter: https://openapi-to-postman.api.gov.bc.ca/?u=https://gwa.api.gov.bc.ca/api/doc/swagger.json
-* <a href="https://grafana.apps.gov.bc.ca" target="_blank">APS Metrics - Grafana</a>
+* [APS Metrics - Grafana](https://grafana.apps.gov.bc.ca)
