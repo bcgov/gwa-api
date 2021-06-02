@@ -350,7 +350,6 @@ View the Directory API in the [Swagger Console](https://openapi-apps-gov-bc-ca.t
 **Restish Setup**
 
 ```
-export NS=""
 restish api configure my_api
 ```
 
@@ -371,6 +370,12 @@ Select `Finished with profile` and then `Save and exit`
 To verify that restish is working, run:
 
 `restish my_api list` or `restish my_api get-new-id product`
+
+The below example works with the service created above, so we will want to reference the NS environment variable.
+
+```
+export NS=""
+```
 
 ### 9.1 Setup Authorization Profiles
 
