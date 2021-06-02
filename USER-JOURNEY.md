@@ -404,7 +404,28 @@ environmentDetails:
 y2j issuer.yaml | restish my_api put-issuer $NS
 ```
 
-### 9.2 Publish your Product, Environments and link your Services
+### 9.2 Update Gateway Configuration based on Flow
+
+In the next section (9.3) we have defined an environment that is protected using Kong's API Key and ACL plugins.  To link gateway services to this environment, the corresponding plugins need to exist on the Gateway for that service or routes.  The ACL `allow` corresponds to the unique `Environment ID` defined in section 9.3.
+
+```
+  plugins:
+  - name: key-auth
+    tags: [ ns.$NS ]
+    protocols: [ http, https ]
+    config:
+      key_names: ["X-API-KEY"]
+      run_on_preflight: true
+      hide_credentials: true
+      key_in_body: false
+  - name: acl
+    tags: [ ns.$NS ]
+    config:
+      hide_groups_header: true
+      allow: [ 2F7CA929 ]
+```
+
+### 9.3 Publish your Product, Environments and link your Services
 
 ``` yaml  
 kind: DraftDataset
@@ -462,7 +483,9 @@ environments:
 y2j prod.yaml | restish my_api put-product $NS
 ```
 
-### 9.3 Publish Documentation
+
+
+### 9.4 Publish Documentation
 
 ``` yaml
 kind: Content
@@ -486,7 +509,7 @@ restish my_api put-content $NS \
   content: @doc.md
 ```
 
-### 9.4 View your product in the API Directory
+### 9.5 View your product in the API Directory
 
 Find your API in the [API Services Portal Directory](https://api-gov-bc-ca.test.api.gov.bc.ca/devportal/api-discovery)
 
