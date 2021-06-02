@@ -394,7 +394,7 @@ availableScopes: [ Function1/read , Function2/* , Function3/write, Function3/rea
 owner: acope@idir
 environmentDetails:
   - environment: prod
-    issuerUrl: https://dev.oidc.gov.bc.ca/auth/realms/xtmke7ky
+    issuerUrl: https://dev.oidc.gov.bc.ca/auth/realms/abc
     clientId: testapp-client
     clientRegistration: managed
     clientSecret: ''
