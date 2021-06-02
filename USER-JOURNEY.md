@@ -383,7 +383,7 @@ export NS=""
 kind: CredentialIssuer
 name: Resource Server $NS
 namespace: $NS
-description: Authorization Profile for protecting Ministry of Health Services
+description: Authorization Profile for protecting Ministry of XYZ
 flow: client-credentials
 mode: auto
 authPlugin: jwt-keycloak
