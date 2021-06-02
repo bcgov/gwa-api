@@ -486,7 +486,7 @@ restish my_api put-content $NS \
 
 Find your API in the [API Services Portal Directory](https://api-gov-bc-ca.test.api.gov.bc.ca/devportal/api-discovery)
 
-It is now ready to receive access requests from the community.
+It is now ready to receive access requests from the community!
 
 # Production Links
 
