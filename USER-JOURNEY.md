@@ -380,6 +380,8 @@ export NS=""
 
 ### 9.1 Setup Authorization Profiles
 
+If your APIS are protected with one of the OAuth2 grant types, then an Authorization profile must be created with the appropriate credentials for accessing the corresponding Identity Provider/Broker and Authorization Server.
+
 ``` yaml
 kind: CredentialIssuer
 name: Resource Server $NS
