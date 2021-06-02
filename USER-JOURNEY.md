@@ -436,8 +436,7 @@ environments:
   approval: false
   legal: terms-of-use-for-api-gateway-1
   flow: kong-api-key-acl
-  credentialIssuer: null
-  additionalDetailsToRequest: Please provider a bit more of this
+  additionalDetailsToRequest: Please provide a bit more of this
   services: []
 - id: 2F7CA929
   name: test
@@ -445,9 +444,8 @@ environments:
   approval: true
   legal: terms-of-use-for-api-gateway-1
   flow: kong-api-key-acl
-  credentialIssuer: null
-  additionalDetailsToRequest: Please provider a bit more of this
-  services: []
+  additionalDetailsToRequest: Asking for test environment? Please provide some more info
+  services: [ a-service-for-$NS ]
 - id: 3F7CA929
   name: prod
   active: true
@@ -455,7 +453,7 @@ environments:
   legal: terms-of-use-for-api-gateway-1
   flow: client-credentials
   credentialIssuer: Resource Server $NS
-  additionalDetailsToRequest: Please provider a bit more of this
+  additionalDetailsToRequest: Production? Great, please provide X, Y and Z
   services: []
 ```
 
