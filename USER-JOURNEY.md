@@ -384,12 +384,12 @@ mode: auto
 authPlugin: jwt-keycloak
 clientAuthenticator: client-secret
 clientRoles: []
-availableScopes: [System/Patient.*, System/MedicationRequest.*]
+availableScopes: [ Function1/read , Function2/* , Function3/write, Function3/read ]
 owner: acope@idir
 environmentDetails:
   - environment: prod
     issuerUrl: https://dev.oidc.gov.bc.ca/auth/realms/xtmke7ky
-    clientId: abc-client
+    clientId: testapp-client
     clientRegistration: managed
     clientSecret: ''
 ```
