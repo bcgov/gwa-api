@@ -9,8 +9,9 @@ If you have not requested access to the API Gateway Services, then you must firs
 * login using your IDIR or Github account
 * go to the `Directory` tab and select the "API Gateway Services"
 * on the "API Gateway Services" detail page, there will be a button in the top right "Request Access"
-* select your Application (you need to create one if you have not already)
-* select the "test" environment and click "Submit"
+* select the "test" environment
+* in additional details, indicate that you are an API Owner so that you will be granted the appropriate role to create namespaces
+* click "Submit"
 
 You will be provided with credentials for accessing the Gateway Services API, but you will need to wait until the request has been approved for the credential to be active and authorized.
 
@@ -31,7 +32,7 @@ You can select and manage namespaces by clicking the namespace dropdown in the t
 
 Go to the `Namespaces` tab, click the `Service Accounts` link, and click the `New Service Account`.  A new credential will be created - make a note of the `ID` and `Secret`.
 
-Before the credential can be used, you need to grant it the appropriate Scopes.  This can be done by going to the `API Access` tab and click the "Manage Resources" for the `Gateway Administration API` product.  Click the link that corresponds to your newly created namespace.  Click the `Grant Service Account Access` and enter in the `ID` and the scopes you want to grant to the Service Account, then click the `Share` button to grant the permissions.
+Before the credential can be used, you need to grant it the appropriate permissions.  This can be done by going to the `API Access` tab and click the "Manage Resources" for the `Gateway Administration API`.  Click the link that corresponds to your newly created namespace.  Click the `Grant Service Account Access` and enter in the `ID` and the scopes you want to grant to the Service Account, then click the `Share` button to grant the permissions.
 
 The available Scopes are:
 | Scope | Permission |
