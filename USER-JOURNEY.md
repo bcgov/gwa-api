@@ -172,6 +172,8 @@ unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 
 > **Using MacOS or Windows?** Download here: [https://github.com/bcgov/gwa-cli/releases/tag/v1.2.0](https://github.com/bcgov/gwa-cli/releases/tag/v1.2.0)
 
+> NOTE: Version 1.2.0 introduces support for v2 of our api. To continue using v1 of the api, ensure that the API Version is set to 1 (see below)
+
 **Configure**
 
 Create a `.env` file and update the CLIENT_ID and CLIENT_SECRET with the new credentials that were generated in step #2:
@@ -187,7 +189,7 @@ API_VERSION=2
 
 OR run:
 
-gwa init -T --namespace=$NS --client-id=<YOUR SERVICE ACCOUNT ID> --client-secret=<YOUR SERVICE ACCOUNT SECRET>
+gwa init -T --api-version=2 --namespace=$NS --client-id=<YOUR SERVICE ACCOUNT ID> --client-secret=<YOUR SERVICE ACCOUNT SECRET>
 
 ```
 
