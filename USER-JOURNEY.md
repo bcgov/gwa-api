@@ -142,12 +142,12 @@ The Swagger console for the `gwa-api` can be used to publish Kong Gateway config
 **Install (for Linux)**
 
 ``` bash
-GWA_CLI_VERSION=v1.1.3; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
+GWA_CLI_VERSION=v1.2.0; curl -L -O https://github.com/bcgov/gwa-cli/releases/download/${GWA_CLI_VERSION}/gwa_${GWA_CLI_VERSION}_linux_x64.zip
 unzip gwa_${GWA_CLI_VERSION}_linux_x64.zip
 ./gwa --version
 ```
 
-> **Using MacOS or Windows?** Download here: https://github.com/bcgov/gwa-cli/releases/tag/v1.1.3
+> **Using MacOS or Windows?** Download here: https://github.com/bcgov/gwa-cli/releases/tag/v1.2.0
 
 **Configure**
 
@@ -159,11 +159,12 @@ GWA_NAMESPACE=$NS
 CLIENT_ID=<YOUR SERVICE ACCOUNT ID>
 CLIENT_SECRET=<YOUR SERVICE ACCOUNT SECRET>
 GWA_ENV=test
+API_VERSION=1
 " > .env
 
 OR run:
 
-gwa init -T --namespace=$NS --client-id=<YOUR SERVICE ACCOUNT ID> --client-secret=<YOUR SERVICE ACCOUNT SECRET>
+gwa init -T --api-version=1 --namespace=$NS --client-id=<YOUR SERVICE ACCOUNT ID> --client-secret=<YOUR SERVICE ACCOUNT SECRET>
 
 ```
 
