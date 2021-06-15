@@ -23,6 +23,9 @@ def get_plugins_by_route (route):
 def get_routes_by_ns (ns):
     return recurse_get_records ([], "/routes?tags=ns.%s" % ns)
 
+def get_service_routes (service_id):
+    return recurse_get_records ([], "/services/%s/routes" % service_id)
+
 def recurse_get_records (result, url):
     log = app.logger
     admin_url = app.config['kongAdminUrl']

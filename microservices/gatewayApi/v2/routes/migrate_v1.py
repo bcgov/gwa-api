@@ -16,7 +16,7 @@ from keycloak.urls_patterns import URL_ADMIN_CLIENTS
 from subprocess import Popen, PIPE, STDOUT
 from utils.clientid import client_id_valid, generate_client_id
 from clients.keycloak import admin_api
-from clients.kong import get_plugins, get_services_by_ns, get_routes_by_ns
+from clients.kong import get_plugins, get_services_by_ns, get_service_routes
 
 mg = Blueprint('migration.v2', 'migration')
 
@@ -69,7 +69,7 @@ def get_acl_protected_services_by_ns(ns, all_plugins):
             "acl_allow": []
         }
         print("--", svc['name'])
-        for rte in get_routes_by_ns(ns):
+        for rte in get_service_routes(svc['id']):
             for plugin in get_plugins_by_route(all_plugins, rte['id']):
                 if plugin['name'] == 'acl':
                     definition['acl_allow'] = definition['acl_allow'] + [{"type":"route","name":rte['name'],"allow":plugin['config']['allow']}]
