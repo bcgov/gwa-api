@@ -23,6 +23,15 @@ def get_plugins_by_route (route):
 def get_routes_by_ns (ns):
     return recurse_get_records ([], "/routes?tags=ns.%s" % ns)
 
+def get_service_routes (service_id):
+    return recurse_get_records ([], "/services/%s/routes" % service_id)
+
+def get_acls ():
+    return recurse_get_records ([], "/acls")
+
+def get_consumer (consumer_id):
+    return get_record ([], "/consumers/%s" % consumer_id)
+
 def recurse_get_records (result, url):
     log = app.logger
     admin_url = app.config['kongAdminUrl']
@@ -36,3 +45,11 @@ def recurse_get_records (result, url):
     if json['next'] is not None:
         recurse_get_records (result, json['next'])
     return result
+
+def get_record (result, url):
+    log = app.logger
+    admin_url = app.config['kongAdminUrl']
+
+    log.debug("%s%s" % (admin_url, url))
+    r = requests.get("%s%s" % (admin_url, url))
+    return r.json()

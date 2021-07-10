@@ -16,7 +16,7 @@ from keycloak.urls_patterns import URL_ADMIN_CLIENTS
 from subprocess import Popen, PIPE, STDOUT
 from utils.clientid import client_id_valid, generate_client_id
 from clients.keycloak import admin_api
-from clients.kong import get_plugins, get_services_by_ns, get_routes_by_ns
+from clients.kong import get_plugins, get_services_by_ns, get_service_routes, get_acls, get_consumer
 
 mg = Blueprint('migration.v2', 'migration')
 
@@ -41,7 +41,8 @@ def export_details() -> object:
                 "view_membership": [],
                 "admin_membership": [],
                 "service_accounts": [],
-                "acl_protected": []
+                "acl_protected": [],
+                "acl_members": []
             }
             for acln in acl_namespaces:
                 if acln['name'] == ns_name:
@@ -52,6 +53,8 @@ def export_details() -> object:
             ns['attributes'] = get_group_attributes(keycloak_admin, ns_id)
             ns['service_accounts'] = get_service_accounts(keycloak_admin, ns_name)
             ns['acl_protected'] = get_acl_protected_services_by_ns(ns_name, all_plugins)
+            ns['acl_members'] = get_acl_members(ns['acl_protected'])
+
             response.append(ns)
 
         return make_response(jsonify(response))
@@ -61,6 +64,30 @@ def export_details() -> object:
         abort(make_response(jsonify(error="Failed to generate report"), 400))
 
 
+# Get the full list of /acls and get a list of Kong Consumer IDs that belong to one
+# of the groups in acl_protected
+def get_acl_members (acl_protected):
+
+  # use acl_protected to get a list of groups
+  groups = []
+  for aclp in acl_protected:
+    for rule in aclp['acl_allow']:
+      for group in rule['allow']:
+        if group not in groups:
+          groups.append(group)
+
+  old_membership = []
+  membership = []
+  acls = get_acls()
+  for acl in acls:
+    if acl['group'] in groups:
+      consumer_id = acl['consumer']['id']
+      if consumer_id not in old_membership:
+        old_membership.append(consumer_id)
+        consumer = get_consumer (consumer_id)
+        membership.append(consumer['username'])
+  return membership
+
 def get_acl_protected_services_by_ns(ns, all_plugins):
     result = []
     for svc in get_services_by_ns(ns):
@@ -69,7 +96,7 @@ def get_acl_protected_services_by_ns(ns, all_plugins):
             "acl_allow": []
         }
         print("--", svc['name'])
-        for rte in get_routes_by_ns(ns):
+        for rte in get_service_routes(svc['id']):
             for plugin in get_plugins_by_route(all_plugins, rte['id']):
                 if plugin['name'] == 'acl':
                     definition['acl_allow'] = definition['acl_allow'] + [{"type":"route","name":rte['name'],"allow":plugin['config']['allow']}]
