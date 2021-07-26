@@ -1,66 +1,74 @@
+from logging import error
 import sys
-from flask import make_response, current_app as app
+from typing import Any
+from flask import json, make_response, jsonify, abort, current_app as app
 import requests
 
 class GatewayConsumerService:
 
-    def add_plugin_to_consumer(self, consumerid, pluginData):
-        log = app.logger
-        action = "ADDING CONSUMER PLUGIN"
-        log.debug("%s[%s] to %s" % (action, pluginData['name'], consumerid))
+    def add_consumer_plugin(self, consumer_id: str, plugin_data: Any):
+        url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + '/plugins'
 
-        url = app.config['kongAdminUrl'] + '/consumers/' + consumerid + '/plugins'
-        if pluginData['name'] == 'rate-limiting':
-            pluginData = add_redis_config(pluginData)
-        response = requests.post(url, json=pluginData, headers={'Content-Type': 'application/json'}, timeout=5)
+        if plugin_data['name'] == 'rate-limiting':
+            plugin_data = add_redis_config(plugin_data)
 
-        message = "COMPLETED" if response.status_code in (200, 201) else "FAILED"
-            
-        log.debug("%s %s[%s] to %s" % (message, action, pluginData['name'], consumerid))
-        return response_transformer(response.json())
+        return make_http_request("ADDING CONSUMER PLUGIN", consumer_id, "post", url=url, json=plugin_data, headers={'Content-Type': 'application/json'}, timeout=5)
 
-    def update_plugin_to_consumer(self, consumerid, pluginid, pluginData):
-        log = app.logger
-        action = "UPDATING CONSUMER PLUGIN"
-        log.debug("%s[%s] to %s" % (action, pluginData['name'], consumerid))
-        url = app.config['kongAdminUrl'] + '/consumers/' + consumerid + '/plugins/' + pluginid
-
-        if pluginData['name'] == 'rate-limiting':
-            pluginData = add_redis_config(pluginData)
-
-        response = requests.put(url, json=pluginData, headers={'Content-Type': 'application/json'}, timeout=5)
-        message = "COMPLETED" if response.status_code in (200, 201) else "FAILED"           
-        log.debug("%s %s[%s] to %s" % (message, action, pluginData['name'], consumerid))
-        return response.json()
-
-    def delete_plugin_to_consumer(self, consumerid, pluginid):
-        log = app.logger
-        action = "DELETING CONSUMER PLUGIN"
-        try:
-            res = self.get_gateway_consumer_plugin(consumerid, pluginid)
-        except:
-            log.error("failed to fetch plugin. %s" % sys.exc_info()[0])
-
-        if "message" in res:
-            log.error("failed to fetch plugin. %s" % res['message'])
-            return res
-
-        log.debug("%s[%s] from %s" % (action, res['name'], consumerid))
-        url = app.config['kongAdminUrl'] + '/consumers/' + consumerid + '/plugins/' + pluginid
-        response = requests.delete(url, headers={'Content-Type': 'application/json'}, timeout=5)
-        message = "COMPLETED" if response.status_code == 204 else "FAILED"
-        log.debug("%s %s[%s] from %s" % (message, action, res['name'], consumerid))
-        return make_response('deleted', response.status_code)
-
-    def get_gateway_consumer (self, consumer_id):
-        url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id
-        response = requests.get(url, timeout=5)
-        return response.json()
-
-    def get_gateway_consumer_plugin (self, consumer_id, plugin_id):
+    def update_consumer_plugin(self, consumer_id: str, plugin_id: str, plugin_data: Any):
         url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + '/plugins/' + plugin_id
-        response = requests.get(url, timeout=5)
-        return response.json()
+
+        if plugin_data['name'] == 'rate-limiting':
+            plugin_data = add_redis_config(plugin_data)
+
+        return make_http_request("UPDATING CONSUMER PLUGIN", consumer_id, "put", url=url, json=plugin_data, headers={'Content-Type': 'application/json'}, timeout=5)
+
+    def delete_consumer_plugin(self, consumer_id: str, plugin_id: str):    
+        url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + '/plugins/' + plugin_id
+        return make_http_request("DELETING CONSUMER PLUGIN", consumer_id, "delete", url=url, headers={'Content-Type': 'application/json'}, timeout=5)
+
+    def get_consumer (self, id_or_name: str):
+        url = app.config['kongAdminUrl'] + '/consumers/' + id_or_name
+        return requests.get(url, timeout=5).json()
+
+    def get_consumers_by_ns (self, namespace: str):
+        url = app.config['kongAdminUrl'] + '/consumers?tags=ns.' + namespace
+        return requests.get(url, timeout=5).json()
+
+    def get_consumer_acl_by_ns (self, consumer_id: str, namespace: str):
+        url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + '/acls?tags=ns.' + namespace
+        return requests.get(url, timeout=5).json()
+
+    def get_consumer_plugin (self, consumer_id: str, plugin_id: str):
+        url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + '/plugins/' + plugin_id
+        return requests.get(url, timeout=5).json()
+
+    def create_consumer(self, consumer_data: Any):
+        url = app.config['kongAdminUrl'] + '/consumers'
+        return make_http_request("CREATING CONSUMER", consumer_data['username'], "post", url=url, json=consumer_data, headers={'Content-Type': 'application/json'}, timeout=5)
+
+    def update_consumer(self, username: str, consumer_data: Any):
+        url = app.config['kongAdminUrl'] + '/consumers/' + username
+        return make_http_request("UPDATING CONSUMER", consumer_data['username'], "put", url=url, json=consumer_data, headers={'Content-Type': 'application/json'}, timeout=5)
+
+    def delete_consumer(self, id_or_name: str):
+        url = app.config['kongAdminUrl'] + '/consumers/' + id_or_name
+        return make_http_request("DELETING CONSUMER", id_or_name, "delete", url=url, headers={'Content-Type': 'application/json'}, timeout=5)
+
+    def add_consumer_acl(self, consumer_id, acl_data: Any):
+        url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + "/acls"
+        return make_http_request("ADDING CONSUMER ACL", consumer_id, "post", url=url, json=acl_data, headers={'Content-Type': 'application/json'}, timeout=5)
+
+    def delete_consumer_acl(self, consumer_id: str, acl_id: str):
+        url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + "/acls/" + acl_id
+        return make_http_request("DELETING CONSUMER ACL", consumer_id, "delete", url=url, headers={'Content-Type': 'application/json'}, timeout=5)
+        
+    def add_keyauth_to_consumer(self, consumer_id: str, keyauth_data: Any):
+        url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + '/key-auth'
+        return make_http_request("ADDING KEYAUTH TO CONSUMER", consumer_id, "post", url=url, json=keyauth_data, headers={'Content-Type': 'application/json'}, timeout=5)
+
+    def gen_key_for_consumer_keyauth(self, consumer_id: str, keyauth_id: str, key_data: Any):
+        url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + '/key-auth/' + keyauth_id
+        return make_http_request("GENERATING KEYAUTH KEY", consumer_id, "put", url=url, json=key_data, headers={'Content-Type': 'application/json'}, timeout=5)
 
 def response_transformer(response):
     """ 
@@ -84,3 +92,26 @@ def add_redis_config(pluginData: str):
     pluginData['config']['redis_timeout'] = rateLimitConfig['redis_timeout']
     pluginData['config']['redis_database'] = rateLimitConfig['redis_database']
     return pluginData
+
+
+def make_http_request(action: str, id: str, method: str, **rqst_params):
+    log = app.logger
+    message = "STARTED"
+    log.debug("%s %s[%s]" % (message, action, id))
+    mod = __import__('requests')
+    method_to_call = getattr(mod, method)
+    response = method_to_call(**rqst_params)
+    message = "COMPLETED"
+    if response.status_code in (200, 201):
+        res = response.json()
+    elif response.status_code == 204:
+        res = make_response(jsonify(message='done'), response.status_code)
+    else:
+        message = "FAILED"
+        try:
+            res = make_response(response.json(), response.status_code)
+        except:
+            res = make_response(jsonify(error='failed'), response.status_code)
+    log.debug("%s %s[%s]" % (message, action, id))
+    return res
+    
