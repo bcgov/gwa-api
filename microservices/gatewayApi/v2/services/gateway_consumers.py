@@ -1,7 +1,5 @@
-from logging import error
-import sys
 from typing import Any
-from flask import json, make_response, jsonify, abort, current_app as app
+from flask import make_response, jsonify, current_app as app
 import requests
 
 
@@ -9,18 +7,10 @@ class GatewayConsumerService:
 
     def add_consumer_plugin(self, consumer_id: str, plugin_data: Any):
         url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + '/plugins'
-
-        if plugin_data['name'] == 'rate-limiting':
-            plugin_data = add_redis_config(plugin_data)
-
         return make_http_request("ADDING CONSUMER PLUGIN", consumer_id, "post", url=url, json=plugin_data, headers={'Content-Type': 'application/json'}, timeout=5)
 
     def update_consumer_plugin(self, consumer_id: str, plugin_id: str, plugin_data: Any):
         url = app.config['kongAdminUrl'] + '/consumers/' + consumer_id + '/plugins/' + plugin_id
-
-        if plugin_data['name'] == 'rate-limiting':
-            plugin_data = add_redis_config(plugin_data)
-
         return make_http_request("UPDATING CONSUMER PLUGIN", consumer_id, "put", url=url, json=plugin_data, headers={'Content-Type': 'application/json'}, timeout=5)
 
     def delete_consumer_plugin(self, consumer_id: str, plugin_id: str):
@@ -84,16 +74,6 @@ def response_transformer(response):
 def get_http_error_by_kong_code(code: int):
     code_dict = {5: 409, 2: 400}
     return code_dict.get(code, 400)
-
-
-def add_redis_config(pluginData: str):
-    rateLimitConfig = app.config['plugins']['rate_limiting']
-    pluginData['config']['redis_host'] = rateLimitConfig['redis_host']
-    pluginData['config']['redis_password'] = rateLimitConfig['redis_password']
-    pluginData['config']['redis_port'] = rateLimitConfig['redis_port']
-    pluginData['config']['redis_timeout'] = rateLimitConfig['redis_timeout']
-    pluginData['config']['redis_database'] = rateLimitConfig['redis_database']
-    return pluginData
 
 
 def make_http_request(action: str, id: str, method: str, **rqst_params):
