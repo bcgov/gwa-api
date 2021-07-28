@@ -58,6 +58,8 @@ def create_consumer_plugin(namespace: str, consumer_id: str) -> object:
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 @consumers.route('/<string:consumer_id>/plugins/<string:plugin_id>',
                  methods=['PUT'], strict_slashes=False)
 def update_consumer_plugin(namespace: str, consumer_id: str, plugin_id: str) -> object:
@@ -102,6 +104,8 @@ def update_consumer_plugin(namespace: str, consumer_id: str, plugin_id: str) -> 
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 @consumers.route('/<string:consumer_id>/plugins/<string:plugin_id>',
                  methods=['DELETE'], strict_slashes=False)
 def delete_consumer_plugin(namespace: str, consumer_id: str, plugin_id: str) -> object:
@@ -119,6 +123,8 @@ def delete_consumer_plugin(namespace: str, consumer_id: str, plugin_id: str) -> 
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'Namespace.View')
 @consumers.route('/<string:username>',
                  methods=['GET'], strict_slashes=False)
 def get_consumer_by_username(namespace: str, username: str) -> object:
@@ -134,6 +140,8 @@ def get_consumer_by_username(namespace: str, username: str) -> object:
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 @consumers.route('',
                  methods=['POST'], strict_slashes=False)
 def create_consumer(namespace: str):
@@ -176,6 +184,8 @@ def create_consumer(namespace: str):
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 @consumers.route('/<string:username>',
                  methods=['PUT'], strict_slashes=False)
 def update_consumer(namespace: str, username: str):
@@ -217,6 +227,8 @@ def update_consumer(namespace: str, username: str):
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 @consumers.route('/<string:username>',
                  methods=['DELETE'], strict_slashes=False)
 def delete_consumer(namespace: str, username: str) -> object:
@@ -234,6 +246,8 @@ def delete_consumer(namespace: str, username: str) -> object:
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 @consumers.route('/<string:consumer_id>/key-auth',
                  methods=['POST'], strict_slashes=False)
 def add_consumer_keyauth(namespace: str, consumer_id: str) -> object:
@@ -258,6 +272,8 @@ def add_consumer_keyauth(namespace: str, consumer_id: str) -> object:
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 @consumers.route('/<string:consumer_id>/key-auth/<string:keyauth_id>',
                  methods=['PUT'], strict_slashes=False)
 def generate_consumer_keyauth_key(namespace: str, consumer_id: str, keyauth_id: str):
@@ -282,6 +298,8 @@ def generate_consumer_keyauth_key(namespace: str, consumer_id: str, keyauth_id: 
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'Namespace.View')
 @consumers.route('',
                  methods=['GET'], strict_slashes=False)
 def get_consumers_by_namespace(namespace: str) -> object:
@@ -297,6 +315,8 @@ def get_consumers_by_namespace(namespace: str) -> object:
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'Namespace.View')
 @consumers.route('/<string:consumer_id>/acls',
                  methods=['GET'], strict_slashes=False)
 def get_consumer_acl_by_namespace(namespace: str, consumer_id: str) -> object:
@@ -312,6 +332,8 @@ def get_consumer_acl_by_namespace(namespace: str, consumer_id: str) -> object:
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 @consumers.route('/<string:consumer_id>/acls',
                  methods=['POST'], strict_slashes=False)
 def assign_consumer_acl(namespace: str, consumer_id: str) -> object:
@@ -336,6 +358,8 @@ def assign_consumer_acl(namespace: str, consumer_id: str) -> object:
     return response
 
 
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 @consumers.route('/<string:consumer_id>/acls/<string:acl_id>',
                  methods=['DELETE'], strict_slashes=False)
 def remove_consumer_acl(namespace: str, consumer_id: str, acl_id: str) -> object:
