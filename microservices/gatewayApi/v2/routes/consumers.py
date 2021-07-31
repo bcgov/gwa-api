@@ -22,30 +22,16 @@ def create_consumer_plugin(namespace: str, consumer_id: str) -> object:
     plugin_data = request.get_json()
     cnsr = GatewayConsumerService()
     selectTag = "ns.%s" % namespace
-    ns_qualifier = None
 
     if plugin_data == None:
         log.error("Missing input")
         record_custom_event(event_id, 'GatewayConsumerPlugin', 'add', 'failed', namespace, "Missing input.")
         abort(make_response(jsonify(error="Missing input."), 400))
 
-    transform_tags(plugin_data, namespace, "ns.%s" % namespace)
-
     if plugin_data['name'] == 'rate-limiting':
         rate_limiting(plugin_data)
 
     validate_tags(plugin_data, selectTag)
-
-    nsq = traverse_get_ns_qualifier(plugin_data, selectTag)
-    if nsq is not None:
-        if ns_qualifier is not None and nsq != ns_qualifier:
-            abort_early(event_id, 'GatewayConsumerPlugin', namespace, jsonify(error="Validation Errors:\n%s" %
-                        ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))))
-        ns_qualifier = nsq
-        log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
-
-    if ns_qualifier is not None:
-        selectTag = ns_qualifier
 
     try:
         response = cnsr.add_consumer_plugin(consumer_id, plugin_data)
@@ -67,30 +53,17 @@ def update_consumer_plugin(namespace: str, consumer_id: str, plugin_id: str) -> 
     plugin_data = request.get_json()
     cnsr = GatewayConsumerService()
     selectTag = "ns.%s" % namespace
-    ns_qualifier = None
 
     if plugin_data == None:
         log.error("Missing input")
         record_custom_event(event_id, 'GatewayConsumerPlugin', 'update', 'failed', namespace, "Missing input.")
         abort(make_response(jsonify(error="Missing input."), 400))
 
-    transform_tags(plugin_data, namespace, "ns.%s" % namespace)
-
     if plugin_data['name'] == 'rate-limiting':
         rate_limiting(plugin_data)
 
     validate_tags(plugin_data, selectTag)
-
-    nsq = traverse_get_ns_qualifier(plugin_data, selectTag)
-    if nsq is not None:
-        if ns_qualifier is not None and nsq != ns_qualifier:
-            abort_early(event_id, 'GatewayConsumerPlugin', namespace, jsonify(error="Validation Errors:\n%s" %
-                        ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))))
-        ns_qualifier = nsq
-        log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
-
-    if ns_qualifier is not None:
-        selectTag = ns_qualifier
+    verify_tags(consumer_id, plugin_id, selectTag)
 
     try:
         response = cnsr.update_consumer_plugin(consumer_id, plugin_id, plugin_data)
@@ -108,7 +81,9 @@ def update_consumer_plugin(namespace: str, consumer_id: str, plugin_id: str) -> 
                  methods=['DELETE'], strict_slashes=False)
 def delete_consumer_plugin(namespace: str, consumer_id: str, plugin_id: str) -> object:
     event_id = str(uuid.uuid4())
+    selectTag = "ns.%s" % namespace
     cnsr = GatewayConsumerService()
+    verify_tags(consumer_id, plugin_id, selectTag)
 
     try:
         response = cnsr.delete_consumer_plugin(consumer_id, plugin_id)
@@ -152,33 +127,18 @@ def validate_tags(data, required_tag):
     errors = []
     qualifiers = []
 
-    if traverse_has_ns_qualifier(data, required_tag) and traverse_has_ns_tag_only(data, required_tag):
-        errors.append(
-            "Tags for the namespace can not have a mix of 'ns.<namespace>' and 'ns.<namespace>.<qualifier>'.  Rejecting request.")
-
-    traverse("", errors, data, required_tag, qualifiers)
-    if len(qualifiers) > 1:
-        errors.append("Too many different qualified namespaces (%s).  Rejecting request." % qualifiers)
-
-    if len(errors) != 0:
-        #raise Exception('\n'.join(errors))
-        abort(make_response(jsonify(error=errors), 400))
-
-
-def traverse(source, errors, data, required_tag, qualifiers):
-
     if 'tags' in data:
         if required_tag not in data['tags']:
             errors.append("missing required tag %s" % (required_tag))
-        for tag in data['tags']:
-            # if the required_tag is "abc" and the tag starts with "ns."
-            # then ns.abc and ns.abc.dev are valid, but anything else is an error
-            if tag.startswith("ns.") and tag != required_tag and not tag.startswith("%s." % required_tag):
-                errors.append("invalid ns tag %s" % (tag))
-            if tag.startswith("%s." % required_tag) and tag not in qualifiers:
-                qualifiers.append(tag)
+
+        if traverse_has_ns_qualifier(data, required_tag):
+            errors.append(
+                "Tags for the namespace can not have a mix of 'ns.<namespace>' and 'ns.<namespace>.<qualifier>'.  Rejecting request.")
     else:
         errors.append("no tags found")
+
+    if len(errors) != 0:
+        abort(make_response(jsonify(error=errors), 400))
 
 
 def traverse_has_ns_qualifier(data, required_tag):
@@ -190,26 +150,8 @@ def traverse_has_ns_qualifier(data, required_tag):
     return False
 
 
-def traverse_has_ns_tag_only(data, required_tag):
-    log = app.logger
-    if 'tags' in data:
-        if required_tag in data['tags'] and has_ns_qualifier(data['tags'], required_tag) is False:
-            return True
-    if traverse_has_ns_tag_only(data, required_tag) == True:
-        return True
-    return False
-
-
-def has_ns_qualifier(tags, required_tag):
-    for tag in tags:
-        if tag.startswith("%s." % required_tag):
-            return True
-    return False
-
-
-def traverse_get_ns_qualifier(data, required_tag):
-    if 'tags' in data:
-        for tag in data['tags']:
-            if tag.startswith("%s." % required_tag):
-                return tag
-    return None
+def verify_tags(consumer_id: str, plugin_id: str, select_tag):
+    cnsr = GatewayConsumerService()
+    plugin_tags = cnsr.get_consumer_plugin(consumer_id, plugin_id)['tags']
+    if select_tag not in plugin_tags:
+        abort(make_response(jsonify(error="The request tag does not match with the plugin tag."), 400))
