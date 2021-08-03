@@ -28,6 +28,7 @@ from utils.transforms import plugins_transformations
 from utils.masking import mask
 
 gw = Blueprint('gwa.v2', 'gateway')
+local_environment = os.environ.get("LOCAL_ENVIRONMENT", default=False)
 
 def abort_early (event_id, action, namespace, response):
     record_gateway_event(event_id, action, 'failed', namespace, json.dumps(response.get_json()))
@@ -75,7 +76,7 @@ def delete_config(namespace: str, qualifier = "") -> object:
         log.warn("%s - %s" % (namespace, out.decode('utf-8')))
         abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))) )
 
-    elif cmd == "sync":
+    elif cmd == "sync" and not local_environment:
         try:
             route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
             log.debug("%s - Prepared %d routes" % (namespace, route_count))
@@ -271,7 +272,7 @@ def write_config(namespace: str) -> object:
         log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
         abort_early(event_id, 'publish', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
 
-    elif cmd == "sync":
+    elif cmd == "sync" and not local_environment:
         try:
             route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
             log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
