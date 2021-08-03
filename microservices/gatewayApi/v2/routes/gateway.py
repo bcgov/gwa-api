@@ -274,7 +274,6 @@ def write_config(namespace: str) -> object:
 
     elif cmd == "sync" and not local_environment:
         try:
-            # skip creation of routes in local development environment
             route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
             log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
             if route_count > 0:
