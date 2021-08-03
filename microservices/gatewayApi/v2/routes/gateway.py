@@ -76,32 +76,31 @@ def delete_config(namespace: str, qualifier = "") -> object:
         log.warn("%s - %s" % (namespace, out.decode('utf-8')))
         abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))) )
 
-    elif cmd == "sync":
+    elif cmd == "sync" and not local_environment:
         try:
-            if not local_environment:
-                route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
-                log.debug("%s - Prepared %d routes" % (namespace, route_count))
-                if route_count > 0:
-                    apply_routes (tempFolder)
-                    log.debug("%s - Applied %d routes" % (namespace, route_count))
-                route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
-                log.debug("%s - Prepared %d deletions" % (namespace, route_count))
-                if route_count > 0:
-                    delete_routes (tempFolder)
-            
-                # create Network Security Policies (nsp) for any upstream that
-                # has the format: <name>.<ocp_ns>.svc
-                log.debug("%s - Update NSPs" % (namespace))
-                ocp_ns_list = get_ocp_service_namespaces (tempFolder)
-                for ocp_ns in ocp_ns_list:
-                    if check_nsp (namespace, ocp_ns) is False:
-                        apply_nsp (namespace, ocp_ns, tempFolder)
+            route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
+            log.debug("%s - Prepared %d routes" % (namespace, route_count))
+            if route_count > 0:
+                apply_routes (tempFolder)
+                log.debug("%s - Applied %d routes" % (namespace, route_count))
+            route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
+            log.debug("%s - Prepared %d deletions" % (namespace, route_count))
+            if route_count > 0:
+                delete_routes (tempFolder)
+        
+            # create Network Security Policies (nsp) for any upstream that
+            # has the format: <name>.<ocp_ns>.svc
+            log.debug("%s - Update NSPs" % (namespace))
+            ocp_ns_list = get_ocp_service_namespaces (tempFolder)
+            for ocp_ns in ocp_ns_list:
+                if check_nsp (namespace, ocp_ns) is False:
+                    apply_nsp (namespace, ocp_ns, tempFolder)
 
-                # ok all looks good, so update a secret containing the original submitted request
-                log.debug("%s - Update Original Config" % (namespace))
-                write_submitted_config ("", tempFolder)
-                prep_and_apply_secret (namespace, selectTag, tempFolder)
-                log.debug("%s - Updated Original Config" % (namespace))
+            # ok all looks good, so update a secret containing the original submitted request
+            log.debug("%s - Update Original Config" % (namespace))
+            write_submitted_config ("", tempFolder)
+            prep_and_apply_secret (namespace, selectTag, tempFolder)
+            log.debug("%s - Updated Original Config" % (namespace))
         except HTTPException as ex:
             traceback.print_exc()
             log.error("Error updating custom routes, nsps and secrets. %s" % ex)
@@ -273,34 +272,33 @@ def write_config(namespace: str) -> object:
         log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
         abort_early(event_id, 'publish', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
 
-    elif cmd == "sync":
+    elif cmd == "sync" and not local_environment:
         try:
             # skip creation of routes in local development environment
-            if not local_environment:
-                route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
-                log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
-                if route_count > 0:
-                    apply_routes (tempFolder)
-                    log.debug("[%s] - Applied %d routes" % (namespace, route_count))
-                route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
-                log.debug("[%s] - Prepared %d deletions" % (namespace, route_count))
-                if route_count > 0:
-                    delete_routes (tempFolder)
-            
-                # create Network Security Policies (nsp) for any upstream that
-                # has the format: <name>.<ocp_ns>.svc
-                if should_we_apply_nsp_policies():
-                    log.debug("[%s] - Update NSPs" % (namespace))
-                    ocp_ns_list = get_ocp_service_namespaces (tempFolder)
-                    for ocp_ns in ocp_ns_list:
-                        if check_nsp (namespace, ocp_ns) is False:
-                            apply_nsp (namespace, ocp_ns, tempFolder)
+            route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
+            log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
+            if route_count > 0:
+                apply_routes (tempFolder)
+                log.debug("[%s] - Applied %d routes" % (namespace, route_count))
+            route_count = prepare_delete_routes (namespace, selectTag, tempFolder)
+            log.debug("[%s] - Prepared %d deletions" % (namespace, route_count))
+            if route_count > 0:
+                delete_routes (tempFolder)
+        
+            # create Network Security Policies (nsp) for any upstream that
+            # has the format: <name>.<ocp_ns>.svc
+            if should_we_apply_nsp_policies():
+                log.debug("[%s] - Update NSPs" % (namespace))
+                ocp_ns_list = get_ocp_service_namespaces (tempFolder)
+                for ocp_ns in ocp_ns_list:
+                    if check_nsp (namespace, ocp_ns) is False:
+                        apply_nsp (namespace, ocp_ns, tempFolder)
 
-                # ok all looks good, so update a secret containing the original submitted request
-                log.debug("[%s] - Update Original Config" % (namespace))
-                write_submitted_config (orig_config, tempFolder)
-                prep_and_apply_secret (namespace, selectTag, tempFolder)
-                log.debug("[%s] - Updated Original Config" % (namespace))
+            # ok all looks good, so update a secret containing the original submitted request
+            log.debug("[%s] - Update Original Config" % (namespace))
+            write_submitted_config (orig_config, tempFolder)
+            prep_and_apply_secret (namespace, selectTag, tempFolder)
+            log.debug("[%s] - Updated Original Config" % (namespace))
         except HTTPException as ex:
             traceback.print_exc()
             log.error("[%s] Error updating custom routes, nsps and secrets. %s" % (namespace, ex))
