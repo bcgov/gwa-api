@@ -7,6 +7,17 @@ import urllib.parse
 #
 # 'type', 'name', 'action', 'message', 'refId', 'namespace'
 
+def record_custom_event (uuid, type, action, result, namespace, message = ""):
+    record_activity ({
+        'id': uuid,
+        'type': type,
+        'action': action,
+        'result': result,
+        'name': 'N/A',
+        'message': message,
+        'refId': '',
+        'namespace': namespace
+    })
 
 def record_namespace_event (uuid, action, result, namespace, message = ""):
     record_activity ({
