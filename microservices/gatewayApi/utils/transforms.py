@@ -9,14 +9,23 @@ conf = config.Config().data
 def plugins_transformations (namespace, yaml):
     traverse_plugins (yaml)
 
-def rate_limiting (plugin):
-    log = app.logger
+def rate_limiting (plugin, plugin_configs=None):
     override_config = conf['plugins']['rate_limiting']
 
-    if 'config' not in plugin:
-        plugin['config'] = {}
+    if '_config' in plugin:
+        if not plugin_configs == None:
+            if plugin['_config'] not in plugin_configs:
+                plugin_configs[plugin['_config']] = {}
+            plugin_config = plugin_configs[plugin['_config']]
+        else:
+            plugin_configs = {plugin['_config']: {}}
+            plugin_config = plugin_configs[plugin['_config']]
 
-    plugin_config = plugin['config']
+    elif 'config' in plugin:
+        plugin_config = plugin['config']
+    else:
+        plugin['config'] = {}
+        plugin_config = plugin['config']
 
     policy = "redis"
     if 'policy' in plugin_config and plugin_config['policy'] == 'local':
@@ -43,13 +52,18 @@ def rate_limiting (plugin):
         if k not in plugin:
             plugin[k] = v
 
-def traverse_plugins (yaml):
+def traverse_plugins (yaml, plugin_configs = None):
+    if plugin_configs == None:
+        if '_plugin_configs' in yaml:
+            plugin_configs = yaml['_plugin_configs']
     traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
                 if k == 'plugins':
                     if item['name'] == 'rate-limiting':
-                        rate_limiting(item)
-                traverse_plugins (item)
+                        rate_limiting(item, plugin_configs)
+                traverse_plugins (item, plugin_configs)
+    
+
 
