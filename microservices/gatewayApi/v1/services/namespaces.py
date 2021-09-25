@@ -9,7 +9,7 @@ from clients.keycloak import admin_api
 
 class NamespaceService:
     std_attrs = []
-    priv_attrs = [ 'perm-domains', 'perm-protected-ns' ]
+    priv_attrs = [ 'perm-domains', 'perm-protected-ns', 'perm-data-plane' ]
 
     def __init__ (self):
         self.keycloak_admin = admin_api()

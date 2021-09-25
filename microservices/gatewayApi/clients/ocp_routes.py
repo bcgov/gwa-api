@@ -136,7 +136,7 @@ def prepare_route_last_version (ns, select_tag):
         resource_versions[ route['metadata']['name'] ] = route['metadata']['resourceVersion']
     return resource_versions
 
-def prepare_apply_routes (ns, select_tag, is_host_transform_enabled, rootPath):
+def prepare_apply_routes (ns, select_tag, is_host_transform_enabled, data_plane, rootPath):
     log = app.logger
     ssl_key_path = "/ssl/tls.key"
     ssl_crt_path = "/ssl/tls.crt"
@@ -174,7 +174,7 @@ ${ssl_crt}
 ${ssl_key}
   to:
     kind: Service
-    name: ${serviceName}
+    name: ${service_name}
     weight: 100
   wildcardPolicy: None
 status:
@@ -211,7 +211,7 @@ status:
                 resource_version = resource_versions[name]
 
             log.debug("[%s] Route A %03d wild-%s-%s (ver.%s)" % (select_tag, index, select_tag.replace('.','-'), host, resource_version))
-            out_file.write(template.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/', ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, serviceName='kong-kong-proxy', timestamp=ts, fmt_time=fmt_time))
+            out_file.write(template.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/', ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time))
             out_file.write('\n---\n')
             index = index + 1
 
