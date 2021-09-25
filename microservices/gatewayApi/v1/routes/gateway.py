@@ -282,7 +282,7 @@ def write_config(namespace: str) -> object:
     elif cmd == "sync":
         try:
             if update_routes_flag:
-                route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
+                route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), data_plane(ns_attributes), tempFolder)
                 log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
                 if route_count > 0:
                     apply_routes (tempFolder)
@@ -552,6 +552,10 @@ def traverse_get_ns_qualifier (yaml, required_tag):
                 if qualifier is not None:
                     return qualifier
     return None
+
+def data_plane (ns_attributes):
+    default_data_plane = app.config['defaultDataPlane']
+    return ns_attributes.get('perm-data-plane', [ default_data_plane ] )[0]
 
 def is_host_transform_enabled ():
     conf = app.config['hostTransformation']
