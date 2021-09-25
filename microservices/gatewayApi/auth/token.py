@@ -1,7 +1,7 @@
 import requests
 import time
 from authlib.jose import jwt
-from authlib.jose.errors import JoseError, ExpiredTokenError
+from authlib.jose.errors import JoseError, ExpiredTokenError, InvalidClaimError
 from authlib.oauth2.rfc6749 import TokenMixin
 from authlib.oauth2.rfc6750 import BearerTokenValidator
 from flask import current_app, g
@@ -53,8 +53,9 @@ class OIDCTokenValidator(BearerTokenValidator):
         g.token_string = token_string
         g.principal = token
 
-        #if self.aud not in token.get("aud"):
-        #    return None
+        if token.get("aud") is not None and self.aud not in token.get("aud"):
+            raise InvalidClaimError("aud")
+
         return self.token_cls(token)
 
     def request_invalid(self, request):
