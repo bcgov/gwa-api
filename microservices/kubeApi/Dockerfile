@@ -1,7 +1,8 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
 
-RUN apt-get -y update
+WORKDIR /app
 
+RUN apt-get -y update
 
 RUN apt-get -y install libffi-dev openssl curl
 
@@ -17,12 +18,12 @@ RUN cd /tmp && \
     ln -s /opt/poetry/bin/poetry && \
     poetry config virtualenvs.create false
 
-COPY ./dockerfiles/gwa-kube-api/pyproject.toml /tmp/
+COPY pyproject.toml /tmp/
 
-COPY ./dockerfiles/gwa-kube-api/poetry.lock /tmp/
+COPY poetry.lock /tmp/
 
 RUN cd /tmp && poetry install --no-root --no-dev
 
-COPY ./dockerfiles/gwa-kube-api /app
+COPY . /app
 
 EXPOSE 8080
