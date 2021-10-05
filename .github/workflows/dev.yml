@@ -6,7 +6,7 @@ name: Build
 # events but only for the master branch
 on:
   push:
-    branches: [ dev, feature/* ]
+    branches: [dev, feature/*]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -17,32 +17,46 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
 
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
-      with:
-        # Disabling shallow clone is recommended for improving relevancy of reporting
-        fetch-depth: 0
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-    - name: SonarCloud Scan
-      uses: sonarsource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        
-    - name: Docker Image for gwa-api
-      uses: docker/build-push-action@v1
-      env:
-        DOCKER_BUILDKIT: 1
-      with:
-        registry: docker.pkg.github.com
-        username: $GITHUB_ACTOR
-        password: ${{ secrets.GITHUB_TOKEN }}
-        repository: bcgov/gwa-api/gwa-gateway-api
-        path: microservices/gatewayApi
-        dockerfile: microservices/gatewayApi/Dockerfile
-        tag_with_ref: true
-        tag_with_sha: false
-        add_git_labels: true
-        push: true
-        #push: ${{ startsWith(github.ref, 'refs/tags/') }}
+      - name: Docker Image for gwa-api
+        uses: docker/build-push-action@v1
+        env:
+          DOCKER_BUILDKIT: 1
+        with:
+          registry: docker.pkg.github.com
+          username: $GITHUB_ACTOR
+          password: ${{ secrets.GITHUB_TOKEN }}
+          repository: bcgov/gwa-api/gwa-gateway-api
+          path: microservices/gatewayApi
+          dockerfile: microservices/gatewayApi/Dockerfile
+          tag_with_ref: true
+          tag_with_sha: false
+          add_git_labels: true
+          push: true
+          #push: ${{ startsWith(github.ref, 'refs/tags/') }}
+      - name: Docker Image for gwa-kube-api
+        uses: docker/build-push-action@v1
+        env:
+          DOCKER_BUILDKIT: 1
+        with:
+          registry: docker.pkg.github.com
+          username: $GITHUB_ACTOR
+          password: ${{ secrets.GITHUB_TOKEN }}
+          repository: bcgov/gwa-api/gwa-kube-api
+          path: microservices/kubeApi
+          dockerfile: microservices/kubeApi/Dockerfile
+          tag_with_ref: true
+          tag_with_sha: false
+          add_git_labels: true
+          push: true
