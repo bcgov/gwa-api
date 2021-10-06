@@ -386,7 +386,7 @@ def host_transformation (namespace, yaml):
 def transform_host (host):
     if is_host_transform_enabled():
         conf = app.config['hostTransformation']
-        return "%s.%s" % (host.replace('.', '-'), conf['baseUrl'])
+        return "%s%s" % (host.replace('.', '-'), conf['baseUrl'])
     else:
         return host
 
