@@ -7,8 +7,9 @@ import urllib.parse
 #
 # 'type', 'name', 'action', 'message', 'refId', 'namespace'
 
-def record_custom_event (uuid, type, action, result, namespace, message = ""):
-    record_activity ({
+
+def record_custom_event(uuid, type, action, result, namespace, message=""):
+    record_activity({
         'id': uuid,
         'type': type,
         'action': action,
@@ -19,8 +20,9 @@ def record_custom_event (uuid, type, action, result, namespace, message = ""):
         'namespace': namespace
     })
 
-def record_namespace_event (uuid, action, result, namespace, message = ""):
-    record_activity ({
+
+def record_namespace_event(uuid, action, result, namespace, message=""):
+    record_activity({
         'id': uuid,
         'type': 'GatewayNamespace',
         'action': action,
@@ -29,10 +31,11 @@ def record_namespace_event (uuid, action, result, namespace, message = ""):
         'message': message,
         'refId': '',
         'namespace': namespace
-})
+    })
 
-def record_gateway_event (uuid, action, result, namespace, message = ""):
-    record_activity ({
+
+def record_gateway_event(uuid, action, result, namespace, message="", blob=""):
+    record_activity({
         'id': uuid,
         'type': 'GatewayConfig',
         'action': action,
@@ -40,10 +43,12 @@ def record_gateway_event (uuid, action, result, namespace, message = ""):
         'name': 'N/A',
         'message': message,
         'refId': '',
-        'namespace': namespace
+        'namespace': namespace,
+        'blob': blob
     })
 
-def record_activity (activity):
+
+def record_activity(activity):
     log = app.logger
     portal_url = app.config['portal']['url']
 

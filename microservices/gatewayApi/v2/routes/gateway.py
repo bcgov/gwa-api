@@ -111,15 +111,10 @@ def delete_config(namespace: str, qualifier="") -> object:
             #         apply_nsp(namespace, ocp_ns, tempFolder)
 
             # ok all looks good, so update a secret containing the original submitted request
-            log.debug("%s - Update Original Config" % (namespace))
+            # log.debug("%s - Update Original Config" % (namespace))
             # write_submitted_config("", tempFolder)
             # prep_and_apply_secret(namespace, selectTag, tempFolder)
-            secret_payload = {
-                "content": "",
-                "select_tag": selectTag
-            }
-            session.put(rqst_url + "/namespaces/%s/secrets" % namespace, data=secret_payload)
-            log.debug("%s - Updated Original Config" % (namespace))
+            # log.debug("%s - Updated Original Config" % (namespace))
         except HTTPException as ex:
             traceback.print_exc()
             log.error("Error updating custom routes, nsps and secrets. %s" % ex)
@@ -323,15 +318,10 @@ def write_config(namespace: str) -> object:
             #             apply_nsp(namespace, ocp_ns, tempFolder)
 
             # ok all looks good, so update a secret containing the original submitted request
-            log.debug("[%s] - Update Original Config" % (namespace))
-            #write_submitted_config(orig_config, tempFolder)
-            #prep_and_apply_secret(namespace, selectTag, tempFolder)
-            secret_payload = {
-                "content": orig_config,
-                "select_tag": selectTag
-            }
-            session.put(rqst_url + "/namespaces/%s/secrets" % namespace, data=secret_payload)
-            log.debug("[%s] - Updated Original Config" % (namespace))
+            # log.debug("[%s] - Update Original Config" % (namespace))
+            # write_submitted_config(orig_config, tempFolder)
+            # prep_and_apply_secret(namespace, selectTag, tempFolder)
+            # log.debug("[%s] - Updated Original Config" % (namespace))
         except HTTPException as ex:
             traceback.print_exc()
             log.error("[%s] Error updating custom routes, nsps and secrets. %s" % (namespace, ex))
@@ -349,7 +339,7 @@ def write_config(namespace: str) -> object:
     if cmd == 'diff':
         message = "Dry-run.  No changes applied."
 
-    record_gateway_event(event_id, 'publish', 'completed', namespace)
+    record_gateway_event(event_id, 'publish', 'completed', namespace, blob=orig_config)
     return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
 
 
