@@ -21,6 +21,7 @@ router = APIRouter(
 
 class Secret(BaseModel):
     content: str
+    select_tag: str
 
 
 @router.put("", status_code=201)
@@ -29,7 +30,7 @@ def add_secret(namespace: str, secret: Secret):
         select_tag = "ns.%s" % namespace
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
-        prep_and_apply_secret(namespace, select_tag, secret.content, source_folder)
+        prep_and_apply_secret(namespace, secret.select_tag, secret.content, source_folder)
     except Exception as ex:
         traceback.print_exc()
         logger.error("%s - %s" % (namespace, "Failed adding secret"))
@@ -44,7 +45,7 @@ def add_secret(namespace: str, secret: Secret):
 @router.delete("/{name}", status_code=204)
 def delete_secret(name: str):
     try:
-        kubectl_delete('Secret', name)
+        kubectl_delete('secret', name)
     except Exception as ex:
         traceback.print_exc()
         logger.error("Failed deleting secret %s" % name)

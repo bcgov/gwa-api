@@ -111,44 +111,6 @@ def prepare_mismatched_routes(select_tag, hosts, rootPath):
     return len(delete_list)
 
 
-def prepare_delete_route(select_tag, name, rootPath):
-
-    args = [
-        "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
-    ]
-    run = Popen(args, stdout=PIPE, stderr=PIPE)
-    out, err = run.communicate()
-    if run.returncode != 0:
-        logger.error("Failed to get existing routes", out, err)
-        raise Exception("Failed to get existing routes")
-
-    current_routes = []
-
-    existing = json.loads(out)
-    for route in existing['items']:
-        current_routes.append(route['metadata']['name'])
-    print(str(current_routes))
-    delete_list = []
-    for route_name in current_routes:
-        if route_name == name:
-            delete_list.append(route_name)
-
-    out_filename = "%s/routes-deletions.yaml" % rootPath
-
-    with open(out_filename, 'w') as out_file:
-        index = 1
-        for route_name in delete_list:
-            logger.debug("[%s] Route D %03d %s" % (select_tag, index, route_name))
-            out_file.write(ROUTE_HEAD.substitute(name=route_name))
-            out_file.write('\n---\n')
-            index = index + 1
-
-    if len(delete_list) == 0:
-        logger.debug("[%s] Route D No Deletions Needed" % select_tag)
-
-    return len(delete_list)
-
-
 def prepare_route_last_version(ns, select_tag):
     args = [
         "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
