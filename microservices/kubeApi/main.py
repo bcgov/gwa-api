@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Request, requests
+from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
-from routers import routes, secrets
+from routers import routes
 from auth.auth import retrieve_token
 from config import settings
 from fastapi_utils.tasks import repeat_every
@@ -10,7 +10,6 @@ app = FastAPI(title="GWA Kubernetes API",
               description="Description: API to create resources in Openshift using Kubectl",
               version="1.0.0")
 app.include_router(routes.router)
-app.include_router(secrets.router)
 
 
 @app.post("/token")

@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.logger import logger
 from pydantic.main import BaseModel
 from starlette.responses import Response
-from clients.ocp_routes import get_gwa_ocp_routes, prepare_apply_routes, apply_routes, prepare_mismatched_routes, prepare_delete_route, delete_routes
+from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
 from services.namespaces import NamespaceService
 from config import settings
 import traceback
@@ -21,12 +21,12 @@ router = APIRouter(
 
 class RouteRequest(BaseModel):
     hosts: list
+    select_tag: str
 
 
 @router.put("", status_code=201)
 def add_routes(namespace: str, route: RouteRequest):
     hosts = route.hosts
-    select_tag = "ns.%s" % namespace
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
@@ -45,12 +45,12 @@ def add_routes(namespace: str, route: RouteRequest):
     try:
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
-        route_count = prepare_apply_routes(namespace, select_tag, hosts, source_folder)
+        route_count = prepare_apply_routes(namespace, route.select_tag, hosts, source_folder)
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)
             logger.debug("[%s] - Applied %s routes" % (namespace, route_count))
-        route_count = prepare_mismatched_routes(select_tag, hosts, source_folder)
+        route_count = prepare_mismatched_routes(route.select_tag, hosts, source_folder)
         logger.debug("[%s] - Prepared %d deletions" % (namespace, route_count))
         if route_count > 0:
             logger.debug("[%s] - Prepared deletions" % (namespace))
@@ -67,25 +67,17 @@ def add_routes(namespace: str, route: RouteRequest):
 
 
 @router.delete("/{name}", status_code=204)
-def delete_route(namespace: str, name: str):
+def delete_route(name: str):
     try:
-        select_tag = "ns.%s" % namespace
-        source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
-        os.makedirs(source_folder, exist_ok=False)
-        route_count = prepare_delete_route(select_tag, name, source_folder)
-        logger.debug("[%s] - Prepared %d deletions" % (namespace, route_count))
-        if route_count > 0:
-            logger.debug("[%s] - Prepared deletions" % (namespace))
-            delete_routes(source_folder)
+        kubectl_delete('route', name)
     except Exception as ex:
         traceback.print_exc()
-        logger.error("[%s] Error deleting routes. %s" % (namespace, ex))
-        raise HTTPException(status_code=400, detail="[%s] Error deleting route %s. %s" % (namespace, name, ex))
+        logger.error("Failed deleting route %s" % name)
+        raise HTTPException(status_code=400, detail=str(ex))
     except:
         traceback.print_exc()
-        logger.error("[%s] Error deleting routes. %s" % (namespace, sys.exc_info()[0]))
-        raise HTTPException(status_code=400, detail="[%s] Error deleting route %s. %s" % (
-            namespace, name, sys.exc_info()[0]))
+        logger.error("Failed deleting route %s" % name)
+        raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
     return Response(status_code=204)
 
 
