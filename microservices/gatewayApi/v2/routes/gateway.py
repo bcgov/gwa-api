@@ -90,7 +90,7 @@ def delete_config(namespace: str, qualifier="") -> object:
                 "hosts": get_host_list(tempFolder),
                 "select_tag": selectTag
             }
-            rqst_url = app.config['dataPlanes'][get_data_plane(ns_attributes)]
+            rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
             session.put(rqst_url + "/namespaces/%s/routes" % namespace, data=route_payload)
             # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
             # log.debug("%s - Prepared %d routes" % (namespace, route_count))
