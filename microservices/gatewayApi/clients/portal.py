@@ -3,14 +3,15 @@ import sys
 import requests
 import traceback
 import urllib.parse
+import uuid
 
 #
 # 'type', 'name', 'action', 'message', 'refId', 'namespace'
 
 
-def record_custom_event(uuid, type, action, result, namespace, message=""):
+def record_custom_event(event_id, type, action, result, namespace, message=""):
     record_activity({
-        'id': uuid,
+        'id': event_id,
         'type': type,
         'action': action,
         'result': result,
@@ -21,9 +22,9 @@ def record_custom_event(uuid, type, action, result, namespace, message=""):
     })
 
 
-def record_namespace_event(uuid, action, result, namespace, message=""):
+def record_namespace_event(event_id, action, result, namespace, message=""):
     record_activity({
-        'id': uuid,
+        'id': event_id,
         'type': 'GatewayNamespace',
         'action': action,
         'result': result,
@@ -34,10 +35,10 @@ def record_namespace_event(uuid, action, result, namespace, message=""):
     })
 
 
-def record_gateway_event(uuid, action, result, namespace, message="", blob=""):
+def record_gateway_event(event_id, action, result, namespace, message="", blob=""):
 
     payload = {
-        'id': uuid,
+        'id': event_id,
         'type': 'GatewayConfig',
         'action': action,
         'result': result,
@@ -48,8 +49,7 @@ def record_gateway_event(uuid, action, result, namespace, message="", blob=""):
     }
 
     if not blob == "" and not blob == None:
-        create_blob({'id': uuid, 'blob': blob})
-        payload.update({'blob': uuid})
+        payload.update({'blob': [{"id": str(uuid.uuid4()), "blob": blob}]})
 
     record_activity(payload)
 
@@ -69,22 +69,4 @@ def record_activity(activity):
             log.info("Request Record Activity %s : %d" % (portal_url, r.status_code))
         except Exception as ex:
             log.error("Error recording activity %s : %s" % (portal_url, str(ex)))
-            traceback.print_exc(file=sys.stdout)
-
-
-def create_blob(blob):
-    log = app.logger
-    portal_url = app.config['portal']['url']
-
-    log.debug("create_blob %s : %s" % (portal_url, blob['id']))
-
-    if portal_url != "":
-        headers = {
-            "Content-Type": "application/json"
-        }
-        try:
-            r = requests.put("%s/feed/Blob" % portal_url, headers=headers, json=blob, timeout=5)
-            log.info("Create Blob %s : %d" % (portal_url, r.status_code))
-        except Exception as ex:
-            log.error("Error creating blob %s : %s" % (portal_url, str(ex)))
             traceback.print_exc(file=sys.stdout)
