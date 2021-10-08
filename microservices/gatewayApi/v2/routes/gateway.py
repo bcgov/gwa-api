@@ -91,7 +91,9 @@ def delete_config(namespace: str, qualifier="") -> object:
                 "select_tag": selectTag
             }
             rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
-            session.put(rqst_url + "/namespaces/%s/routes" % namespace, data=route_payload)
+            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, data=json.dumps(route_payload))
+            if res.status_code != 201:
+                raise Exception("Failed to apply routes")
             # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
             # log.debug("%s - Prepared %d routes" % (namespace, route_count))
             # if route_count > 0:
@@ -297,7 +299,9 @@ def write_config(namespace: str) -> object:
                 "select_tag": selectTag
             }
             rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
-            session.put(rqst_url + "/namespaces/%s/routes" % namespace, data=route_payload)
+            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, data=json.dumps(route_payload))
+            if res.status_code != 201:
+                raise Exception("Failed to apply routes")
 
             # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
             # log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
