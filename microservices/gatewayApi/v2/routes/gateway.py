@@ -117,11 +117,11 @@ def delete_config(namespace: str, qualifier="") -> object:
             # log.debug("%s - Updated Original Config" % (namespace))
         except HTTPException as ex:
             traceback.print_exc()
-            log.error("Error updating custom routes, nsps and secrets. %s" % ex)
+            log.error("Error updating custom routes. %s" % ex)
             abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
         except:
             traceback.print_exc()
-            log.error("Error updating custom routes, nsps and secrets. %s" % sys.exc_info()[0])
+            log.error("Error updating custom routes. %s" % sys.exc_info()[0])
             abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
 
     cleanup(tempFolder)
@@ -324,11 +324,11 @@ def write_config(namespace: str) -> object:
             # log.debug("[%s] - Updated Original Config" % (namespace))
         except HTTPException as ex:
             traceback.print_exc()
-            log.error("[%s] Error updating custom routes, nsps and secrets. %s" % (namespace, ex))
+            log.error("[%s] Error updating custom routes. %s" % (namespace, ex))
             abort_early(event_id, 'publish', namespace, jsonify(error="Partially failed."))
         except:
             traceback.print_exc()
-            log.error("[%s] Error updating custom routes, nsps and secrets. %s" % (namespace, sys.exc_info()[0]))
+            log.error("[%s] Error updating custom routes. %s" % (namespace, sys.exc_info()[0]))
             abort_early(event_id, 'publish', namespace, jsonify(error="Partially failed."))
 
     cleanup(tempFolder)
