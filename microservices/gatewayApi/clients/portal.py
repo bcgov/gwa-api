@@ -3,14 +3,15 @@ import sys
 import requests
 import traceback
 import urllib.parse
+import uuid
 
 #
 # 'type', 'name', 'action', 'message', 'refId', 'namespace'
 
 
-def record_custom_event(uuid, type, action, result, namespace, message=""):
+def record_custom_event(event_id, type, action, result, namespace, message=""):
     record_activity({
-        'id': uuid,
+        'id': event_id,
         'type': type,
         'action': action,
         'result': result,
@@ -21,9 +22,9 @@ def record_custom_event(uuid, type, action, result, namespace, message=""):
     })
 
 
-def record_namespace_event(uuid, action, result, namespace, message=""):
+def record_namespace_event(event_id, action, result, namespace, message=""):
     record_activity({
-        'id': uuid,
+        'id': event_id,
         'type': 'GatewayNamespace',
         'action': action,
         'result': result,
@@ -34,18 +35,23 @@ def record_namespace_event(uuid, action, result, namespace, message=""):
     })
 
 
-def record_gateway_event(uuid, action, result, namespace, message="", blob=""):
-    record_activity({
-        'id': uuid,
+def record_gateway_event(event_id, action, result, namespace, message="", blob=""):
+
+    payload = {
+        'id': event_id,
         'type': 'GatewayConfig',
         'action': action,
         'result': result,
         'name': 'N/A',
         'message': message,
         'refId': '',
-        'namespace': namespace,
-        'blob': blob
-    })
+        'namespace': namespace
+    }
+
+    if not blob == "" and not blob == None:
+        payload.update({'blob': [{"id": str(uuid.uuid4()), "blob": blob}]})
+
+    record_activity(payload)
 
 
 def record_activity(activity):
