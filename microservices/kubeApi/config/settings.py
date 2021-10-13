@@ -30,7 +30,8 @@ logLevel = config('LOG_LEVEL')
 oidcBaseUrl = config('OIDC_BASE_URL')
 
 tokenMatch = {
-    "aud": config('TOKEN_MATCH_AUD')
+    "aud": config('TOKEN_MATCH_AUD', default="gwa"),
+    "admin-aud": config('TOKEN_MATCH_ADMIN_AUD')
 }
 
 dataPlane = config('DATA_PLANE', default="kong-kong-proxy")

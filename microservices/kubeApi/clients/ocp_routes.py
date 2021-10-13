@@ -195,10 +195,9 @@ def get_gwa_ocp_routes():
     ]
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
+
     if run.returncode != 0:
         logger.error("Failed to get existing routes", out, err)
         raise Exception("Failed to get existing routes")
-
-    current_routes = []
 
     return json.loads(out)['items']

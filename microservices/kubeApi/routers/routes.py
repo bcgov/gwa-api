@@ -1,20 +1,20 @@
 import uuid
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.logger import logger
 from pydantic.main import BaseModel
+import requests
 from starlette.responses import Response
 from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
 from services.namespaces import NamespaceService
 from config import settings
 import traceback
 import os
-from auth.auth import validate_permissions
+from auth.auth import validate_permissions, validate_admin_token
 import sys
 
 router = APIRouter(
-    prefix="/namespaces/{namespace}/routes",
+    prefix="",
     tags=["routes"],
-    dependencies=[Depends(validate_permissions)],
     responses={404: {"description": "Not found"}},
 )
 
@@ -24,7 +24,7 @@ class RouteRequest(BaseModel):
     select_tag: str
 
 
-@router.put("", status_code=201)
+@router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(validate_permissions)])
 def add_routes(namespace: str, route: RouteRequest):
     hosts = route.hosts
     ns_svc = NamespaceService()
@@ -66,7 +66,7 @@ def add_routes(namespace: str, route: RouteRequest):
     return {"message": "created"}
 
 
-@router.delete("/{name}", status_code=204)
+@router.delete("/namespaces/{namespace}/routes/{name}", status_code=204, dependencies=[Depends(validate_permissions)])
 def delete_route(name: str):
     try:
         kubectl_delete('route', name)
@@ -79,6 +79,31 @@ def delete_route(name: str):
         logger.error("Failed deleting route %s" % name)
         raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
     return Response(status_code=204)
+
+
+@router.post("/routes", status_code=200, dependencies=[Depends(validate_admin_token)])
+def verify_and_create_routes(request: Request):
+    source_routes = request.json()
+    source_route_hosts = {}
+
+    for route in range(source_routes):
+        source_route_hosts[route["spec"]["host"]] = route
+
+    existing_routes = get_gwa_ocp_routes()
+
+    existing_route_hosts = []
+
+    for route in range(existing_routes):
+        existing_route_hosts.append(route["spec"]["host"])
+
+    missing_routes = []
+
+    for host in source_route_hosts:
+        if host not in existing_route_hosts:
+            missing_routes.append(source_route_hosts[host])
+
+    print(str(missing_routes))
+    return Response(status_code=200)
 
 
 def validate_hosts(ns_attributes, hosts):

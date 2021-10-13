@@ -37,7 +37,7 @@ def validate_token(token: str = Depends(oauth2_scheme, use_cache=False)):
         realm = settings.resourceAuthServer['realm']
         baseUrl = "%srealms/%s" % (server_url, realm)
 
-        aud = 'gwa'
+        aud = settings.tokenMatch["aud"]
 
         server_metadata = OIDCDiscovery(baseUrl)
 
@@ -48,9 +48,40 @@ def validate_token(token: str = Depends(oauth2_scheme, use_cache=False)):
                                 detail="Error getting jwk from url: %s" % {server_metadata['jwks_uri']})
         jwk = jwk_r.json()
         token = jwt.decode(token, jwk)
-    
         token.validate()
         if token.get("aud") is not None and aud not in token.get("aud"):
+            raise InvalidClaimError("aud")
+    except DecodeError as err:
+        raise HTTPException(status_code=400, detail="Invalid token: %s" % str(err))
+    except InvalidClaimError as ex:
+        raise HTTPException(status_code=403, detail=str(ex))
+    except Exception as ex:
+        raise HTTPException(status_code=401, detail=str(ex))
+    return token_str
+
+
+def validate_admin_token(token: str = Depends(oauth2_scheme, use_cache=False)):
+    try:
+        token_str = token
+        server_url = settings.resourceAuthServer['serverUrl']
+        realm = settings.resourceAuthServer['realm']
+        baseUrl = "%srealms/%s" % (server_url, realm)
+
+        aud = settings.tokenMatch["admin-aud"]
+
+        server_metadata = OIDCDiscovery(baseUrl)
+
+        # Fetch the public key for validating Bearer token
+        jwk_r = requests.get(server_metadata['jwks_uri'])
+        if jwk_r.status_code != 200:
+            raise HTTPException(status_code=jwk_r.status_code,
+                                detail="Error getting jwk from url: %s" % {server_metadata['jwks_uri']})
+        jwk = jwk_r.json()
+        token = jwt.decode(token, jwk)
+
+        token.validate()
+        if token.get("aud") is not None and aud not in token.get("aud"):
+            print(aud)
             raise InvalidClaimError("aud")
     except DecodeError as err:
         raise HTTPException(status_code=400, detail="Invalid token: %s" % str(err))
