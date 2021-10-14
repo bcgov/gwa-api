@@ -97,12 +97,14 @@ async def verify_and_create_routes(request: Request):
                 "name": route["metadata"]["name"],
                 "namespace": route["metadata"]["labels"]["aps-namespace"],
                 "selectTag": route["metadata"]["labels"]["aps-select-tag"],
-                "host": route["spec"]["host"]
+                "host": route["spec"]["host"],
+                "service": route["spec"]["to"]["name"]
             }
         )
 
     insert_batch = [x for x in source_routes if x not in existing_routes]
     delete_batch = [y for y in existing_routes if y not in source_routes]
+
     try:
         if len(insert_batch) > 0:
             logger.debug("Creating %s routes" % (len(insert_batch)))
@@ -113,7 +115,7 @@ async def verify_and_create_routes(request: Request):
                 select_tag = route["selectTag"]
                 hosts = [route["host"]]
                 prepare_apply_routes(ns, select_tag, hosts, source_folder)
-            apply_routes(source_folder)
+                apply_routes(source_folder)
     except Exception as ex:
         traceback.print_exc()
         logger.error("Error creating routes. %s" % (ex))
