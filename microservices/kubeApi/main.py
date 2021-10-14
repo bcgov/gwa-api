@@ -6,11 +6,21 @@ from fastapi.exceptions import HTTPException
 from routers import routes
 from auth.auth import retrieve_token
 from config import settings
+from custom_logging import CustomizeLogger
 
-app = FastAPI(title="GWA Kubernetes API",
-              description="Description: API to create resources in Openshift using Kubectl",
-              version="1.0.0")
-app.include_router(routes.router)
+
+def create_app() -> FastAPI:
+    app = FastAPI(title="GWA Kubernetes API",
+                  description="Description: API to create resources in Openshift using Kubectl",
+                  version="1.0.0")
+    app.include_router(routes.router)
+    logger = CustomizeLogger.make_logger(settings.logLevel)
+    app.logger = logger
+
+    return app
+
+
+app = create_app()
 
 
 @app.exception_handler(RequestValidationError)

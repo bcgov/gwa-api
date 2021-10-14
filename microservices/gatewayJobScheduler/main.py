@@ -8,7 +8,9 @@ import shlex
 import traceback
 from schedule import every, repeat, run_pending, clear
 import time
+import json
 
+# using root logger
 logging.basicConfig(level=os.getenv('LOG_LEVEL', default=logging.DEBUG),
                     format='%(asctime)s-%(levelname)s-%(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
@@ -46,14 +48,14 @@ def get_routes():
     try:
         p1 = Popen(shlex.split("kubectl get routes -l aps-generated-by=gwa-cli -o json"), stdout=PIPE)
         run = Popen(shlex.split(
-            "jq '.items[] | {name: .metadata.name, host: .spec.host, namespace: .metadata.labels[\"aps-namespace\"], selectTag: .metadata.labels[\"aps-select-tag\"]}'"), stdin=p1.stdout, stdout=PIPE, stderr=PIPE)
+            "jq '[.items[] | {name: .metadata.name, host: .spec.host, namespace: .metadata.labels[\"aps-namespace\"], selectTag: .metadata.labels[\"aps-select-tag\"], service: .spec.to.name}]'"), stdin=p1.stdout, stdout=PIPE, stderr=PIPE)
         out, err = run.communicate()
 
         if run.returncode != 0:
             logging.error("Failed to get existing routes - %s - %s", out, err)
             raise Exception("Failed to get existing routes")
 
-        return out
+        return json.loads(out)
     except:
         traceback.print_exc()
         logging.error('Failed to get existing routes - %s' % (exc_info()[0]))
@@ -62,18 +64,27 @@ def get_routes():
 @repeat(every(int(os.getenv('SYNC_INTERVAL'))).seconds.tag('sync-routes'))
 def sync_routes():
     headers = {
-        'authorization': 'Bearer %s' % get_token(),
+        'accept': 'application/json',
+        'authorization': 'bearer %s' % get_token(),
         'cache-control': 'no-cache',
         'content-type': 'application/json'
     }
-    data = get_routes()
-    url = os.getenv('KUBE_API_DR_URL')
-    response = requests.post(url, headers=headers, data=data)
+    data = transform_domain(get_routes())  # update kdc to cdc
+    url = os.getenv('GWA_KUBE_API_DR_URL') + '/sync/routes'
+    response = requests.post(url, headers=headers, json=data)
 
     if response.status_code not in [200, 201]:
         logging.error('Failed to sync routes - %s' % response.text)
         clear('sync-routes')
         exit(1)
+
+
+def transform_domain(data):
+    for route_obj in data:
+        for key in route_obj:
+            if "kdc" in route_obj[key]:
+                route_obj[key] = route_obj[key].replace("kdc", "cdc")
+    return data
 
 
 while True:

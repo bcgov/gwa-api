@@ -147,8 +147,8 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath):
                     if host.endswith(host_match):
                         ssl_ref = ssl_file_prefix
                         logger.debug("[%s] Route A %03d matched ssl cert %s" % (select_tag, index, ssl_ref))
-            ssl_key = read_and_indent("/ssl/%s.key" % ssl_ref, 8)
-            ssl_crt = read_and_indent("/ssl/%s.crt" % ssl_ref, 8)
+            ssl_key = read_and_indent("/home/nkuruba/nithin/ssl/golddr/%s.key" % ssl_ref, 8)
+            ssl_crt = read_and_indent("/home/nkuruba/nithin/ssl/golddr/%s.crt" % ssl_ref, 8)
 
             name = "wild-%s-%s" % (select_tag.replace('.', '-'), host)
 
@@ -162,6 +162,7 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath):
                                             ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=settings.dataPlane, timestamp=ts, fmt_time=fmt_time))
             out_file.write('\n---\n')
             index = index + 1
+        out_file.close()
     return len(hosts)
 
 
