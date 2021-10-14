@@ -1,20 +1,21 @@
 import uuid
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.logger import logger
 from pydantic.main import BaseModel
+import requests
 from starlette.responses import Response
 from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
 from services.namespaces import NamespaceService
 from config import settings
 import traceback
 import os
-from auth.auth import validate_permissions
+from auth.auth import validate_permissions, validate_admin_token
 import sys
+from datetime import datetime
 
 router = APIRouter(
-    prefix="/namespaces/{namespace}/routes",
+    prefix="",
     tags=["routes"],
-    dependencies=[Depends(validate_permissions)],
     responses={404: {"description": "Not found"}},
 )
 
@@ -24,7 +25,7 @@ class RouteRequest(BaseModel):
     select_tag: str
 
 
-@router.put("", status_code=201)
+@router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(validate_permissions)])
 def add_routes(namespace: str, route: RouteRequest):
     hosts = route.hosts
     ns_svc = NamespaceService()
@@ -66,7 +67,7 @@ def add_routes(namespace: str, route: RouteRequest):
     return {"message": "created"}
 
 
-@router.delete("/{name}", status_code=204)
+@router.delete("/namespaces/{namespace}/routes/{name}", status_code=204, dependencies=[Depends(validate_permissions)])
 def delete_route(name: str):
     try:
         kubectl_delete('route', name)
@@ -79,6 +80,63 @@ def delete_route(name: str):
         logger.error("Failed deleting route %s" % name)
         raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
     return Response(status_code=204)
+
+
+@router.post("/sync/routes", status_code=200, dependencies=[Depends(validate_admin_token)])
+async def verify_and_create_routes(request: Request):
+
+    source_routes = await request.json()
+
+    existing_routes_json = get_gwa_ocp_routes()
+
+    existing_routes = []
+
+    for route in existing_routes_json:
+        existing_routes.append(
+            {
+                "name": route["metadata"]["name"],
+                "namespace": route["metadata"]["labels"]["aps-namespace"],
+                "selectTag": route["metadata"]["labels"]["aps-select-tag"],
+                "host": route["spec"]["host"]
+            }
+        )
+
+    insert_batch = [x for x in source_routes if x not in existing_routes]
+    delete_batch = [y for y in existing_routes if y not in source_routes]
+    try:
+        if len(insert_batch) > 0:
+            logger.debug("Creating %s routes" % (len(insert_batch)))
+            source_folder = "%s/%s" % ('/tmp/sync', f'{datetime.now():%Y%m%d%H%M%S}')
+            os.makedirs(source_folder, exist_ok=False)
+            for route in insert_batch:
+                ns = route["namespace"]
+                select_tag = route["selectTag"]
+                hosts = [route["host"]]
+                prepare_apply_routes(ns, select_tag, hosts, source_folder)
+            apply_routes(source_folder)
+    except Exception as ex:
+        traceback.print_exc()
+        logger.error("Error creating routes. %s" % (ex))
+        raise HTTPException(status_code=400, detail="Error creating routes. %s" % (ex))
+    except:
+        traceback.print_exc()
+        logger.error("Error creating routes. %s" % (sys.exc_info()[0]))
+        raise HTTPException(status_code=400, detail="Error creating routes. %s" % (sys.exc_info()[0]))
+
+    if len(delete_batch) > 0:
+        logger.debug("Deleting %s routes" % (len(insert_batch)))
+        for route in delete_batch:
+            try:
+                kubectl_delete('route', route["name"])
+            except Exception as ex:
+                traceback.print_exc()
+                logger.error("Failed deleting route %s" % route["name"])
+                raise HTTPException(status_code=400, detail=str(ex))
+            except:
+                traceback.print_exc()
+                logger.error("Failed deleting route %s" % route["name"])
+                raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
+    return Response(status_code=200)
 
 
 def validate_hosts(ns_attributes, hosts):

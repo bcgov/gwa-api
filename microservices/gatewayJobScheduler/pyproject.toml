@@ -1,20 +1,17 @@
 [tool.poetry]
-name = "gwa-kube-api"
+name = "gatewayapischeduler"
 version = "1.0.0"
-description = "An API to manage Kubernetes and OCP resources"
+description = "Job scheduler to run jobs at specified intervals"
 authors = ["Nithin Shekar Kuruba <nithinshekar.kuruba@gov.bc.ca>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-fastapi = "^0.68.1"
-uvicorn = "^0.15.0"
-PyYAML = "^5.4.1"
-python-keycloak = "^0.26.1"
-Authlib = "^0.15.4"
-httpx = "^0.19.0"
+requests = "^2.26.0"
+schedule = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
-python-dotenv = "^0.19.0"
+autopep8 = "^1.5.7"
+python-dotenv = "^0.19.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -45,6 +45,21 @@ jobs:
           add_git_labels: true
           push: true
           #push: ${{ startsWith(github.ref, 'refs/tags/') }}
+      - name: Docker Image for gwa-api-scheduler
+        uses: docker/build-push-action@v1
+        env:
+          DOCKER_BUILDKIT: 1
+        with:
+          registry: docker.pkg.github.com
+          username: $GITHUB_ACTOR
+          password: ${{ secrets.GITHUB_TOKEN }}
+          repository: bcgov/gwa-api/gwa-scheduler
+          path: microservices/gatewayJobScheduler
+          dockerfile: microservices/gatewayJobScheduler/Dockerfile
+          tag_with_ref: true
+          tag_with_sha: false
+          add_git_labels: true
+          push: true
       - name: Docker Image for gwa-kube-api
         uses: docker/build-push-action@v1
         env:
