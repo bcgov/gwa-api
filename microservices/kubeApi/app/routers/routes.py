@@ -1,17 +1,19 @@
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.logger import logger
+import logging
 from pydantic.main import BaseModel
 import requests
 from starlette.responses import Response
-from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
-from services.namespaces import NamespaceService
-from config import settings
+from app.clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
+from app.services.namespaces import NamespaceService
+from app.config import settings
 import traceback
 import os
-from auth.auth import validate_permissions, validate_admin_token
+from app.auth.auth import validate_permissions, validate_admin_token
 import sys
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="",
@@ -172,7 +174,7 @@ def host_ends_with_one_of_list(a_str, a_list):
 
 def transform_host(host):
     if is_host_transform_enabled():
-        return "%s.%s" % (host.replace('.', '-'), settings.hostTransformation['baseUrl'])
+        return "%s%s" % (host.replace('.', '-'), settings.hostTransformation['baseUrl'])
     else:
         return host
 

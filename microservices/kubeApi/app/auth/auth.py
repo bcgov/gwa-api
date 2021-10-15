@@ -1,11 +1,13 @@
 from fastapi import Request, HTTPException
-from fastapi.logger import logger
+import logging
 from fastapi.param_functions import Depends
 from fastapi.security import OAuth2PasswordBearer
 from authlib.jose import jwt
 from authlib.jose.errors import DecodeError, InvalidClaimError
-from config import settings
+from app.config import settings
 import requests
+
+logger = logging.getLogger(__name__)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 

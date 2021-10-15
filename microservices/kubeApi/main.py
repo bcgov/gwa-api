@@ -3,24 +3,38 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
-from routers import routes
-from auth.auth import retrieve_token
-from config import settings
-from custom_logging import CustomizeLogger
+from app.routers import routes
+from app.auth.auth import retrieve_token
+from app.config import settings
+import logging
+import logging.config
+import os
+import json
+import logging
 
 
-def create_app() -> FastAPI:
-    app = FastAPI(title="GWA Kubernetes API",
-                  description="Description: API to create resources in Openshift using Kubectl",
-                  version="1.0.0")
-    app.include_router(routes.router)
-    logger = CustomizeLogger.make_logger(settings.logLevel)
-    app.logger = logger
+# Logging configuration
+logging.config.dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '%(asctime)s %(levelname)5s %(module)-15s: %(message)s',
+    }},
+    'handlers': {'console': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://sys.stdout',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': settings.logLevel,
+        'handlers': ['console']
+    }
+})
+logger = logging.getLogger(__name__)
 
-    return app
-
-
-app = create_app()
+app = FastAPI(title="GWA Kubernetes API",
+              description="Description: API to create resources in Openshift using Kubectl",
+              version="1.0.0")
+app.include_router(routes.router)
 
 
 @app.exception_handler(RequestValidationError)
@@ -41,6 +55,6 @@ def login(request: Request):
                           'openid')
 
 
-@app.get("/health")
-def check_health():
-    return "up"
+@app.get("/")
+async def root():
+    return {"status": "up"}
