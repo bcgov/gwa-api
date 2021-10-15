@@ -11,6 +11,7 @@ from subprocess import Popen, PIPE, STDOUT
 from templates.routes import ROUTE, ROUTE_HEAD
 from config import settings
 
+
 files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml",
                    "submitted_config.yaml", "submitted_config_secret.yaml"]
 

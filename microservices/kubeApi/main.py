@@ -1,42 +1,28 @@
 from fastapi import FastAPI, Request, status, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
+from fastapi.params import Depends
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
-from app.routers import routes
-from app.auth.auth import retrieve_token
-from app.config import settings
-import logging
-import logging.config
-import os
-import json
-import logging
+from routers import routes
+from auth.auth import retrieve_token, validate_permissions
+from config import settings
+from logger.log_config import CustomizeLogger
 
 
-# Logging configuration
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {
-        'default': {
-            'format': '%(asctime)s %(levelname)5s %(module)-15s: %(message)s',
-        }},
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://sys.stdout',
-            'formatter': 'default'
-        }},
-    'root': {
-        'level': settings.logLevel,
-        'handlers': ['console']
-    }
-})
-logger = logging.getLogger(__name__)
+def create_app() -> FastAPI:
+    app = FastAPI(title="GWA Kubernetes API",
+                  description="Description: API to create resources in Openshift using Kubectl",
+                  version="1.0.0")
+    app.include_router(routes.router)
 
-app = FastAPI(title="GWA Kubernetes API",
-              description="Description: API to create resources in Openshift using Kubectl",
-              version="1.0.0")
-app.include_router(routes.router)
+    logger = CustomizeLogger.make_logger(settings.logLevel)
+    app.logger = logger
+
+    return app
+
+
+app = create_app()
 
 
 @app.exception_handler(RequestValidationError)
@@ -58,5 +44,10 @@ def login(request: Request):
 
 
 @app.get("/")
+async def root():
+    return {"status": "up"}
+
+
+@app.get("/testing", dependencies=[Depends(validate_permissions)])
 async def root():
     return {"status": "up"}

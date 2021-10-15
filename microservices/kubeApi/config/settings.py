@@ -27,7 +27,6 @@ hostTransformation = {
 }
 
 logLevel = config('LOG_LEVEL')
-oidcBaseUrl = config('OIDC_BASE_URL')
 
 tokenMatch = {
     "aud": config('TOKEN_MATCH_AUD', default="gwa"),
@@ -38,4 +37,9 @@ dataPlane = config('DATA_PLANE', default="kong-kong-proxy")
 
 syncConfig = {
     "interval": config('SYNC_INTERVAL', default="1"),
+}
+
+gwaAdmin = {
+    "clientId": config('GWA_ADMIN_CLIENT_ID', default="gwa-admin"),
+    "namespace": config('GWA_ADMIN_NAMESPACE', default="platform")
 }
