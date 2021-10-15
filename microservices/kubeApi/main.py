@@ -4,6 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.params import Depends
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
+from starlette.responses import HTMLResponse
 from routers import routes
 from auth.auth import retrieve_token, validate_permissions
 from config import settings
@@ -43,11 +44,15 @@ def login(request: Request):
                           'openid')
 
 
+@app.get("/health")
+async def get_health():
+    return {"status": "up"}
+
+
 @app.get("/")
-async def root():
-    return {"status": "up"}
-
-
-@app.get("/testing", dependencies=[Depends(validate_permissions)])
-async def root():
-    return {"status": "up"}
+def main():
+    title = """
+    <h1>
+        GWA KUBE API
+    </h1>                                                                              """
+    return HTMLResponse(title)
