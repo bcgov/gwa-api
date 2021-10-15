@@ -586,7 +586,7 @@ def traverse_get_ns_qualifier(yaml, required_tag):
 
 def get_data_plane(ns_attributes):
     default_data_plane = app.config['defaultDataPlane']
-    return ns_attributes.get('perm-data-plane', default_data_plane)
+    return ns_attributes.get('perm-data-plane', [default_data_plane])[0]
 
 
 def is_host_transform_enabled():
