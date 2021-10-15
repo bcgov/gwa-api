@@ -1,19 +1,17 @@
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, Request
-import logging
+from fastapi.logger import logger
 from pydantic.main import BaseModel
 import requests
 from starlette.responses import Response
-from app.clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
-from app.services.namespaces import NamespaceService
-from app.config import settings
+from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
+from services.namespaces import NamespaceService
+from config import settings
 import traceback
 import os
-from app.auth.auth import validate_permissions, validate_admin_token
+from auth.auth import validate_permissions, validate_token
 import sys
 from datetime import datetime
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="",
@@ -33,12 +31,12 @@ def add_routes(namespace: str, route: RouteRequest):
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
-    if settings.hostTransformation['enabled']:
-        # Transform Hosts
-        new_hosts = []
-        for host in hosts:
-            new_hosts.append(transform_host(host))
-        hosts = new_hosts
+    # if settings.hostTransformation['enabled']:
+    #     # Transform Hosts
+    #     new_hosts = []
+    #     for host in hosts:
+    #         new_hosts.append(transform_host(host))
+    #     hosts = new_hosts
     try:
         validate_hosts(ns_attributes, hosts)
     except Exception as ex:
@@ -84,7 +82,7 @@ def delete_route(name: str):
     return Response(status_code=204)
 
 
-@router.post("/sync/routes", status_code=200, dependencies=[Depends(validate_admin_token)])
+@router.post("/sync/routes", status_code=200, dependencies=[Depends(validate_token)])
 async def verify_and_create_routes(request: Request):
 
     source_routes = await request.json()

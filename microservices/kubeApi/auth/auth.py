@@ -1,13 +1,12 @@
 from fastapi import Request, HTTPException
-import logging
+from fastapi.logger import logger
 from fastapi.param_functions import Depends
 from fastapi.security import OAuth2PasswordBearer
 from authlib.jose import jwt
 from authlib.jose.errors import DecodeError, InvalidClaimError
-from app.config import settings
+from config import settings
 import requests
-
-logger = logging.getLogger(__name__)
+from auth.authz import enforce_authorization
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
@@ -32,14 +31,14 @@ def retrieve_token(authorization, issuer, scope='openid'):
         raise HTTPException(status_code=400, detail=response.text)
 
 
-def validate_token(token: str = Depends(oauth2_scheme, use_cache=False)):
+def validate_token(request: Request, token: str = Depends(oauth2_scheme, use_cache=False)):
     try:
-        token_str = token
+        request.state.token_string = token
         server_url = settings.resourceAuthServer['serverUrl']
         realm = settings.resourceAuthServer['realm']
         baseUrl = "%srealms/%s" % (server_url, realm)
 
-        aud = settings.tokenMatch["aud"]
+        aud = [settings.tokenMatch["admin-aud"], settings.tokenMatch["aud"]]
 
         server_metadata = OIDCDiscovery(baseUrl)
 
@@ -50,48 +49,20 @@ def validate_token(token: str = Depends(oauth2_scheme, use_cache=False)):
                                 detail="Error getting jwk from url: %s" % {server_metadata['jwks_uri']})
         jwk = jwk_r.json()
         token = jwt.decode(token, jwk)
+        request.state.token_principal = token
         token.validate()
-        if token.get("aud") is not None and aud not in token.get("aud"):
-            raise InvalidClaimError("aud")
+        if token.get("clientId") == settings.gwaAdmin['clientId'] and token.get("namespace") == settings.gwaAdmin['namespace']:
+            enforce_authorization(request, token.get("namespace"))
+        else:
+            if token.get("aud") is not None and not any(x in token.get("aud") for x in aud):
+                raise InvalidClaimError("aud")
     except DecodeError as err:
         raise HTTPException(status_code=400, detail="Invalid token: %s" % str(err))
     except InvalidClaimError as ex:
         raise HTTPException(status_code=403, detail=str(ex))
     except Exception as ex:
         raise HTTPException(status_code=401, detail=str(ex))
-    return token_str
-
-
-def validate_admin_token(token: str = Depends(oauth2_scheme, use_cache=False)):
-    try:
-        token_str = token
-        server_url = settings.resourceAuthServer['serverUrl']
-        realm = settings.resourceAuthServer['realm']
-        baseUrl = "%srealms/%s" % (server_url, realm)
-
-        aud = settings.tokenMatch["admin-aud"]
-
-        server_metadata = OIDCDiscovery(baseUrl)
-
-        # Fetch the public key for validating Bearer token
-        jwk_r = requests.get(server_metadata['jwks_uri'])
-        if jwk_r.status_code != 200:
-            raise HTTPException(status_code=jwk_r.status_code,
-                                detail="Error getting jwk from url: %s" % {server_metadata['jwks_uri']})
-        jwk = jwk_r.json()
-        token = jwt.decode(token, jwk)
-
-        token.validate()
-        if token.get("aud") is not None and aud not in token.get("aud"):
-            print(aud)
-            raise InvalidClaimError("aud")
-    except DecodeError as err:
-        raise HTTPException(status_code=400, detail="Invalid token: %s" % str(err))
-    except InvalidClaimError as ex:
-        raise HTTPException(status_code=403, detail=str(ex))
-    except Exception as ex:
-        raise HTTPException(status_code=401, detail=str(ex))
-    return token_str
+    return request.state.token_string
 
 
 def OIDCDiscovery(base_url):
@@ -106,11 +77,12 @@ def OIDCDiscovery(base_url):
 
 
 def validate_permissions(rqst: Request, token: str = Depends(validate_token, use_cache=False)):
-    pat = get_token()
-    rsid = map_res_name_to_id(pat['access_token'], rqst.path_params['namespace'])
-    if check_permissions(token, [("permission", "%s#%s" % (rsid, "GatewayConfig.Publish"))]) == False:
-        raise HTTPException(
-            status_code=403, detail="Not authorized to access namespace %s with GatewayConfig.Publish" % rqst.path_params['namespace'])
+    if not rqst.state.token_principal.get("clientId") == settings.gwaAdmin['clientId'] and not rqst.state.token_principal.get("namespace") == settings.gwaAdmin['namespace']:
+        pat = get_token()
+        rsid = map_res_name_to_id(pat['access_token'], rqst.path_params['namespace'])
+        if check_permissions(token, [("permission", "%s#%s" % (rsid, "GatewayConfig.Publish"))]) == False:
+            raise HTTPException(
+                status_code=403, detail="Not authorized to access namespace %s with GatewayConfig.Publish" % rqst.path_params['namespace'])
 
 
 def get_token():

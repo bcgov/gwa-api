@@ -1,10 +1,8 @@
-FROM python:3.7.12
+FROM python:3.8-alpine
 
 WORKDIR /app
 
-RUN apt-get -y update
-
-RUN apt-get -y install libffi-dev openssl curl
+RUN apk add build-base libffi-dev openssl curl
 
 RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
     chmod +x kubectl; mv kubectl /usr/local/bin/.
