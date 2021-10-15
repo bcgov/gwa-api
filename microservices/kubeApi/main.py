@@ -16,14 +16,16 @@ import logging
 # Logging configuration
 logging.config.dictConfig({
     'version': 1,
-    'formatters': {'default': {
-        'format': '%(asctime)s %(levelname)5s %(module)-15s: %(message)s',
-    }},
-    'handlers': {'console': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://sys.stdout',
-        'formatter': 'default'
-    }},
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s %(levelname)5s %(module)-15s: %(message)s',
+        }},
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stdout',
+            'formatter': 'default'
+        }},
     'root': {
         'level': settings.logLevel,
         'handlers': ['console']

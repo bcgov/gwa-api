@@ -99,8 +99,7 @@ async def verify_and_create_routes(request: Request):
                 "name": route["metadata"]["name"],
                 "namespace": route["metadata"]["labels"]["aps-namespace"],
                 "selectTag": route["metadata"]["labels"]["aps-select-tag"],
-                "host": route["spec"]["host"],
-                "service": route["spec"]["to"]["name"]
+                "host": route["spec"]["host"]
             }
         )
 
