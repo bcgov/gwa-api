@@ -33,12 +33,12 @@ def add_routes(namespace: str, route: RouteRequest):
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
-    if settings.hostTransformation['enabled']:
-        # Transform Hosts
-        new_hosts = []
-        for host in hosts:
-            new_hosts.append(transform_host(host))
-        hosts = new_hosts
+    # if settings.hostTransformation['enabled']:
+    #     # Transform Hosts
+    #     new_hosts = []
+    #     for host in hosts:
+    #         new_hosts.append(transform_host(host))
+    #     hosts = new_hosts
     try:
         validate_hosts(ns_attributes, hosts)
     except Exception as ex:
