@@ -42,23 +42,28 @@ def get_token():
     except:
         traceback.print_exc()
         logging.error("Failed to get token. %s" % (exc_info()[0]))
+        clear('sync-routes')
+        exit(1)
 
 
 def get_routes():
     try:
-        p1 = Popen(shlex.split("kubectl get routes -l aps-generated-by=gwa-cli -o json"), stdout=PIPE)
+        p1 = Popen(shlex.split("curl %s/routes" % os.getenv('KONG_ADMIN_API_URL')), stdout=PIPE)
         run = Popen(shlex.split(
-            "jq '[.items[] | {name: .metadata.name, host: .spec.host, namespace: .metadata.labels[\"aps-namespace\"], selectTag: .metadata.labels[\"aps-select-tag\"], service: .spec.to.name}]'"), stdin=p1.stdout, stdout=PIPE, stderr=PIPE)
+            "jq '.data'"), stdin=p1.stdout, stdout=PIPE, stderr=PIPE)
         out, err = run.communicate()
 
         if run.returncode != 0:
             logging.error("Failed to get existing routes - %s - %s", out, err)
-            raise Exception("Failed to get existing routes")
+            clear('sync-routes')
+            exit(1)
 
         return json.loads(out)
     except:
         traceback.print_exc()
         logging.error('Failed to get existing routes - %s' % (exc_info()[0]))
+        clear('sync-routes')
+        exit(1)
 
 
 @repeat(every(int(os.getenv('SYNC_INTERVAL'))).seconds.tag('sync-routes'))
@@ -69,22 +74,26 @@ def sync_routes():
         'cache-control': 'no-cache',
         'content-type': 'application/json'
     }
-    data = transform_domain(get_routes())  # update kdc to cdc
-    url = os.getenv('GWA_KUBE_API_DR_URL') + '/sync/routes'
-    response = requests.post(url, headers=headers, json=data)
+    data = transform_data(get_routes())  # update kdc to cdc
+    # url = os.getenv('GWA_KUBE_API_DR_URL') + '/sync/routes'
+    # response = requests.post(url, headers=headers, json=data)
 
-    if response.status_code not in [200, 201]:
-        logging.error('Failed to sync routes - %s' % response.text)
-        clear('sync-routes')
-        exit(1)
+    # if response.status_code not in [200, 201]:
+    #     logging.error('Failed to sync routes - %s' % response.text)
+    #     clear('sync-routes')
+    #     exit(1)
 
 
-def transform_domain(data):
+def transform_data(data):
+    new_data = []
     for route_obj in data:
-        for key in route_obj:
-            if "kdc" in route_obj[key]:
-                route_obj[key] = route_obj[key].replace("kdc", "cdc")
-    return data
+        new_route_obj = {}
+        new_route_obj['selectTag'] = route_obj['tags'][0]
+        new_route_obj['host'] = route_obj['hosts'][0]
+        new_route_obj['namespace'] = route_obj['tags'][0].split(".")[1]
+        new_route_obj['name'] = 'wild-%s-%s' % (route_obj['tags'][0].replace(".", "-"), route_obj['hosts'][0])
+        new_data.append(new_route_obj)
+    print(new_data)
 
 
 while True:

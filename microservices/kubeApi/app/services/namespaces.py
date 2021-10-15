@@ -1,7 +1,7 @@
 
-from auth.authz import users_group_root, admins_group_root
+from app.auth.authz import users_group_root, admins_group_root
 
-from clients.keycloak import admin_api
+from app.clients.keycloak import admin_api
 
 
 class NamespaceService:

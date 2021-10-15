@@ -1,5 +1,5 @@
 from keycloak import KeycloakAdmin
-from config import settings
+from app.config import settings
 
 
 def admin_api():
