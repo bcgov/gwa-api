@@ -2,12 +2,11 @@
 # kong-specs configuration
 from fastapi.logger import logger
 from fastapi import HTTPException
-import os
 import json
-import yaml
 import time
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
+from logger.utils import timeit
 from templates.routes import ROUTE, ROUTE_HEAD
 from config import settings
 
@@ -70,6 +69,7 @@ def delete_routes(rootPath):
         raise Exception("Failed to delete routes")
 
 
+@timeit()
 def prepare_mismatched_routes(select_tag, hosts, rootPath):
 
     args = [
@@ -112,6 +112,7 @@ def prepare_mismatched_routes(select_tag, hosts, rootPath):
     return len(delete_list)
 
 
+@timeit()
 def prepare_route_last_version(ns, select_tag):
     args = [
         "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
@@ -130,6 +131,7 @@ def prepare_route_last_version(ns, select_tag):
     return resource_versions
 
 
+@timeit()
 def prepare_apply_routes(ns, select_tag, hosts, rootPath):
     out_filename = "%s/routes-current.yaml" % rootPath
     ts = int(time.time())
@@ -167,30 +169,7 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath):
     return len(hosts)
 
 
-def get_host_list(rootPath):
-    host_list = []
-
-    for x in os.walk(rootPath):
-        for file in x[2]:
-            if file not in files_to_ignore:
-                full_path = "%s/%s" % (x[0], file)
-
-                stream = open(full_path, 'r')
-                data = yaml.load(stream, Loader=yaml.SafeLoader)
-
-                if data is not None and 'services' in data:
-                    for service in data['services']:
-                        if 'routes' in service:
-                            for route in service['routes']:
-                                if 'hosts' in route:
-                                    for host in route['hosts']:
-                                        if host not in host_list:
-                                            host_list.append(host)
-
-    host_list.sort()
-    return host_list
-
-
+@timeit()
 def get_gwa_ocp_routes():
     args = [
         "kubectl", "get", "routes", "-l", "aps-generated-by=gwa-cli", "-o", "json"
