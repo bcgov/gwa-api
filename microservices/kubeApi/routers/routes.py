@@ -164,16 +164,9 @@ def validate_hosts(ns_attributes, hosts):
 
 def host_ends_with_one_of_list(a_str, a_list):
     for item in a_list:
-        if a_str.endswith(transform_host(item)):
+        if a_str.endswith(item):
             return True
     return False
-
-
-def transform_host(host):
-    if is_host_transform_enabled():
-        return "%s%s" % (host.replace('.', '-'), settings.hostTransformation['baseUrl'])
-    else:
-        return host
 
 
 def is_host_transform_enabled():
