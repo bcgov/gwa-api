@@ -69,7 +69,7 @@ def delete_routes(rootPath):
         raise Exception("Failed to delete routes")
 
 
-@timeit()
+@timeit
 def prepare_mismatched_routes(select_tag, hosts, rootPath):
 
     args = [
@@ -112,7 +112,7 @@ def prepare_mismatched_routes(select_tag, hosts, rootPath):
     return len(delete_list)
 
 
-@timeit()
+@timeit
 def prepare_route_last_version(ns, select_tag):
     args = [
         "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
@@ -131,7 +131,7 @@ def prepare_route_last_version(ns, select_tag):
     return resource_versions
 
 
-@timeit()
+@timeit
 def prepare_apply_routes(ns, select_tag, hosts, rootPath):
     out_filename = "%s/routes-current.yaml" % rootPath
     ts = int(time.time())
@@ -169,7 +169,7 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath):
     return len(hosts)
 
 
-@timeit()
+@timeit
 def get_gwa_ocp_routes():
     args = [
         "kubectl", "get", "routes", "-l", "aps-generated-by=gwa-cli", "-o", "json"

@@ -2,7 +2,6 @@ import uuid
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.logger import logger
 from pydantic.main import BaseModel
-import requests
 from starlette.responses import Response
 from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
 from logger.utils import timeit
@@ -141,7 +140,7 @@ async def verify_and_create_routes(request: Request):
     return Response(status_code=200)
 
 
-@timeit()
+@timeit
 def validate_hosts(ns_attributes, hosts):
     allowed_domains = []
     for domain in ns_attributes.get('perm-domains', ['.api.gov.bc.ca']):
