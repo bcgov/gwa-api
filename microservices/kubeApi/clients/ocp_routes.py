@@ -1,6 +1,5 @@
 # Build a Kubernetes yaml file of all the routes based on the
 # kong-specs configuration
-from fastapi.logger import logger
 from fastapi import HTTPException
 import json
 import time
@@ -9,7 +8,7 @@ from subprocess import Popen, PIPE, STDOUT
 from logger.utils import timeit
 from templates.routes import ROUTE, ROUTE_HEAD
 from config import settings
-
+from fastapi.logger import logger
 
 files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml",
                    "submitted_config.yaml", "submitted_config_secret.yaml"]

@@ -1,6 +1,5 @@
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.logger import logger
 from pydantic.main import BaseModel
 from starlette.responses import Response
 from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
@@ -12,6 +11,7 @@ import os
 from auth.auth import validate_permissions, validate_token
 import sys
 from datetime import datetime
+from fastapi.logger import logger
 
 router = APIRouter(
     prefix="",

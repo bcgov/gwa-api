@@ -1,6 +1,6 @@
 import time
-from fastapi.logger import logger
 from functools import wraps
+from fastapi.logger import logger
 
 
 def timeit(func):
