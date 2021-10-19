@@ -1,5 +1,4 @@
 from sys import exc_info
-from dotenv import load_dotenv
 import os
 import requests
 import logging
@@ -9,12 +8,16 @@ import traceback
 from schedule import every, repeat, run_pending, clear
 import time
 import json
+# from dotenv import load_dotenv
+import traceback
 
 # using root logger
 logging.basicConfig(level=os.getenv('LOG_LEVEL', default=logging.DEBUG),
                     format='%(asctime)s-%(levelname)s-%(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
-load_dotenv()
+logger = logging.getLogger(__name__)
+
+# load_dotenv()
 
 
 def get_token():
@@ -35,13 +38,13 @@ def get_token():
         print(tokenUrl)
         r = requests.post(tokenUrl, headers=headers, data=data)
         if r.status_code not in [200, 201]:
-            logging.error('Failed to get token')
-        logging.debug("[get_token] %s" % r.status_code)
+            logger.error('Failed to get token')
+        logger.debug("[get_token] %s" % r.status_code)
         json = r.json()
         return json['access_token']
     except:
         traceback.print_exc()
-        logging.error("Failed to get token. %s" % (exc_info()[0]))
+        logger.error("Failed to get token. %s" % (exc_info()[0]))
         clear('sync-routes')
         exit(1)
 
@@ -54,14 +57,14 @@ def get_routes():
         out, err = run.communicate()
 
         if run.returncode != 0:
-            logging.error("Failed to get existing routes - %s - %s", out, err)
+            logger.error("Failed to get existing routes - %s - %s", out, err)
             clear('sync-routes')
             exit(1)
 
         return json.loads(out)
     except:
         traceback.print_exc()
-        logging.error('Failed to get existing routes - %s' % (exc_info()[0]))
+        logger.error('Failed to get existing routes - %s' % (exc_info()[0]))
         clear('sync-routes')
         exit(1)
 
@@ -75,25 +78,29 @@ def sync_routes():
         'content-type': 'application/json'
     }
     data = transform_data(get_routes())  # update kdc to cdc
-    # url = os.getenv('GWA_KUBE_API_DR_URL') + '/sync/routes'
-    # response = requests.post(url, headers=headers, json=data)
+    url = os.getenv('KUBE_API_URL') + '/sync/routes'
+    response = requests.post(url, headers=headers, json=data)
 
-    # if response.status_code not in [200, 201]:
-    #     logging.error('Failed to sync routes - %s' % response.text)
-    #     clear('sync-routes')
-    #     exit(1)
+    if response.status_code not in [200, 201]:
+        logging.error('Failed to sync routes - %s' % response.text)
+        clear('sync-routes')
+        exit(0)
 
 
 def transform_data(data):
-    new_data = []
-    for route_obj in data:
-        new_route_obj = {}
-        new_route_obj['selectTag'] = route_obj['tags'][0]
-        new_route_obj['host'] = route_obj['hosts'][0]
-        new_route_obj['namespace'] = route_obj['tags'][0].split(".")[1]
-        new_route_obj['name'] = 'wild-%s-%s' % (route_obj['tags'][0].replace(".", "-"), route_obj['hosts'][0])
-        new_data.append(new_route_obj)
-    print(new_data)
+    try:
+        new_data = []
+        for route_obj in data:
+            new_route_obj = {}
+            new_route_obj['selectTag'] = route_obj['tags'][0]
+            new_route_obj['host'] = route_obj['hosts'][0]
+            new_route_obj['namespace'] = route_obj['tags'][0].split(".")[1]
+            new_route_obj['name'] = 'wild-%s-%s' % (route_obj['tags'][0].replace(".", "-"), route_obj['hosts'][0])
+            new_data.append(new_route_obj)
+        return new_data
+    except:
+        traceback.print_exc()
+        logger.error("Error transforming data. %s" % str(data))
 
 
 while True:
