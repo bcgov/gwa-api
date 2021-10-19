@@ -1,6 +1,5 @@
 # Build a Kubernetes yaml file of all the routes based on the
 # kong-specs configuration
-from fastapi.logger import logger
 from fastapi import HTTPException
 import json
 import time
@@ -9,7 +8,7 @@ from subprocess import Popen, PIPE, STDOUT
 from logger.utils import timeit
 from templates.routes import ROUTE, ROUTE_HEAD
 from config import settings
-
+from fastapi.logger import logger
 
 files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml",
                    "submitted_config.yaml", "submitted_config_secret.yaml"]
@@ -132,7 +131,7 @@ def prepare_route_last_version(ns, select_tag):
 
 
 @timeit
-def prepare_apply_routes(ns, select_tag, hosts, rootPath):
+def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
     out_filename = "%s/routes-current.yaml" % rootPath
     ts = int(time.time())
     fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
@@ -162,7 +161,7 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath):
             logger.debug("[%s] Route A %03d wild-%s-%s (ver.%s)" %
                          (select_tag, index, select_tag.replace('.', '-'), host, resource_version))
             out_file.write(ROUTE.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/',
-                                            ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=settings.dataPlane, timestamp=ts, fmt_time=fmt_time))
+                                            ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time))
             out_file.write('\n---\n')
             index = index + 1
         out_file.close()
