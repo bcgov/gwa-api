@@ -1,0 +1,8 @@
+externalLink: https://github.com/bcgov/gwa-api/blob/dev/tutorial-idp-client-cred-flow.md
+title: "Setting up Client Credential Protection"
+description: "Configuration the Gateway with an Identity Provider and Client Credential Grant"
+order: 1
+tags: ["ns.platform", "tutorial"]
+isComplete: true
+isPublic: true
+publishDate: "2021-09-27T20:00:00.000-08:00"
