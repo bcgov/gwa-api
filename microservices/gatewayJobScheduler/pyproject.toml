@@ -5,7 +5,7 @@ description = "Job scheduler to run jobs at specified intervals"
 authors = ["Nithin Shekar Kuruba <nithinshekar.kuruba@gov.bc.ca>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 requests = "^2.26.0"
 schedule = "^1.1.0"
 

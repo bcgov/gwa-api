@@ -1,6 +1,5 @@
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.logger import logger
 from pydantic.main import BaseModel
 from starlette.responses import Response
 from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
@@ -12,6 +11,8 @@ import os
 from auth.auth import validate_permissions, validate_token
 import sys
 from datetime import datetime
+from fastapi.logger import logger
+from config import settings
 
 router = APIRouter(
     prefix="",
@@ -46,7 +47,8 @@ def add_routes(namespace: str, route: RouteRequest):
     try:
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
-        route_count = prepare_apply_routes(namespace, route.select_tag, hosts, source_folder)
+        route_count = prepare_apply_routes(namespace, route.select_tag, hosts,
+                                           source_folder, get_data_plane(ns_attributes))
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)
@@ -104,17 +106,25 @@ async def verify_and_create_routes(request: Request):
     insert_batch = [x for x in source_routes if x not in existing_routes]
     delete_batch = [y for y in existing_routes if y not in source_routes]
 
+    logger.debug("insert batch: " + str(insert_batch))
+
+    logger.debug("delete batch: " + str(delete_batch))
+
     try:
         if len(insert_batch) > 0:
             logger.debug("Creating %s routes" % (len(insert_batch)))
             source_folder = "%s/%s" % ('/tmp/sync', f'{datetime.now():%Y%m%d%H%M%S}')
             os.makedirs(source_folder, exist_ok=False)
-            for route in insert_batch:
-                ns = route["namespace"]
-                select_tag = route["selectTag"]
-                hosts = [route["host"]]
-                prepare_apply_routes(ns, select_tag, hosts, source_folder)
-                apply_routes(source_folder)
+            routes_by_ns_dict = group_hosts_by_ns(insert_batch)
+            ns_svc = NamespaceService()
+            for ns in routes_by_ns_dict:
+                ns_attributes = ns_svc.get_namespace_attributes(ns)
+                data_plane = get_data_plane(ns_attributes)
+                for route in routes_by_ns_dict[ns]:
+                    select_tag = route["selectTag"]
+                    hosts = [route["host"]]
+                    prepare_apply_routes(ns, select_tag, hosts, source_folder, data_plane)
+                    apply_routes(source_folder)
     except Exception as ex:
         traceback.print_exc()
         logger.error("Error creating routes. %s" % (ex))
@@ -172,3 +182,17 @@ def host_ends_with_one_of_list(a_str, a_list):
 
 def is_host_transform_enabled():
     return settings.hostTransformation['enabled'] is True
+
+
+def group_hosts_by_ns(data):
+    routes_by_ns = {}
+    for route_obj in data:
+        if route_obj['namespace'] not in routes_by_ns:
+            routes_by_ns[route_obj['namespace']] = []
+        routes_by_ns[route_obj['namespace']].append(route_obj)
+    return routes_by_ns
+
+
+def get_data_plane(ns_attributes):
+    default_data_plane = settings.dataPlane
+    return ns_attributes.get('perm-data-plane', [default_data_plane])[0]
