@@ -87,6 +87,7 @@ def delete_route(name: str):
 @router.post("/sync/routes", status_code=200, dependencies=[Depends(validate_token)])
 async def verify_and_create_routes(request: Request):
 
+    ns_svc = NamespaceService()
     source_routes = await request.json()
 
     existing_routes_json = get_gwa_ocp_routes()
@@ -103,7 +104,10 @@ async def verify_and_create_routes(request: Request):
             }
         )
 
-    insert_batch = [x for x in source_routes if x not in existing_routes]
+    missing_routes = [x for x in source_routes if x not in existing_routes]
+
+    insert_batch = get_routes_by_data_plane(missing_routes)
+
     delete_batch = [y for y in existing_routes if y not in source_routes]
 
     logger.debug("insert batch: " + str(insert_batch))
@@ -116,7 +120,7 @@ async def verify_and_create_routes(request: Request):
             source_folder = "%s/%s" % ('/tmp/sync', f'{datetime.now():%Y%m%d%H%M%S}')
             os.makedirs(source_folder, exist_ok=False)
             routes_by_ns_dict = group_hosts_by_ns(insert_batch)
-            ns_svc = NamespaceService()
+
             for ns in routes_by_ns_dict:
                 ns_attributes = ns_svc.get_namespace_attributes(ns)
                 data_plane = get_data_plane(ns_attributes)
@@ -196,3 +200,21 @@ def group_hosts_by_ns(data):
 def get_data_plane(ns_attributes):
     default_data_plane = settings.dataPlane
     return ns_attributes.get('perm-data-plane', [default_data_plane])[0]
+
+
+def get_routes_by_data_plane(routes_list):
+    filtered_routes = []
+    ns_in_cluster = {}  # set of namespaces
+    ns_svc = NamespaceService()
+    for route in routes_list:
+        if route['namespace'] not in ns_in_cluster:
+            ns_attributes = ns_svc.get_namespace_attributes(route['namespace'])
+            dp = ns_attributes.get('perm-data-plane', [settings.dataPlane])[0]
+            if dp == settings.dataPlane:
+                ns_in_cluster.add(route['namespace'])
+
+    for route in routes_list:
+        if route['namespace'] in ns_in_cluster:
+            filtered_routes.append(route)
+
+    return filtered_routes
