@@ -204,7 +204,7 @@ def get_data_plane(ns_attributes):
 
 def get_routes_by_data_plane(routes_list):
     filtered_routes = []
-    ns_in_cluster = {}  # set of namespaces
+    ns_in_cluster = set([])
     ns_svc = NamespaceService()
     for route in routes_list:
         if route['namespace'] not in ns_in_cluster:
