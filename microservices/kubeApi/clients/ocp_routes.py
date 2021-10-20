@@ -161,7 +161,7 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
             logger.debug("[%s] Route A %03d wild-%s-%s (ver.%s)" %
                          (select_tag, index, select_tag.replace('.', '-'), host, resource_version))
             out_file.write(ROUTE.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/',
-                                            ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time))
+                                            ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time, data_plane=data_plane))
             out_file.write('\n---\n')
             index = index + 1
         out_file.close()
