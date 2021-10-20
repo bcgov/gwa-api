@@ -6,14 +6,14 @@ Steps for protecting and calling an API using the OAuth2 Client Credential Grant
 2. Granting Access to the IdP
 3. Client Requesting Access
 4. Provider Approving Access
-5. Client Retrieving Bearer Token
+5. Client Retrieving the Access Token
 6. Client Calling an API
 
 ![alt text](assets/oauth2.png "Protecting an API")
 
 ## 1. Configuring an API on the Kong Gateway
 
-The API Provider User Journey document provides the steps to enable a new API on the Kong Gateway.  It will walk you through the creation of a new Namespace, and a Service Account that can be used to configure the Kong Gateway and the Authorization Profile described in step 2.
+The API Provider User Journey document provides the steps to enable a new API on the Kong Gateway. It will walk you through the creation of a new Namespace, and a Service Account that can be used to configure the Kong Gateway and the Authorization Profile described in step 2.
 
 Once the API is working on the Gateway, you can then define a Product, which can be made available on the API Services Portal Directory.
 
@@ -21,11 +21,11 @@ Once the API is working on the Gateway, you can then define a Product, which can
 
 ### a) Prerequisites
 
-Before the Portal can be configured, a new set of credentials must be created on the IdP.  For this tutorial, we will include the steps when Keycloak is the IdP.
+Before the Portal can be configured, a new set of credentials must be created on the IdP. For this tutorial, we will include the steps when Keycloak is the IdP.
 
 **Create a new Client on the IdP**
 
-Create a new client with Access Type `confidential`.  All flows except `Service Accounts` should be turned off.
+Create a new client with Access Type `confidential`. All flows except `Service Accounts` should be turned off.
 
 Make a note of the `Client ID` and `Client Secret` , they will be used when the Portal `Authorization Profile` is created.
 
@@ -66,7 +66,7 @@ environmentDetails:
 
 ### c) Link the Authorization Profile to the Product
 
-Before making the API available on the Directory, the API should be configured with a plugin for protecting access.  To do this, an API Provider can edit the Product details to select `Oauth2 Client Credential Flow` and the newly created Authorization Profile.
+Before making the API available on the Directory, the API should be configured with a plugin for protecting access. To do this, an API Provider can edit the Product details to select `Oauth2 Client Credential Flow` and the newly created Authorization Profile.
 
 ### d) Update your Gateway Configuration with the Plugin
 
@@ -118,23 +118,19 @@ Update the following `CredentialIssuer` attributes:
 
 > `resourceAccessScope` - The API Services Portal has not completed the implementation for the scenario where the User is the Resource Owner (`resourceAccessScope` is left blank). It uses the `Token Exchange` capability but it's an optional service available on Keycloak and has numerous caveats around it. Please contact the APS team if interested to know more.
 
-
-
 ## 3. Client Requesting Access
 
 Request access to the API via the API Services Portal and generate the credentials to be used below.
 
 The Portal will use the credentials setup in the Authorization Profile, to create a disabled Client on the IdP (with any applicable Client Mappers) and return the credentials to the Requesting user.
 
-A detailed flow diagram can be viewed `client-requesting-access.md`.
-
 ## 4. Provider Approving Access
 
-An Access Manager reviews the access request, sets any additional controls, grants the relevant permissions (i.e./ scopes and roles), and approves.  The Portal will enable the Client and apply the permissions on the IdP.
+An Access Manager reviews the access request, sets any additional controls, grants the relevant permissions (i.e./ scopes and roles), and approves. The Portal will enable the Client and apply the permissions on the IdP.
 
 The Portal sends a notification to the Requester letting them know that API Access has been approved (or rejected).
 
-## 5. Client Retrieving the Bearer Token
+## 5. Client Retrieving the Access Token
 
 Using the Credentials generated in step 3, the Requester calls the Token endpoint to get a new JWT token.
 
@@ -167,6 +163,6 @@ The API Gateway's `jwt-keycloak` plugin will use the IdP's public keys to valida
 
 The Authorization Profile `clientAuthenticator` was set to `client-secret` in this tutorial, but there is an alternate setup that can be used:
 
-* `client-jwt-jwks-url` (Signed JWT with JWKS URL)
+- `client-jwt-jwks-url` (Signed JWT with JWKS URL)
 
-In this scenario, when a Client is requesting access, they will be required to enter a public URL that holds the public key information for a key pair that will be used in step 5 when retrieving the Bearer Token.  For further details, you can see the specific example `intro-signed-jwt.md`.
+In this scenario, when a Client is requesting access, they will be required to enter a public URL that holds the public key information for a key pair that will be used in step 5 when retrieving the Bearer Token. For further details, you can see the specific example `intro-signed-jwt.md`.
