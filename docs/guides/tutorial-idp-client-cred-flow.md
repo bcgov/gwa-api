@@ -157,6 +157,18 @@ curl -v -H "Authorization: Bearer $TOK" \
 
 The API Gateway's `jwt-keycloak` plugin will use the IdP's public keys to validate the token and depending on the plugin configuration, validate the scopes or roles.
 
+## 7. Gateway Proxying to Upstream
+
+A technical, but important step in the integration is the Gateway proxying the request to the Upstream Service API and deciding on the different options for securing that interaction.
+
+Options:
+
+- `Network Policy` : If the Services are co-located on the same Cluster as the Gateway's Data Plane, then native network policies can be used to protect the channel between the Gateway and the Upstream Service. This approach is used for Services running on the Openshift Silver cluster.
+
+- `Kong Upstream JWT`: This plugin adds a signed JWT to the request headers so that the Upstream Service can verify that the request came specifically from the Gateway.
+
+- `Client Certificates` : Client certificates (mTLS) provides a way for the Upstream Service to provide a secure channel from the Gateway and to verify that the request came specifically from the Gateway.
+
 ## Variations
 
 ### Signed JWT
