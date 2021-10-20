@@ -8,6 +8,7 @@ Steps for protecting and calling an API using the OAuth2 Client Credential Grant
 4. Provider Approving Access
 5. Client Retrieving the Access Token
 6. Client Calling an API
+7. Gateway Proxying to Upstream
 
 ![alt text](assets/oauth2.png "Protecting an API")
 
@@ -168,6 +169,8 @@ Options:
 - `Kong Upstream JWT`: This plugin adds a signed JWT to the request headers so that the Upstream Service can verify that the request came specifically from the Gateway.
 
 - `Client Certificates` : Client certificates (mTLS) provides a way for the Upstream Service to provide a secure channel from the Gateway and to verify that the request came specifically from the Gateway.
+
+- `Firewall IP Restrictions` : This provides a low-level of protection by limiting the IPs to the ones of the Gateway Data Planes. Because the Data Planes are typically on shared infrastructure, this would still allow traffic from other tenants. This might be acceptable based on the type of data delivered by or to the Upstream Service.
 
 ## Variations
 
