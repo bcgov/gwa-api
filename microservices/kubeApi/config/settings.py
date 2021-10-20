@@ -33,7 +33,7 @@ tokenMatch = {
     "admin-aud": config('TOKEN_MATCH_ADMIN_AUD')
 }
 
-dataPlane = config('DATA_PLANE', default="kong-kong-proxy")
+dataPlane = config('DATA_PLANE')
 
 syncConfig = {
     "interval": config('SYNC_INTERVAL', default="1"),
