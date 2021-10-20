@@ -15,6 +15,7 @@ metadata:
     aps-select-tag: "${select_tag}"
     aps-published-ts: "${timestamp}"
     aps-ssl: "${ssl_ref}"
+    aps-data-plane: "${data_plane}"
 spec:
   host: ${host}
   port:
