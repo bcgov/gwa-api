@@ -14,5 +14,3 @@ access_credentials = {
     "accessUser": config('ACCESS_USER'),
     "accessSecret": config('ACCESS_SECRET')
 }
-
-data_plane = config('DATA_PLANE')

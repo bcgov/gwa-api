@@ -3,21 +3,17 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic.main import BaseModel
 from starlette.responses import Response
 from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
-from logger.utils import timeit
-from config import settings
 import traceback
 import os
 from auth.basic_auth import verify_credentials
 import sys
 from datetime import datetime
 from fastapi.logger import logger
-from config import settings
 
 router = APIRouter(
-    prefix="/namespaces/{namespace}/routes",
+    prefix="",
     tags=["routes"],
     responses={404: {"description": "Not found"}},
-    dependencies=[Depends(verify_credentials)]
 )
 
 
@@ -27,14 +23,14 @@ class OCPRoute(BaseModel):
     ns_attributes: dict
 
 
-@router.put("", status_code=201)
+@router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(verify_credentials)])
 def add_routes(namespace: str, route: OCPRoute):
 
     try:
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
         route_count = prepare_apply_routes(namespace, route.select_tag, route.hosts,
-                                           source_folder)
+                                           source_folder, get_data_plane(namespace, route.ns_attributes))
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)
@@ -56,7 +52,7 @@ def add_routes(namespace: str, route: OCPRoute):
     return {"message": "created"}
 
 
-@router.delete("/{name}", status_code=204)
+@router.delete("/namespaces/{namespace}/routes/{name}", status_code=204, dependencies=[Depends(verify_credentials)])
 def delete_route(name: str):
     try:
         kubectl_delete('route', name)
@@ -71,7 +67,7 @@ def delete_route(name: str):
     return Response(status_code=204)
 
 
-@router.post("/sync", status_code=200)
+@router.post("/namespaces/{namespace}/routes/sync", status_code=200, dependencies=[Depends(verify_credentials)])
 async def verify_and_create_routes(namespace: str, request: Request):
 
     source_routes = await request.json()
@@ -85,14 +81,17 @@ async def verify_and_create_routes(namespace: str, request: Request):
             {
                 "name": route["metadata"]["name"],
                 "selectTag": route["metadata"]["labels"]["aps-select-tag"],
-                "host": route["spec"]["host"]
+                "host": route["spec"]["host"],
+                "dataPlane": route["spec"]["to"]["name"]
             }
         )
 
     insert_batch = [x for x in source_routes if x not in existing_routes]
+
     delete_batch = [y for y in existing_routes if y not in source_routes]
 
     logger.debug("insert batch: " + str(insert_batch))
+
     logger.debug("delete batch: " + str(delete_batch))
 
     try:
@@ -103,7 +102,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
             hosts_by_st_dict = group_hosts_by_tag(insert_batch)
 
             for st in hosts_by_st_dict:
-                prepare_apply_routes(namespace, st, hosts_by_st_dict[st], source_folder)
+                prepare_apply_routes(namespace, st, hosts_by_st_dict[st], source_folder, insert_batch[0]["dataPlane"])
                 apply_routes(source_folder)
     except Exception as ex:
         traceback.print_exc()
@@ -128,6 +127,14 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 logger.error("Failed deleting route %s" % route["name"])
                 raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
     return Response(status_code=200)
+
+
+def get_data_plane(ns, ns_attributes):
+    try:
+        data_plane = ns_attributes.get('perm-data-plane')[0]
+    except Exception as err:
+        raise HTTPException(status_code=400, detail="perm-data-plane not defined for namespace %s - %s" % (ns, err))
+    return data_plane
 
 
 def group_hosts_by_tag(data):

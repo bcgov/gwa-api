@@ -88,7 +88,8 @@ def delete_config(namespace: str, qualifier="") -> object:
             session.headers.update({'Authorization': 'Bearer %s' % g.token_string, "Content-Type": "application/json"})
             route_payload = {
                 "hosts": get_host_list(tempFolder),
-                "select_tag": selectTag
+                "select_tag": selectTag,
+                "ns_attributes": ns_attributes
             }
             rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
             res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload)
@@ -296,7 +297,8 @@ def write_config(namespace: str) -> object:
             session.headers.update({'Authorization': 'Bearer %s' % g.token_string, "Content-Type": "application/json"})
             route_payload = {
                 "hosts": get_host_list(tempFolder),
-                "select_tag": selectTag
+                "select_tag": selectTag,
+                "ns_attributes": ns_attributes
             }
             rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
             res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload)

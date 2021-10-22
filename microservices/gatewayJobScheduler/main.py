@@ -92,7 +92,8 @@ def transform_data_by_ns(data):
 
             # check if namespace has data plane attribute
             if ns_attr_dict[namespace].get('perm-data-plane', [''])[0] == os.getenv('DATA_PLANE'):
-                ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host})
+                ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host,
+                                          "dataPlane": ns_attr_dict[namespace].get('perm-data-plane')[0]})
 
         return ns_dict
     except:
