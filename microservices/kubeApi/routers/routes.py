@@ -102,11 +102,9 @@ async def verify_and_create_routes(namespace: str, request: Request):
             os.makedirs(source_folder, exist_ok=False)
             hosts_by_st_dict = group_hosts_by_tag(insert_batch)
 
-            logger.debug(hosts_by_st_dict)
-
-            # for st in hosts_by_st_dict:
-            #     prepare_apply_routes(namespace, st, hosts_by_st_dict[st], source_folder)
-            #     apply_routes(source_folder)
+            for st in hosts_by_st_dict:
+                prepare_apply_routes(namespace, st, hosts_by_st_dict[st], source_folder)
+                apply_routes(source_folder)
     except Exception as ex:
         traceback.print_exc()
         logger.error("Error creating routes. %s" % (ex))
