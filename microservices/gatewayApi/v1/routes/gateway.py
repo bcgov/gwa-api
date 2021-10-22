@@ -114,6 +114,7 @@ def delete_config(namespace: str, qualifier="") -> object:
             # write_submitted_config ("", tempFolder)
             # prep_and_apply_secret (namespace, selectTag, tempFolder)
             # log.debug("%s - Updated Original Config" % (namespace))
+            session.close()
         except HTTPException as ex:
             traceback.print_exc()
             log.error("Error updating custom routes, nsps and secrets. %s" % ex)

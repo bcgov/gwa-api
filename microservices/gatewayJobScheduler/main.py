@@ -5,6 +5,7 @@ import logging
 from subprocess import Popen, PIPE
 import shlex
 import traceback
+from clients.keycloak import admin_api
 from schedule import every, repeat, run_pending, clear
 import time
 import json
@@ -20,33 +21,17 @@ logger = logging.getLogger(__name__)
 # load_dotenv()
 
 
-def get_token():
-    try:
-        tokenUrl = "%s/realms/%s/protocol/openid-connect/token" % (os.getenv('KC_SERVER_URL'), os.getenv('KC_REALM'))
+class NamespaceService:
 
-        data = {
-            "grant_type": "client_credentials",
-            "client_id": os.getenv('KC_RES_SVR_CLIENT_ID'),
-            "client_secret": os.getenv('KC_RES_SVR_CLIENT_SECRET'),
-        }
+    def __init__(self):
+        self.keycloak_admin = admin_api()
 
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-
-        print(tokenUrl)
-        r = requests.post(tokenUrl, headers=headers, data=data)
-        if r.status_code not in [200, 201]:
-            logger.error('Failed to get token')
-        logger.debug("[get_token] %s" % r.status_code)
-        json = r.json()
-        return json['access_token']
-    except:
-        traceback.print_exc()
-        logger.error("Failed to get token. %s" % (exc_info()[0]))
-        clear('sync-routes')
-        exit(1)
+    def get_namespace_attributes(self, namespace):
+        ns_group_summary = self.keycloak_admin.get_group_by_path(
+            path="/%s/%s" % ('ns', namespace), search_in_subgroups=True)
+        ns_group = self.keycloak_admin.get_group(ns_group_summary['id'])
+        attrs = ns_group['attributes']
+        return attrs
 
 
 def get_routes():
@@ -73,31 +58,43 @@ def get_routes():
 def sync_routes():
     headers = {
         'accept': 'application/json',
-        'authorization': 'bearer %s' % get_token(),
         'cache-control': 'no-cache',
         'content-type': 'application/json'
     }
-    data = transform_data(get_routes())  # update kdc to cdc
-    url = os.getenv('KUBE_API_URL') + '/sync/routes'
-    response = requests.post(url, headers=headers, json=data)
 
-    if response.status_code not in [200, 201]:
-        logging.error('Failed to sync routes - %s' % response.text)
-        clear('sync-routes')
-        exit(0)
+    data = transform_data_by_ns(get_routes())
+    logger.debug(data)
+    for ns in data:
+        url = os.getenv('KUBE_API_URL') + '/namespaces/%s/routes/sync' % ns
+        response = requests.post(url, headers=headers, json=data[ns], auth=(
+            os.getenv('KUBE_API_USER'), os.getenv('KUBE_API_PASS')))
+
+        if response.status_code not in [200, 201]:
+            logging.error('Failed to sync routes - %s' % response.text)
+            clear('sync-routes')
+            exit(0)
 
 
-def transform_data(data):
+def transform_data_by_ns(data):
+    ns_svc = NamespaceService()
     try:
-        new_data = []
+        ns_dict = {}
+        ns_attr_dict = {}
         for route_obj in data:
-            new_route_obj = {}
-            new_route_obj['selectTag'] = route_obj['tags'][0]
-            new_route_obj['host'] = route_obj['hosts'][0]
-            new_route_obj['namespace'] = route_obj['tags'][0].split(".")[1]
-            new_route_obj['name'] = 'wild-%s-%s' % (route_obj['tags'][0].replace(".", "-"), route_obj['hosts'][0])
-            new_data.append(new_route_obj)
-        return new_data
+            select_tag = route_obj['tags'][0]
+            host = route_obj['hosts'][0]
+            namespace = route_obj['tags'][0].split(".")[1]
+            name = 'wild-%s-%s' % (route_obj['tags'][0].replace(".", "-"), route_obj['hosts'][0])
+
+            if namespace not in ns_dict:
+                ns_dict[namespace] = []
+                ns_attr_dict[namespace] = ns_svc.get_namespace_attributes(namespace)
+
+            # check if namespace has data plane attribute
+            if ns_attr_dict[namespace].get('perm-data-plane', [''])[0] == os.getenv('DATA_PLANE'):
+                ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host})
+
+        return ns_dict
     except:
         traceback.print_exc()
         logger.error("Error transforming data. %s" % str(data))

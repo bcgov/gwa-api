@@ -131,7 +131,7 @@ def prepare_route_last_version(ns, select_tag):
 
 
 @timeit
-def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
+def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane=settings.data_plane):
     out_filename = "%s/routes-current.yaml" % rootPath
     ts = int(time.time())
     fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
@@ -169,9 +169,13 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
 
 
 @timeit
-def get_gwa_ocp_routes():
+def get_gwa_ocp_routes(extralabels=""):
+
+    label = "aps-generated-by=gwa-cli"
+    if not extralabels == None and not extralabels == "":
+        label = label + "," + extralabels
     args = [
-        "kubectl", "get", "routes", "-l", "aps-generated-by=gwa-cli", "-o", "json"
+        "kubectl", "get", "routes", "-l", label, "-o", "json"
     ]
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
