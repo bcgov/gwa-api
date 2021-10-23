@@ -144,7 +144,7 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
             # If host transformation is disabled, then select the appropriate
             # SSL cert based on the suffix mapping
             ssl_ref = "tls"
-            if not settings.hostTransformation['enabled']:
+            if not settings.host_transformation['enabled']:
                 for host_match, ssl_file_prefix in host_cert_mapping.items():
                     if host.endswith(host_match):
                         ssl_ref = ssl_file_prefix
