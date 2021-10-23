@@ -99,11 +99,13 @@ async def verify_and_create_routes(namespace: str, request: Request):
             logger.debug("Creating %s routes" % (len(insert_batch)))
             source_folder = "%s/%s" % ('/tmp/sync', f'{datetime.now():%Y%m%d%H%M%S}')
             os.makedirs(source_folder, exist_ok=False)
-            hosts_by_st_dict = group_hosts_by_tag(insert_batch)
 
-            for st in hosts_by_st_dict:
-                prepare_apply_routes(namespace, st, hosts_by_st_dict[st], source_folder, insert_batch[0]["dataPlane"])
+            for route in insert_batch:
+                route_count = prepare_apply_routes(namespace, route['selectTag'], [
+                                                   route['host']], source_folder, route["dataPlane"])
+                logger.debug("[%s] - Prepared %d routes" % (namespace, route_count))
                 apply_routes(source_folder)
+                logger.debug("[%s] - Applied %d routes" % (namespace, route_count))
     except Exception as ex:
         traceback.print_exc()
         logger.error("Error creating routes. %s" % (ex))
@@ -114,10 +116,11 @@ async def verify_and_create_routes(namespace: str, request: Request):
         raise HTTPException(status_code=400, detail="Error creating routes. %s" % (sys.exc_info()[0]))
 
     if len(delete_batch) > 0:
-        logger.debug("Deleting %s routes" % (len(insert_batch)))
+        logger.debug("Deleting %s routes" % (len(delete_batch)))
         for route in delete_batch:
             try:
                 kubectl_delete('route', route["name"])
+                logger.debug("[%s] - Deleted route %s" % (namespace, route["name"]))
             except Exception as ex:
                 traceback.print_exc()
                 logger.error("Failed deleting route %s" % route["name"])
@@ -135,13 +138,3 @@ def get_data_plane(ns, ns_attributes):
     except Exception as err:
         raise HTTPException(status_code=400, detail="perm-data-plane not defined for namespace %s - %s" % (ns, err))
     return data_plane
-
-
-def group_hosts_by_tag(data):
-    select_tags_dict = {}
-    for route in data:
-        if route["selectTag"] not in select_tags_dict:
-            select_tags_dict[route["selectTag"]] = []
-        select_tags_dict[route["selectTag"]].append(route['host'])
-
-    return select_tags_dict
