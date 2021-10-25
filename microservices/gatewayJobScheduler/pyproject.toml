@@ -8,6 +8,7 @@ authors = ["Nithin Shekar Kuruba <nithinshekar.kuruba@gov.bc.ca>"]
 python = "^3.8"
 requests = "^2.26.0"
 schedule = "^1.1.0"
+python-keycloak = "^0.26.1"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.7"

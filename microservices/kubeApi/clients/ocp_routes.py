@@ -144,7 +144,7 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
             # If host transformation is disabled, then select the appropriate
             # SSL cert based on the suffix mapping
             ssl_ref = "tls"
-            if not settings.hostTransformation['enabled']:
+            if not settings.host_transformation['enabled']:
                 for host_match, ssl_file_prefix in host_cert_mapping.items():
                     if host.endswith(host_match):
                         ssl_ref = ssl_file_prefix
@@ -169,9 +169,13 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
 
 
 @timeit
-def get_gwa_ocp_routes():
+def get_gwa_ocp_routes(extralabels=""):
+
+    label = "aps-generated-by=gwa-cli"
+    if not extralabels == None and not extralabels == "":
+        label = label + "," + extralabels
     args = [
-        "kubectl", "get", "routes", "-l", "aps-generated-by=gwa-cli", "-o", "json"
+        "kubectl", "get", "routes", "-l", label, "-o", "json"
     ]
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()

@@ -5,7 +5,6 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
 from starlette.responses import HTMLResponse
 from routers import routes
-from auth.auth import retrieve_token
 from config import settings
 import logging
 import logging.config
@@ -16,7 +15,7 @@ logging.config.dictConfig({
         'format': '[%(asctime)s - %(name)s] %(levelname)5s %(module)s.%(funcName)5s: %(message)s',
     }},
     'handlers': {'console': {
-        'level': settings.logLevel,
+        'level': settings.log_level,
         'class': 'logging.StreamHandler',
         'stream': 'ext://sys.stdout',
         'formatter': 'default'
@@ -30,7 +29,7 @@ logging.config.dictConfig({
         }
     },
     'root': {
-        'level': settings.logLevel,
+        'level': settings.log_level,
         'handlers': ['console']
     }
 })
@@ -49,16 +48,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
     )
-
-
-@app.post("/token")
-def login(request: Request):
-    if "authorization" not in request.headers:
-        raise HTTPException(status_code=400, detail="Invalid request")
-    return retrieve_token(request.headers['authorization'],
-                          settings.resourceAuthServer['serverUrl'] +
-                          "realms/%s/protocol/openid-connect" % settings.resourceAuthServer['realm'],
-                          'openid')
 
 
 @app.get("/health")
