@@ -14,3 +14,5 @@ access_credentials = {
     "accessUser": config('ACCESS_USER'),
     "accessSecret": config('ACCESS_SECRET')
 }
+
+defaultDataPlane = config('DEFAULT_DATA_PLANE', default='dp-silver-kong-proxy')

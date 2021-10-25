@@ -9,6 +9,7 @@ from auth.basic_auth import verify_credentials
 import sys
 from datetime import datetime
 from fastapi.logger import logger
+from config import settings
 
 router = APIRouter(
     prefix="",
@@ -30,7 +31,7 @@ def add_routes(namespace: str, route: OCPRoute):
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
         route_count = prepare_apply_routes(namespace, route.select_tag, route.hosts,
-                                           source_folder, get_data_plane(namespace, route.ns_attributes))
+                                           source_folder, get_data_plane(route.ns_attributes))
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)
@@ -132,9 +133,6 @@ async def verify_and_create_routes(namespace: str, request: Request):
     return Response(status_code=200)
 
 
-def get_data_plane(ns, ns_attributes):
-    try:
-        data_plane = ns_attributes.get('perm-data-plane')[0]
-    except Exception as err:
-        raise HTTPException(status_code=400, detail="perm-data-plane not defined for namespace %s - %s" % (ns, err))
-    return data_plane
+def get_data_plane(ns_attributes):
+    default_data_plane = settings.defaultDataPlane
+    return ns_attributes.get('perm-data-plane', [default_data_plane])[0]
