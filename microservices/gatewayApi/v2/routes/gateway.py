@@ -282,7 +282,7 @@ def write_config(namespace: str) -> object:
 
     log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
     args = [
-        "deck", cmd, "--kong-addr", "https://kongh-adminapi-261403-dev.apps.gold.devops.gov.bc.ca", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
