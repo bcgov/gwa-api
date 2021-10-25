@@ -48,8 +48,8 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
     },
     "defaultDataPlane": "${DEFAULT_DATA_PLANE:-"dp-silver-kong-proxy"}",
     "kubeApiCreds": {
-        "kubeApiUser": ${KUBE_API_USER},
-        "kubeApiPass": ${KUBE_API_PASS}
+        "kubeApiUser": "${KUBE_API_USER}",
+        "kubeApiPass": "${KUBE_API_PASS}"
     }
 }
 EOF
