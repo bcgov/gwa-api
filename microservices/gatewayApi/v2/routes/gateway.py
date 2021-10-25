@@ -85,14 +85,15 @@ def delete_config(namespace: str, qualifier="") -> object:
     elif cmd == "sync" and not local_environment:
         try:
             session = requests.Session()
-            session.headers.update({'Authorization': 'Bearer %s' % g.token_string, "Content-Type": "application/json"})
+            session.headers.update({"Content-Type": "application/json"})
             route_payload = {
                 "hosts": get_host_list(tempFolder),
                 "select_tag": selectTag,
-                "ns_attributes": ns_attributes
+                "ns_attributes": ns_attributes.getAttrs()
             }
             rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
-            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload)
+            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+                app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
             if res.status_code != 201:
                 raise Exception("Failed to apply routes: %s" % str(res.text))
             # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
@@ -281,7 +282,7 @@ def write_config(namespace: str) -> object:
 
     log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
     args = [
-        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        "deck", cmd, "--kong-addr", "https://kongh-adminapi-261403-dev.apps.gold.devops.gov.bc.ca", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -294,14 +295,15 @@ def write_config(namespace: str) -> object:
     elif cmd == "sync" and not local_environment:
         try:
             session = requests.Session()
-            session.headers.update({'Authorization': 'Bearer %s' % g.token_string, "Content-Type": "application/json"})
+            session.headers.update({"Content-Type": "application/json"})
             route_payload = {
                 "hosts": get_host_list(tempFolder),
                 "select_tag": selectTag,
-                "ns_attributes": ns_attributes
+                "ns_attributes": ns_attributes.getAttrs()
             }
             rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
-            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload)
+            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+                app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
             if res.status_code != 201:
                 raise Exception("Failed to apply routes: %s" % str(res.text))
 

@@ -12,7 +12,7 @@ import logging.config
 logging.config.dictConfig({
     'version': 1,
     'formatters': {'default': {
-        'format': '[%(asctime)s - %(name)s] %(levelname)5s %(module)s.%(funcName)5s: %(message)s',
+        'format': '[%(asctime)s] %(levelname)5s %(module)s.%(funcName)5s: %(message)s',
     }},
     'handlers': {'console': {
         'level': settings.log_level,
