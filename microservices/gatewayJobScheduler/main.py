@@ -5,6 +5,7 @@ import logging
 from subprocess import Popen, PIPE
 import shlex
 import traceback
+import schedule
 from clients.keycloak import admin_api
 from schedule import every, repeat, run_pending, clear
 import time
@@ -72,7 +73,7 @@ def sync_routes():
         if response.status_code not in [200, 201]:
             logging.error('Failed to sync routes - %s' % response.text)
             clear('sync-routes')
-            exit(0)
+            exit(1)
 
 
 def transform_data_by_ns(data):
@@ -101,6 +102,10 @@ def transform_data_by_ns(data):
         logger.error("Error transforming data. %s" % str(data))
 
 
+# Run all the jobs for once irrespective of the interval
+schedule.run_all()
+
+# Run all the jobs with specified interval
 while True:
     run_pending()
     time.sleep(1)
