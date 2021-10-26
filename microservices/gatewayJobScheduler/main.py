@@ -64,7 +64,6 @@ def sync_routes():
     }
 
     data = transform_data_by_ns(get_routes())
-    logger.debug(data)
     for ns in data:
         url = os.getenv('KUBE_API_URL') + '/namespaces/%s/routes/sync' % ns
         response = requests.post(url, headers=headers, json=data[ns], auth=(
