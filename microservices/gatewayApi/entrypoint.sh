@@ -46,7 +46,11 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
             "redis_timeout": 2000
         }
     },
-    "defaultDataPlane": "${DEFAULT_DATA_PLANE:-"konghd-kong-proxy"}"
+    "defaultDataPlane": "${DEFAULT_DATA_PLANE:-"dp-silver-kong-proxy"}",
+    "kubeApiCreds": {
+        "kubeApiUser": "${KUBE_API_USER}",
+        "kubeApiPass": "${KUBE_API_PASS}"
+    }
 }
 EOF
 
