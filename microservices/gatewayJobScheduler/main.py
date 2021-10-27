@@ -30,9 +30,12 @@ class NamespaceService:
     def get_namespace_attributes(self, namespace):
         ns_group_summary = self.keycloak_admin.get_group_by_path(
             path="/%s/%s" % ('ns', namespace), search_in_subgroups=True)
-        ns_group = self.keycloak_admin.get_group(ns_group_summary['id'])
-        attrs = ns_group['attributes']
-        return attrs
+        if ns_group_summary is not None:
+            ns_group = self.keycloak_admin.get_group(ns_group_summary['id'])
+            attrs = ns_group['attributes']
+            return attrs
+        # returning empty dict when namespace or group not found in keycloak
+        return {}
 
 
 def get_routes():
@@ -64,7 +67,6 @@ def sync_routes():
     }
 
     data = transform_data_by_ns(get_routes())
-    logger.debug(data)
     for ns in data:
         url = os.getenv('KUBE_API_URL') + '/namespaces/%s/routes/sync' % ns
         response = requests.post(url, headers=headers, json=data[ns], auth=(
@@ -97,9 +99,9 @@ def transform_data_by_ns(data):
                                           "dataPlane": ns_attr_dict[namespace].get('perm-data-plane')[0]})
 
         return ns_dict
-    except:
+    except Exception as err:
         traceback.print_exc()
-        logger.error("Error transforming data. %s" % str(data))
+        logger.error("Error transforming data. %s" % str(err))
 
 
 # Run all the jobs for once irrespective of the interval
