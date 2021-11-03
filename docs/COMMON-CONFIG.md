@@ -73,3 +73,34 @@ plugins:
     month: null
     year: null
 ```
+
+## Two-tiered access setup
+
+The `key-auth` and `jwt-keycloak` plugins support the concept of allowing "anonymous" access, which allows you to define a "free" service which might have limits around it (like only allowing 100 requests/minute), and then an "elevated" access where the Consumer would get an improved level of service, such as higher rate limits.
+
+There is a global "anonymous" consumer that is identified as "ce26955a-cf08-4907-9427-12d01c8bd94c" in both our Test and Production environments.
+
+To enable anonymous access to your API, update your plugin configuration with:
+
+### key-auth
+
+```
+- name: key-auth
+  tags: [ _NS_ ]
+  config:
+    ...
+    anonymous: ce26955a-cf08-4907-9427-12d01c8bd94c      
+```
+
+### jwt-keycloak
+
+```
+- name: jwt-keycloak
+  tags: [ _NS_ ]
+  config:
+    ...
+    consumer_match: true
+    consumer_match_ignore_not_found: false
+    consumer_match_claim_custom_id: false
+    anonymous: ce26955a-cf08-4907-9427-12d01c8bd94c      
+```

@@ -5,6 +5,7 @@ import logging
 
 class DefaultConfig:
     data = None
+
     def __init__(self):
         _default_data_path = 'config/default.json'
         if (os.path.isfile(_default_data_path)):
@@ -12,6 +13,12 @@ class DefaultConfig:
                 self.data = json.load(json_data_file)
         else:
             self.data = {}
+
+        _default_data_plane_conf_path = os.getenv('DATA_PLANES_CONFIG_PATH', './config/data_planes_config.json')
+        if (os.path.isfile(_default_data_plane_conf_path)):
+            with open(_default_data_plane_conf_path) as json_file:
+                self.data.update(json.load(json_file))
+
 
 class ProductionConfig(DefaultConfig):
     def __init__(self):
@@ -22,6 +29,7 @@ class ProductionConfig(DefaultConfig):
                 prod_data = json.load(json_data_file)
                 self.data.update(prod_data)
 
+
 class DevelopmentConfig(DefaultConfig):
     def __init__(self):
         super().__init__()
@@ -31,6 +39,7 @@ class DevelopmentConfig(DefaultConfig):
                 dev_data = json.load(json_data_file)
                 self.data.update(dev_data)
 
+
 class TestingConfig(DefaultConfig):
     def __init__(self):
         super().__init__()
@@ -39,6 +48,7 @@ class TestingConfig(DefaultConfig):
             with open(_test_data_path) as json_data_file:
                 test_data = json.load(json_data_file)
                 self.data.update(test_data)
+
 
 class Config:
     environment = os.getenv('ENVIRONMENT', os.getenv('ENV', 'development')).lower()
@@ -56,5 +66,3 @@ class Config:
             else:
                 Config.conf = DevelopmentConfig()
             Config.data = Config.conf.data
-
-

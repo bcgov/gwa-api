@@ -98,7 +98,7 @@ def map_res_name_to_id (pat_token, name):
 
     log = app.logger
 
-    tokenUrl = "%srealms/%s/authz/protection/resource_set?name=%s" % (conf['serverUrl'],conf['realm'], name)
+    tokenUrl = "%srealms/%s/authz/protection/resource_set?exactName=true&name=%s" % (conf['serverUrl'],conf['realm'], name)
 
     headers = {
         "Authorization": "Bearer %s" % pat_token,

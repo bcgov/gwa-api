@@ -32,7 +32,7 @@ jobs:
           echo "Got tag name ${{ steps.release.outputs.tag_name }}"
           echo "Got release version ${{ steps.release.outputs.version }}"
 
-      - name: Create docker image related to the release
+      - name: Create gwa-api docker image related to the release
         uses: docker/build-push-action@v1
         with:
           registry: docker.pkg.github.com
@@ -41,6 +41,19 @@ jobs:
           repository: bcgov/gwa-api/gwa-gateway-api
           path: microservices/gatewayApi
           dockerfile: microservices/gatewayApi/Dockerfile
+          push: true
+          tags: ${{ steps.release.outputs.tag_name }}
+          tag_with_sha: false
+
+      - name: Create gwa-kube-api docker image related to the release
+        uses: docker/build-push-action@v1
+        with:
+          registry: docker.pkg.github.com
+          username: $GITHUB_ACTOR
+          password: ${{ secrets.GITHUB_TOKEN }}
+          repository: bcgov/gwa-api/gwa-kube-api
+          path: microservices/kubeApi
+          dockerfile: microservices/kubeApi/Dockerfile
           push: true
           tags: ${{ steps.release.outputs.tag_name }}
           tag_with_sha: false
