@@ -91,11 +91,15 @@ def delete_config(namespace: str, qualifier="") -> object:
                 "select_tag": selectTag,
                 "ns_attributes": ns_attributes.getAttrs()
             }
-            rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
+            dp = get_data_plane(ns_attributes)
+            rqst_url = app.config['data_planes'][dp]
+            log.debug("[%s] - Initiating request to kube API" % (dp))
             res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                 app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+            log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
             if res.status_code != 201:
-                raise Exception("Failed to apply routes: %s" % str(res.text))
+                log.debug("[%s] - The kube API could not process the request" % (dp))
+                raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
             # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
             # log.debug("%s - Prepared %d routes" % (namespace, route_count))
             # if route_count > 0:
@@ -301,11 +305,15 @@ def write_config(namespace: str) -> object:
                 "select_tag": selectTag,
                 "ns_attributes": ns_attributes.getAttrs()
             }
-            rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
+            dp = get_data_plane(ns_attributes)
+            rqst_url = app.config['data_planes'][dp]
+            log.debug("[%s] - Initiating request to kube API" % (dp))
             res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                 app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+            log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
             if res.status_code != 201:
-                raise Exception("Failed to apply routes: %s" % str(res.text))
+                log.debug("[%s] - The kube API could not process the request" % (dp))
+                raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
 
             # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
             # log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
