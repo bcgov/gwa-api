@@ -16,9 +16,7 @@ You can select and manage namespaces by clicking the namespace dropdown in the t
 
 ## 2. Generate a Service Account
 
-Go to the `Namespaces` tab, click the `Service Accounts` link, and click the `New Service Account`. A new credential will be created - make a note of the `ID` and `Secret`.
-
-Before the credential can be used, you need to grant it the appropriate permissions. This can be done by going to the `API Access` tab and click the "Manage Resources" for the `Gateway Administration API`. Click the link that corresponds to your newly created namespace. Click the `Grant Service Account Access` and enter in the `ID` and the scopes you want to grant to the Service Account, then click the `Share` button to grant the permissions.
+Go to the `Namespaces` tab, click the `Service Accounts` link, and click the `New Service Account` and select the `GatewayConfig.Publish` permissions for the Service Account and click `Share`. A new credential will be created - make a note of the `ID` and `Secret`.
 
 The available Scopes are:
 | Scope | Permission |
@@ -257,7 +255,7 @@ You can also access summarized metrics from the `API Services Portal` by going t
 
 ## 7. Grant access to others
 
-To grant access to others, you need to grant them the appropriate Scopes. This can be done from the `API Services Portal`, going to the `API Access` tab and clicking the "Manage Resources" for the `Gateway Administration API` product. Click the link that corresponds to your namespace. Click the `Grant User Access` and enter in a username (i.e./ `jsmith@idir`) and the scopes you want to grant to the User, then click the `Share` button to grant the permissions.
+To grant access to others, you need to grant them the appropriate Scopes. This can be done from the `API Services Portal`, selecting the relevant `Namespace` and going to the Namespaces `Namespace Access` page. From here, you are able to grant Users access to the Namespace.
 
 ## 8. Add to your CI/CD Pipeline
 
@@ -309,8 +307,6 @@ jobs:
             --client-secret=${{ secrets.TEST_GWA_ACCT_SECRET }}
 
           gwa pg
-
-          gwa acl --managers acope@idir
 ```
 
 ## 9. Share your API for Discovery
@@ -331,7 +327,7 @@ View the Directory API in the [Swagger Console](https://openapi-apps-gov-bc-ca.t
 
 > Can use `y2j` to convert from YAML to JSON
 >
-> `echo '#!/usr/bin/env python\nimport sys,yaml,json\nprint(json.dumps(yaml.safe_load(open(sys.argv[1]).read())))' > /usr/local/bin/y2j`
+> `echo -e "#"'!'"/usr/bin/env python\nimport sys,yaml,json\nprint(json.dumps(yaml.safe_load(open(sys.argv[1]).read())))" > /usr/local/bin/y2j`
 >
 > `chmod +x /usr/local/bin/y2j`
 

@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "gatewayapischeduler"
+version = "1.0.0"
+description = "Job scheduler to run jobs at specified intervals"
+authors = ["Nithin Shekar Kuruba <nithinshekar.kuruba@gov.bc.ca>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "^2.26.0"
+schedule = "^1.1.0"
+python-keycloak = "^0.26.1"
+
+[tool.poetry.dev-dependencies]
+autopep8 = "^1.5.7"
+python-dotenv = "^0.19.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
