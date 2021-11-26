@@ -112,7 +112,7 @@ def get_select_tag(tags):
     for tag in tags:
         if tag.startswith("ns."):
             required_tag = tag
-            if tag.endswith(('dev', 'test', 'prod')):
+            if tag.endswith(('.dev', '.test', '.prod')):
                 required_tag = tag
                 break
     return required_tag
