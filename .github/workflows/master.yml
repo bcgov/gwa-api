@@ -57,3 +57,16 @@ jobs:
           push: true
           tags: ${{ steps.release.outputs.tag_name }}
           tag_with_sha: false
+
+      - name: Create gwa-scheduler docker image related to the release
+        uses: docker/build-push-action@v1
+        with:
+          registry: docker.pkg.github.com
+          username: $GITHUB_ACTOR
+          password: ${{ secrets.GITHUB_TOKEN }}
+          repository: bcgov/gwa-api/gwa-scheduler
+          path: microservices/gatewayJobScheduler
+          dockerfile: microservices/gatewayJobScheduler/Dockerfile
+          push: true
+          tags: ${{ steps.release.outputs.tag_name }}
+          tag_with_sha: false
