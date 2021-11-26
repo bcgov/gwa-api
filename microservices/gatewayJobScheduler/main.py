@@ -65,7 +65,6 @@ def sync_routes():
         'cache-control': 'no-cache',
         'content-type': 'application/json'
     }
-
     data = transform_data_by_ns(get_routes())
 
     for ns in data:
@@ -88,7 +87,7 @@ def transform_data_by_ns(data):
             select_tag = get_select_tag(route_obj['tags'])
             host = route_obj['hosts'][0]
             namespace = select_tag.split(".")[1]
-            name = 'wild-%s-%s' % (route_obj['tags'][0].replace(".", "-"), route_obj['hosts'][0])
+            name = 'wild-%s-%s' % (select_tag.replace(".", "-"), route_obj['hosts'][0])
 
             if namespace not in ns_dict:
                 ns_dict[namespace] = []
@@ -112,7 +111,7 @@ def get_select_tag(tags):
     for tag in tags:
         if tag.startswith("ns."):
             required_tag = tag
-            if tag.endswith(('.dev', '.test', '.prod')):
+            if len(tag.split(".")) > 2:
                 required_tag = tag
                 break
     return required_tag
