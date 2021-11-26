@@ -65,8 +65,8 @@ def sync_routes():
         'cache-control': 'no-cache',
         'content-type': 'application/json'
     }
-
     data = transform_data_by_ns(get_routes())
+
     for ns in data:
         url = os.getenv('KUBE_API_URL') + '/namespaces/%s/routes/sync' % ns
         response = requests.post(url, headers=headers, json=data[ns], auth=(
@@ -84,10 +84,10 @@ def transform_data_by_ns(data):
         ns_dict = {}
         ns_attr_dict = {}
         for route_obj in data:
-            select_tag = route_obj['tags'][0]
+            select_tag = get_select_tag(route_obj['tags'])
             host = route_obj['hosts'][0]
-            namespace = route_obj['tags'][0].split(".")[1]
-            name = 'wild-%s-%s' % (route_obj['tags'][0].replace(".", "-"), route_obj['hosts'][0])
+            namespace = select_tag.split(".")[1]
+            name = 'wild-%s-%s' % (select_tag.replace(".", "-"), route_obj['hosts'][0])
 
             if namespace not in ns_dict:
                 ns_dict[namespace] = []
@@ -102,6 +102,19 @@ def transform_data_by_ns(data):
     except Exception as err:
         traceback.print_exc()
         logger.error("Error transforming data. %s" % str(err))
+
+
+def get_select_tag(tags):
+    qualifiers = ['dev', 'test', 'prod']
+    valid_select_tags = []
+    required_tag = None
+    for tag in tags:
+        if tag.startswith("ns."):
+            required_tag = tag
+            if len(tag.split(".")) > 2:
+                required_tag = tag
+                break
+    return required_tag
 
 
 # Run all the jobs for once irrespective of the interval
