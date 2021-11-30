@@ -71,10 +71,13 @@ def update_namespace(namespace: str) -> object:
         log.error("Namespace validation failed %s", namespace)
         abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
 
+    log.info("Updating namespace %s" % namespace)
+
     try:
         svc = NamespaceService()
 
         ns_group = svc.get_namespace (namespace)
+        log.info("-> Found %s" % ns_group)
 
         svc.update_ns_attributes (ns_group, params)
 
