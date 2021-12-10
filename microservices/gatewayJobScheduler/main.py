@@ -94,7 +94,6 @@ def transform_data_by_ns(data):
         for route_obj in data:
             select_tag = get_select_tag(route_obj['tags'])
             namespace = select_tag.split(".")[1]
-            name = 'wild-%s-%s' % (select_tag.replace(".", "-"), host)
 
             if namespace not in ns_dict:
                 ns_dict[namespace] = []
@@ -103,8 +102,9 @@ def transform_data_by_ns(data):
             # check if namespace has data plane attribute
             if ns_attr_dict[namespace].get('perm-data-plane', [''])[0] == os.getenv('DATA_PLANE'):
                 for host in route_obj['hosts']:
+                    name = 'wild-%s-%s' % (select_tag.replace(".", "-"), host)
                     ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host,
-                                               "dataPlane": ns_attr_dict[namespace].get('perm-data-plane', [''])[0]})
+                                               "dataPlane": os.getenv('DATA_PLANE')})
         return ns_dict
     except Exception as err:
         traceback.print_exc()
