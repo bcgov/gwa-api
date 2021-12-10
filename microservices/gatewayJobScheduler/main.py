@@ -92,20 +92,19 @@ def transform_data_by_ns(data):
         ns_dict = {}
         ns_attr_dict = {}
         for route_obj in data:
-            select_tag = get_select_tag(route_obj['tags'])
-            host = route_obj['hosts'][0]
-            namespace = select_tag.split(".")[1]
-            name = 'wild-%s-%s' % (select_tag.replace(".", "-"), route_obj['hosts'][0])
+            for host in route_obj['hosts']:
+                select_tag = get_select_tag(route_obj['tags'])
+                namespace = select_tag.split(".")[1]
+                name = 'wild-%s-%s' % (select_tag.replace(".", "-"), host)
 
-            if namespace not in ns_dict:
-                ns_dict[namespace] = []
-                ns_attr_dict[namespace] = ns_svc.get_namespace_attributes(namespace)
+                if namespace not in ns_dict:
+                    ns_dict[namespace] = []
+                    ns_attr_dict[namespace] = ns_svc.get_namespace_attributes(namespace)
 
-            # check if namespace has data plane attribute
-            if ns_attr_dict[namespace].get('perm-data-plane', [''])[0] == os.getenv('DATA_PLANE'):
-                ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host,
-                                          "dataPlane": ns_attr_dict[namespace].get('perm-data-plane')[0]})
-
+                # check if namespace has data plane attribute
+                if ns_attr_dict[namespace].get('perm-data-plane', [''])[0] == os.getenv('DATA_PLANE'):
+                    ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host,
+                                               "dataPlane": ns_attr_dict[namespace].get('perm-data-plane', [''])[0]})
         return ns_dict
     except Exception as err:
         traceback.print_exc()
