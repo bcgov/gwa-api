@@ -1,5 +1,8 @@
-plugins:
-- config:
+services:
+- name: MY_REST_API
+  tags: [ _NS_ ]
+  plugins:
+  - config:
       add:
         body: {}
         headers: {}
@@ -20,11 +23,10 @@ plugins:
       replace:
         body: {}
         headers: {}
-        querystring: {}
+        querystring: {}        
     enabled: true
     name: request-transformer
     protocols:
     - https
     - http
-    tags:
-    - $NS
+    tags: [ _NS_ ]
