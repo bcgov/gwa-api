@@ -100,9 +100,9 @@ def transform_data_by_ns(data):
                 ns_dict[namespace] = []
                 ns_attr_dict[namespace] = ns_svc.get_namespace_attributes(namespace)
 
-            for host in route_obj['hosts']:
-                # check if namespace has data plane attribute
-                if ns_attr_dict[namespace].get('perm-data-plane', [''])[0] == os.getenv('DATA_PLANE'):
+            # check if namespace has data plane attribute
+            if ns_attr_dict[namespace].get('perm-data-plane', [''])[0] == os.getenv('DATA_PLANE'):
+                for host in route_obj['hosts']:
                     ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host,
                                                "dataPlane": ns_attr_dict[namespace].get('perm-data-plane', [''])[0]})
         return ns_dict
