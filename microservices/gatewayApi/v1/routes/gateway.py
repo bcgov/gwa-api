@@ -175,11 +175,11 @@ def write_config(namespace: str) -> object:
 
     dfile = None
 
-    if 'configFile' in request.files:
+    if 'configFile' in request.files and not request.files['configFile'].filename == '':
         log.debug("[%s] %s", namespace, request.files['configFile'])
         dfile = request.files['configFile']
         dry_run = request.values['dryRun']
-    elif request.content_type.startswith("application/json"):
+    elif request.content_type.startswith("application/json") and not request.json['configFile'] in [None, '']:
         dfile = request.json['configFile']
         dry_run = request.json['dryRun']
     else:
@@ -201,6 +201,10 @@ def write_config(namespace: str) -> object:
     yaml_documents = []
     for doc in yaml_documents_iter:
         yaml_documents.append(doc)
+
+    if len(yaml_documents) == 0:
+        log.error("%s - %s" % (namespace, "Empty Configuration Passed"))
+        abort_early(event_id, 'publish', namespace, jsonify(error="Empty Configuration Passed"))
 
     selectTag = "ns.%s" % namespace
     ns_qualifier = None
@@ -290,6 +294,19 @@ def write_config(namespace: str) -> object:
         cmd = "diff"
 
     log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
+
+    args = [
+        "deck", "validate", "--config", "/tmp/deck.yaml", "--state", tempFolder
+    ]
+    log.debug("[%s] Running %s" % (namespace, args))
+    deck_validate = Popen(args, stdout=PIPE, stderr=STDOUT)
+    out, err = deck_validate.communicate()
+
+    if deck_validate.returncode != 0:
+        log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
+        abort_early(event_id, 'validate', namespace, jsonify(
+            error="Validation Failed.", results=mask(out.decode('utf-8'))))
+
     args = [
         "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
