@@ -1,5 +1,9 @@
 FROM python:3.8-alpine
 
+RUN mkdir /.kube
+
+RUN chmod 777 /.kube
+
 WORKDIR /app
 
 RUN apk add build-base libffi-dev openssl curl
