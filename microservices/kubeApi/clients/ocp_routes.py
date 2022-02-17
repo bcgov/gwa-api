@@ -67,12 +67,11 @@ def delete_routes(rootPath):
         logger.error("Failed to delete routes", out, err)
         raise Exception("Failed to delete routes")
 
-
 @timeit
 def prepare_mismatched_routes(select_tag, hosts, rootPath):
 
     args = [
-        "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
+        "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "custom-columns=:metadata.name", "--no-headers"
     ]
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
@@ -80,17 +79,13 @@ def prepare_mismatched_routes(select_tag, hosts, rootPath):
         logger.error("Failed to get existing routes", out, err)
         raise Exception("Failed to get existing routes")
 
-    current_routes = []
+    current_routes = out.splitlines()
 
-    existing = json.loads(out)
-    for route in existing['items']:
-        current_routes.append(route['metadata']['name'])
-    print(str(current_routes))
     delete_list = []
     for route_name in current_routes:
         match = False
         for host in hosts:
-            if route_name == "wild-%s-%s" % (select_tag.replace('.', '-'), host):
+            if route_name.decode('utf8') == "wild-%s-%s" % (select_tag.replace('.', '-'), host):
                 match = True
         if match == False:
             delete_list.append(route_name)

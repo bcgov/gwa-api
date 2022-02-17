@@ -361,7 +361,7 @@ def write_config(namespace: str) -> object:
             # write_submitted_config(orig_config, tempFolder)
             # prep_and_apply_secret(namespace, selectTag, tempFolder)
             # log.debug("[%s] - Updated Original Config" % (namespace))
-            session.close()
+                session.close()
         except HTTPException as ex:
             traceback.print_exc()
             log.error("[%s] Error updating custom routes, nsps and secrets. %s" % (namespace, ex))
