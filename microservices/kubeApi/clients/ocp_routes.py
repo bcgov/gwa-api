@@ -5,7 +5,6 @@ import json
 import time
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
-from logger.utils import timeit
 from templates.routes import ROUTE, ROUTE_HEAD
 from config import settings
 from fastapi.logger import logger
@@ -67,11 +66,10 @@ def delete_routes(rootPath):
         logger.error("Failed to delete routes", out, err)
         raise Exception("Failed to delete routes")
 
-@timeit
 def prepare_mismatched_routes(select_tag, hosts, rootPath):
 
     args = [
-        "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "custom-columns=:metadata.name", "--no-headers"
+        "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
     ]
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
@@ -79,13 +77,17 @@ def prepare_mismatched_routes(select_tag, hosts, rootPath):
         logger.error("Failed to get existing routes", out, err)
         raise Exception("Failed to get existing routes")
 
-    current_routes = out.splitlines()
+    current_routes = []
+
+    existing = json.loads(out)
+    for route in existing['items']:
+        current_routes.append(route['metadata']['name'])
 
     delete_list = []
     for route_name in current_routes:
         match = False
         for host in hosts:
-            if route_name.decode('utf8') == "wild-%s-%s" % (select_tag.replace('.', '-'), host):
+            if route_name == "wild-%s-%s" % (select_tag.replace('.', '-'), host):
                 match = True
         if match == False:
             delete_list.append(route_name)
@@ -106,7 +108,6 @@ def prepare_mismatched_routes(select_tag, hosts, rootPath):
     return len(delete_list)
 
 
-@timeit
 def prepare_route_last_version(ns, select_tag):
     args = [
         "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
@@ -125,7 +126,6 @@ def prepare_route_last_version(ns, select_tag):
     return resource_versions
 
 
-@timeit
 def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
     out_filename = "%s/routes-current.yaml" % rootPath
     ts = int(time.time())
@@ -163,7 +163,6 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
     return len(hosts)
 
 
-@timeit
 def get_gwa_ocp_routes(extralabels=""):
 
     label = "aps-generated-by=gwa-cli"
