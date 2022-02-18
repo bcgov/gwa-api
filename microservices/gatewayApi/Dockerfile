@@ -10,7 +10,7 @@ FROM python:3.8-alpine
 
 RUN mkdir /.kube
 
-RUN chmod 777 /.kube
+RUN chmod ugo+rw /.kube
 
 WORKDIR /app
 
