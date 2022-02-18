@@ -13,7 +13,7 @@ For self-service of APIs, a set of microservices are used to coordinate updates 
 All APIs are protected by an OIDC JWT Token with the following claims:
 
 * `aud` : `gwa`
-* `namespace` : Identifies the namespace that the APIs belong to, used to scope what changes are allowed.
+* `namespace` : Identifies the namespace that the APIs belong to, used to scope what changes are allowed
 
 **Configuration:**
 
