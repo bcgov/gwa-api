@@ -40,17 +40,26 @@ class NamespaceService:
 
 def get_routes():
     try:
-        p1 = Popen(shlex.split("curl %s/routes" % os.getenv('KONG_ADMIN_API_URL')), stdout=PIPE)
-        run = Popen(shlex.split(
-            "jq '.data'"), stdin=p1.stdout, stdout=PIPE, stderr=PIPE)
-        out, err = run.communicate()
+        endpoint = "/routes"
+        routes_list = []
+        while True:
+            p1 = Popen(shlex.split("curl %s%s" % (os.getenv('KONG_ADMIN_API_URL'), endpoint)), stdout=PIPE)
+            run = Popen(shlex.split(
+                "jq ."), stdin=p1.stdout, stdout=PIPE, stderr=PIPE)
+            out, err = run.communicate()
 
-        if run.returncode != 0:
-            logger.error("Failed to get existing routes - %s - %s", out, err)
-            clear('sync-routes')
-            exit(1)
+            if run.returncode != 0:
+                logger.error("Failed to get existing routes - %s - %s", out, err)
+                clear('sync-routes')
+                exit(1)
 
-        return json.loads(out)
+            result = json.loads(out)
+            routes_list = routes_list + result['data']
+
+            if result['next'] == None:
+                return routes_list
+            endpoint = result['next']
+
     except:
         traceback.print_exc()
         logger.error('Failed to get existing routes - %s' % (exc_info()[0]))
@@ -65,7 +74,6 @@ def sync_routes():
         'cache-control': 'no-cache',
         'content-type': 'application/json'
     }
-
     data = transform_data_by_ns(get_routes())
     for ns in data:
         url = os.getenv('KUBE_API_URL') + '/namespaces/%s/routes/sync' % ns
@@ -84,10 +92,8 @@ def transform_data_by_ns(data):
         ns_dict = {}
         ns_attr_dict = {}
         for route_obj in data:
-            select_tag = route_obj['tags'][0]
-            host = route_obj['hosts'][0]
-            namespace = route_obj['tags'][0].split(".")[1]
-            name = 'wild-%s-%s' % (route_obj['tags'][0].replace(".", "-"), route_obj['hosts'][0])
+            select_tag = get_select_tag(route_obj['tags'])
+            namespace = select_tag.split(".")[1]
 
             if namespace not in ns_dict:
                 ns_dict[namespace] = []
@@ -95,13 +101,27 @@ def transform_data_by_ns(data):
 
             # check if namespace has data plane attribute
             if ns_attr_dict[namespace].get('perm-data-plane', [''])[0] == os.getenv('DATA_PLANE'):
-                ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host,
-                                          "dataPlane": ns_attr_dict[namespace].get('perm-data-plane')[0]})
-
+                for host in route_obj['hosts']:
+                    name = 'wild-%s-%s' % (select_tag.replace(".", "-"), host)
+                    ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host,
+                                               "dataPlane": os.getenv('DATA_PLANE')})
         return ns_dict
     except Exception as err:
         traceback.print_exc()
         logger.error("Error transforming data. %s" % str(err))
+
+
+def get_select_tag(tags):
+    qualifiers = ['dev', 'test', 'prod']
+    valid_select_tags = []
+    required_tag = None
+    for tag in tags:
+        if tag.startswith("ns."):
+            required_tag = tag
+            if len(tag.split(".")) > 2:
+                required_tag = tag
+                break
+    return required_tag
 
 
 # Run all the jobs for once irrespective of the interval

@@ -88,11 +88,15 @@ def delete_config(namespace: str, qualifier="") -> object:
                 "select_tag": selectTag,
                 "ns_attributes": ns_attributes.getAttrs()
             }
-            rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
+            dp = get_data_plane(ns_attributes)
+            rqst_url = app.config['data_planes'][dp]
+            log.debug("[%s] - Initiating request to kube API" % (dp))
             res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                 app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+            log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
             if res.status_code != 201:
-                raise Exception("Failed to apply routes: %s" % str(res.text))
+                log.debug("[%s] - The kube API could not process the request" % (dp))
+                raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
             # route_count = prepare_apply_routes (namespace, selectTag, is_host_transform_enabled(), tempFolder)
             # log.debug("%s - Prepared %d routes" % (namespace, route_count))
             # if route_count > 0:
@@ -171,11 +175,11 @@ def write_config(namespace: str) -> object:
 
     dfile = None
 
-    if 'configFile' in request.files:
+    if 'configFile' in request.files and not request.files['configFile'].filename == '':
         log.debug("[%s] %s", namespace, request.files['configFile'])
         dfile = request.files['configFile']
         dry_run = request.values['dryRun']
-    elif request.content_type.startswith("application/json"):
+    elif request.content_type.startswith("application/json") and not request.json['configFile'] in [None, '']:
         dfile = request.json['configFile']
         dry_run = request.json['dryRun']
     else:
@@ -197,6 +201,10 @@ def write_config(namespace: str) -> object:
     yaml_documents = []
     for doc in yaml_documents_iter:
         yaml_documents.append(doc)
+
+    if len(yaml_documents) == 0:
+        log.error("%s - %s" % (namespace, "Empty Configuration Passed"))
+        abort_early(event_id, 'publish', namespace, jsonify(error="Empty Configuration Passed"))
 
     selectTag = "ns.%s" % namespace
     ns_qualifier = None
@@ -286,6 +294,19 @@ def write_config(namespace: str) -> object:
         cmd = "diff"
 
     log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
+
+    args = [
+        "deck", "validate", "--config", "/tmp/deck.yaml", "--state", tempFolder
+    ]
+    log.debug("[%s] Running %s" % (namespace, args))
+    deck_validate = Popen(args, stdout=PIPE, stderr=STDOUT)
+    out, err = deck_validate.communicate()
+
+    if deck_validate.returncode != 0:
+        log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
+        abort_early(event_id, 'validate', namespace, jsonify(
+            error="Validation Failed.", results=mask(out.decode('utf-8'))))
+
     args = [
         "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
@@ -307,11 +328,15 @@ def write_config(namespace: str) -> object:
                     "select_tag": selectTag,
                     "ns_attributes": ns_attributes.getAttrs()
                 }
-                rqst_url = app.config['data_planes'][get_data_plane(ns_attributes)]
+                dp = get_data_plane(ns_attributes)
+                rqst_url = app.config['data_planes'][dp]
+                log.debug("[%s] - Initiating request to kube API" % (dp))
                 res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                     app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+                log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
                 if res.status_code != 201:
-                    raise Exception("Failed to apply routes: %s" % str(res.text))
+                    log.debug("[%s] - The kube API could not process the request" % (dp))
+                    raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
                 # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
                 # log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
                 # if route_count > 0:
@@ -336,7 +361,7 @@ def write_config(namespace: str) -> object:
             # write_submitted_config(orig_config, tempFolder)
             # prep_and_apply_secret(namespace, selectTag, tempFolder)
             # log.debug("[%s] - Updated Original Config" % (namespace))
-            session.close()
+                session.close()
         except HTTPException as ex:
             traceback.print_exc()
             log.error("[%s] Error updating custom routes, nsps and secrets. %s" % (namespace, ex))
