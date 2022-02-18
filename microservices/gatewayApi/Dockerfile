@@ -8,6 +8,10 @@
 
 FROM python:3.8-alpine
 
+RUN mkdir /.kube
+
+RUN chmod ugo+rw /.kube
+
 WORKDIR /app
 
 RUN apk add build-base libffi-dev openssl openssl-dev curl
