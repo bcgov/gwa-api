@@ -33,7 +33,7 @@ from utils.validators import namespace_valid, namespace_validation_rule
 from v1.services.namespaces import NamespaceService, get_base_group_path
 
 
-ns = Blueprint('namespaces.v2', 'namespaces')
+ns = Blueprint('namespaces_v2', 'namespaces')
 
 @ns.route('',
            methods=['GET'], strict_slashes=False)

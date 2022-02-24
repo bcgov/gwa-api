@@ -29,7 +29,7 @@ from utils.validators import host_valid
 from utils.transforms import plugins_transformations
 from utils.masking import mask
 
-gw = Blueprint('gwa.v2', 'gateway')
+gw = Blueprint('gwa_v2', 'gateway')
 local_environment = os.environ.get("LOCAL_ENVIRONMENT", default=False)
 
 

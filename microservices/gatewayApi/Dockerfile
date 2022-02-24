@@ -6,7 +6,7 @@
 #  && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o deck \
 #       -ldflags "-s -w -X github.com/kong/deck/cmd.VERSION=$TAG -X github.com/kong/deck/cmd.COMMIT=$COMMIT"
 
-FROM python:3.7.5
+FROM python:3.8-alpine
 
 RUN mkdir /.kube
 
