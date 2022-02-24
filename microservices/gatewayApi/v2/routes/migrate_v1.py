@@ -18,7 +18,7 @@ from utils.clientid import client_id_valid, generate_client_id
 from clients.keycloak import admin_api
 from clients.kong import get_plugins, get_services_by_ns, get_service_routes, get_acls, get_consumer
 
-mg = Blueprint('migration.v2', 'migration')
+mg = Blueprint('migration_v2', 'migration')
 
 @mg.route('export',
            methods=['GET'], strict_slashes=False)

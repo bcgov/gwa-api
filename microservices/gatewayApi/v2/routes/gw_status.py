@@ -11,7 +11,7 @@ from v2.auth.auth import admin_jwt, uma_enforce
 
 from clients.kong import get_services_by_ns, get_routes_by_ns
 
-gw_status = Blueprint('gw_status.v2', 'gw_status')
+gw_status = Blueprint('gw_status_v2', 'gw_status')
 
 @gw_status.route('',
            methods=['GET'], strict_slashes=False)

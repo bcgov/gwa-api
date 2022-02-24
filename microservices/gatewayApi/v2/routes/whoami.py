@@ -9,7 +9,7 @@ from io import TextIOWrapper
 
 from v2.auth.auth import admin_jwt
 
-whoami = Blueprint('whoami.v2', 'whoami')
+whoami = Blueprint('whoami_v2', 'whoami')
 
 @whoami.route('',
            methods=['GET'], strict_slashes=False)
