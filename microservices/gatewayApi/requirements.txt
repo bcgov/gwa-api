@@ -24,4 +24,3 @@ pycodestyle==2.4.0
 pylint==1.7.2
 flask-jwt-simple==0.0.3
 itsdangerous==1.1.0
-markupsafe==1.1.1
