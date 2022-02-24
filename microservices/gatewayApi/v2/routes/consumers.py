@@ -9,7 +9,7 @@ from clients.portal import record_custom_event
 from v2.services.gateway_consumers import GatewayConsumerService
 from v2.auth.auth import admin_jwt, uma_enforce
 
-consumers = Blueprint('consumers.v2', 'consumers')
+consumers = Blueprint('consumers_v2', 'consumers')
 
 
 @admin_jwt(None)
