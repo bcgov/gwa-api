@@ -72,7 +72,7 @@ def delete_config(namespace: str, qualifier="") -> object:
 
     log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
     args = [
-        "deck", cmd, "--kong-addr", "https://kongh-adminapi-b8840c-dev.apps.gold.devops.gov.bc.ca", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -299,7 +299,7 @@ def write_config(namespace: str) -> object:
     log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
 
     args = [
-        "deck", "validate", "--kong-addr", "https://kongh-adminapi-b8840c-dev.apps.gold.devops.gov.bc.ca", "--state", tempFolder
+        "deck", "validate", "--config", "/tmp/deck.yaml", "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_validate = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -311,7 +311,7 @@ def write_config(namespace: str) -> object:
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
     args = [
-        "deck", cmd, "--kong-addr", "https://kongh-adminapi-b8840c-dev.apps.gold.devops.gov.bc.ca", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -323,23 +323,23 @@ def write_config(namespace: str) -> object:
     # skip creation of routes in local development environment
     elif cmd == "sync" and not local_environment:
         try:
-            # if update_routes_flag:
-            #     session = requests.Session()
-            #     session.headers.update({"Content-Type": "application/json"})
-            #     route_payload = {
-            #         "hosts": get_host_list(tempFolder),
-            #         "select_tag": selectTag,
-            #         "ns_attributes": ns_attributes.getAttrs()
-            #     }
-            #     dp = get_data_plane(ns_attributes)
-            #     rqst_url = app.config['data_planes'][dp]
-            #     log.debug("[%s] - Initiating request to kube API" % (dp))
-            #     res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
-            #         app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
-            #     log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
-            #     if res.status_code != 201:
-            #         log.debug("[%s] - The kube API could not process the request" % (dp))
-            #         raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
+            if update_routes_flag:
+                session = requests.Session()
+                session.headers.update({"Content-Type": "application/json"})
+                route_payload = {
+                    "hosts": get_host_list(tempFolder),
+                    "select_tag": selectTag,
+                    "ns_attributes": ns_attributes.getAttrs()
+                }
+                dp = get_data_plane(ns_attributes)
+                rqst_url = app.config['data_planes'][dp]
+                log.debug("[%s] - Initiating request to kube API" % (dp))
+                res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+                    app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+                log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
+                if res.status_code != 201:
+                    log.debug("[%s] - The kube API could not process the request" % (dp))
+                    raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
 
                 # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
                 # log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
