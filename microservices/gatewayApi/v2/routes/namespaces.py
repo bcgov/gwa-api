@@ -14,26 +14,35 @@
 #
 import requests
 import sys
+import http
 import traceback
+import uuid
+import os
 import urllib3
 import certifi
 import socket
+from subprocess import Popen, PIPE, STDOUT
 from urllib.parse import urlparse
+from werkzeug.exceptions import HTTPException, NotFound
 from flask import Blueprint, jsonify, request, Response, make_response, abort, g, current_app as app
 
 from v2.auth.auth import admin_jwt, uma_enforce
 
 from clients.uma.kcprotect import get_token, create_permission
 from clients.uma.resourceset import list_resources, create_resource, delete_resource, map_res_name_to_id
+from clients.ocp_routes import get_host_list
 
-from keycloak.exceptions import KeycloakGetError
-from clients.keycloak import admin_api
-from utils.validators import namespace_valid, namespace_validation_rule
+from utils.masking import mask
 
 from v1.services.namespaces import NamespaceService, get_base_group_path
-
+from utils.cleanup import cleanup
+from utils.get_data_plane import get_data_plane
 
 ns = Blueprint('namespaces_v2', 'namespaces')
+local_environment = os.environ.get("LOCAL_ENVIRONMENT", default=False)
+
+def abort_early(event_id, action, namespace, response):
+    abort(make_response(response, 400))
 
 @ns.route('',
            methods=['GET'], strict_slashes=False)
@@ -49,59 +58,17 @@ def list_namespaces() -> object:
     response = list_resources(pat['access_token'], username)
     return make_response(jsonify(response))
 
-@ns.route('',
-           methods=['POST'], strict_slashes=False)
-@admin_jwt(None)
-def create_namespace() -> object:
-    log = app.logger
+@ns.route('/defaults',
+           methods=['GET'], strict_slashes=False)
+def get_namespace() -> object:
 
-    pat = get_token()
+    defaults = {
+      "perm-domains": [ '.api.gov.bc.ca' ],
+      "perm-data-plane": app.config['defaultDataPlane'],
+      "perm-protected-ns": 'deny'
+    }
 
-    namespace = request.get_json(force=True)['name']
-
-    if not namespace_valid(namespace):
-        log.error("Namespace validation failed %s", namespace)
-        abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
-
-    try:
-
-        # Resource owners will be the Resource Server - this is because it is quite difficult to manage
-        # user-level resources in Keycloak due to the tight permission model around it.
-        # For example, the Resource Server can not delete/change policies or permissions for a resource
-        # owned by a different user.
-        #
-        svc = NamespaceService()
-
-        # username = None
-        # if 'preferred_username' in g.principal:
-        #     username = g.principal['preferred_username']
-
-        scopes = [ 'Namespace.Manage', 'Namespace.View', 'GatewayConfig.Publish', 'Access.Manage', 'Content.Publish', 'CredentialIssuer.Admin' ]
-        res = create_resource (pat['access_token'], namespace, 'namespace', scopes)
-        print("Resource created")
-        print("Assigning Namespace.Manage to", g.principal['sub'])
-
-        permission = {
-            "resource": res['_id'],
-            "requester": g.principal['sub'],
-            "granted": True,
-            "scopeName": 'Namespace.Manage'
-        }
-
-        create_permission (pat['access_token'], permission)
-        svc.create_or_get_ns (namespace, None)
-
-    except KeycloakGetError as err:
-        if err.response_code == 409:
-            log.error("Namespace %s already created." % namespace)
-            log.error(err)
-            abort(make_response(jsonify(error="Namespace is already created."), 400))
-        else:
-            log.error("Failed to create namespace %s" % namespace)
-            log.error(err)
-            abort(make_response(jsonify(error="Failed to add namespace"), 400))
-
-    return ('', 201)
+    return make_response(jsonify(defaults))
 
 @ns.route('/<string:namespace>',
            methods=['DELETE'], strict_slashes=False)
@@ -115,18 +82,68 @@ def delete_namespace(namespace: str) -> object:
     pat = get_token()
     pat_token = pat['access_token']
 
-    # keycloak_admin = admin_api()
+    event_id = str(uuid.uuid4())
+    ns_svc = NamespaceService()
+    ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
-    try:
-        # for role_name in ['viewer', 'admin']:
-        #     group = keycloak_admin.get_group_by_path("%s/%s" % (get_base_group_path(role_name), namespace), search_in_subgroups=True)
-        #     if group is not None:
-        #         keycloak_admin.delete_group (group['id'])
+    outFolder = namespace
 
-        rid = map_res_name_to_id (pat_token, namespace)
-        delete_resource (pat_token, rid)
-    except KeycloakGetError as err:
-        log.error(err)
-        abort(make_response(jsonify(error="Failed to delete namespace"), 400))
+    tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
+    os.makedirs(tempFolder, exist_ok=False)
 
-    return ('', 204)
+    with open("%s/%s" % (tempFolder, 'empty.yaml'), 'w') as file:
+        file.write("")
+
+    selectTag = "ns.%s" % namespace
+    log.debug("ST = %s" % selectTag)
+
+    # Call the 'deck' command
+    cmd = "sync"
+
+    log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
+    args = [
+        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+    ]
+    log.debug("[%s] Running %s" % (namespace, args))
+    deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
+    out, err = deck_run.communicate()
+    if deck_run.returncode != 0:
+        cleanup(tempFolder)
+        log.warn("%s - %s" % (namespace, out.decode('utf-8')))
+        abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
+
+    elif cmd == "sync" and not local_environment:
+        try:
+            session = requests.Session()
+            session.headers.update({"Content-Type": "application/json"})
+            route_payload = {
+                "hosts": get_host_list(tempFolder),
+                "select_tag": selectTag,
+                "ns_attributes": ns_attributes.getAttrs()
+            }
+            dp = get_data_plane(ns_attributes)
+            rqst_url = app.config['data_planes'][dp]
+            log.debug("[%s] - Initiating request to kube API" % (dp))
+            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+                app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+            log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
+            if res.status_code != 201:
+                log.debug("[%s] - The kube API could not process the request" % (dp))
+                raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
+            session.close()
+        except HTTPException as ex:
+            traceback.print_exc()
+            log.error("Error updating custom routes. %s" % ex)
+            abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
+        except:
+            traceback.print_exc()
+            log.error("Error updating custom routes. %s" % sys.exc_info()[0])
+            abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
+
+    cleanup(tempFolder)
+
+    log.debug("[%s] The exit code was: %d" % (namespace, deck_run.returncode))
+
+    message = "Deletion successful."
+
+    return make_response('', http.HTTPStatus.NO_CONTENT)
