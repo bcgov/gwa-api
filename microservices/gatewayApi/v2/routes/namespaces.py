@@ -21,6 +21,7 @@ import os
 import urllib3
 import certifi
 import socket
+import json
 from subprocess import Popen, PIPE, STDOUT
 from urllib.parse import urlparse
 from werkzeug.exceptions import HTTPException, NotFound
@@ -28,6 +29,7 @@ from flask import Blueprint, jsonify, request, Response, make_response, abort, g
 
 from v2.auth.auth import admin_jwt, uma_enforce
 
+from clients.portal import record_gateway_event
 from clients.uma.kcprotect import get_token, create_permission
 from clients.uma.resourceset import list_resources, create_resource, delete_resource, map_res_name_to_id
 from clients.ocp_routes import get_host_list
@@ -42,6 +44,7 @@ ns = Blueprint('namespaces_v2', 'namespaces')
 local_environment = os.environ.get("LOCAL_ENVIRONMENT", default=False)
 
 def abort_early(event_id, action, namespace, response):
+    record_gateway_event(event_id, action, 'failed', namespace, json.dumps(response.get_json()))
     abort(make_response(response, 400))
 
 @ns.route('',
@@ -83,6 +86,8 @@ def delete_namespace(namespace: str) -> object:
     pat_token = pat['access_token']
 
     event_id = str(uuid.uuid4())
+    record_gateway_event(event_id, 'delete', 'received', namespace)
+
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
@@ -145,5 +150,7 @@ def delete_namespace(namespace: str) -> object:
     log.debug("[%s] The exit code was: %d" % (namespace, deck_run.returncode))
 
     message = "Deletion successful."
+
+    record_gateway_event(event_id, 'delete', 'completed', namespace)
 
     return make_response('', http.HTTPStatus.NO_CONTENT)
