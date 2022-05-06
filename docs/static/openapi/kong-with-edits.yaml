@@ -1,0 +1,21 @@
+_format_version: "1.1"
+services:
+  - name: Sample_API
+    url: https://httpbin.org
+    plugins: []
+    routes:
+      - tags:
+          - OAS3_import
+          - ns.openapi-tests.loc
+        name: Sample_API-path-get
+        methods:
+          - GET
+        hosts:
+          - openapi-gen-sample.api.gov.bc.ca
+        paths:
+          - /headers
+        strip_path: false
+    tags:
+      - OAS3_import
+      - ns.openapi-tests.loc
+
