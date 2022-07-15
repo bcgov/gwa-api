@@ -6,6 +6,7 @@ import logging
 import os
 import time
 import config
+from werkzeug.exceptions import HTTPException
 from authlib.jose.errors import JoseError, ExpiredTokenError
 from flask import Flask, g, jsonify, request, make_response, url_for, Response
 from flask_compress import Compress
@@ -102,6 +103,12 @@ def create_app(test_config=None):
         log.error(request.headers)
         return make_response(content, HTTPStatus.BAD_REQUEST)
 
+    @app.errorhandler(HTTPException)
+    def token_error(error):
+        log.error("Denied access %s - %s" % (request.remote_addr, str(error)))
+        content = jsonify({"error":"Invalid Token"})
+        return make_response(content, HTTPStatus.UNAUTHORIZED)
+
     @app.errorhandler(JoseError)
     def forbidden(error):
         log.error("Denied access %s - %s" % (request.remote_addr, str(error)))
@@ -115,6 +122,7 @@ def create_app(test_config=None):
 
     @app.errorhandler(Exception)
     def other_exception(error):
+        log.error("Unexpected error %s", type(error))
         log.error(error)
         content = jsonify({"error":"Unexpected Error"})
         return make_response(content, HTTPStatus.BAD_REQUEST)

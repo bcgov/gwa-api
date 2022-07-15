@@ -12,10 +12,10 @@ from v2.auth.auth import admin_jwt, uma_enforce
 consumers = Blueprint('consumers_v2', 'consumers')
 
 
-@admin_jwt(None)
-@uma_enforce('namespace', 'Access.Manage')
 @consumers.route('/<string:consumer_id>/plugins',
                  methods=['POST'], strict_slashes=False)
+@admin_jwt(None)
+@uma_enforce('namespace', 'Access.Manage')
 def create_consumer_plugin(namespace: str, consumer_id: str) -> object:
     event_id = str(uuid.uuid4())
     log = app.logger
@@ -43,10 +43,10 @@ def create_consumer_plugin(namespace: str, consumer_id: str) -> object:
     return response
 
 
-@admin_jwt(None)
-@uma_enforce('namespace', 'Access.Manage')
 @consumers.route('/<string:consumer_id>/plugins/<string:plugin_id>',
                  methods=['PUT'], strict_slashes=False)
+@admin_jwt(None)
+@uma_enforce('namespace', 'Access.Manage')
 def update_consumer_plugin(namespace: str, consumer_id: str, plugin_id: str) -> object:
     event_id = str(uuid.uuid4())
     log = app.logger
@@ -75,10 +75,10 @@ def update_consumer_plugin(namespace: str, consumer_id: str, plugin_id: str) -> 
     return response
 
 
-@admin_jwt(None)
-@uma_enforce('namespace', 'Access.Manage')
 @consumers.route('/<string:consumer_id>/plugins/<string:plugin_id>',
                  methods=['DELETE'], strict_slashes=False)
+@admin_jwt(None)
+@uma_enforce('namespace', 'Access.Manage')
 def delete_consumer_plugin(namespace: str, consumer_id: str, plugin_id: str) -> object:
     event_id = str(uuid.uuid4())
     selectTag = "ns.%s" % namespace
