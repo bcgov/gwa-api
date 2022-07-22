@@ -58,4 +58,4 @@ cat > /tmp/deck.yaml <<EOF
 kong-addr: $KONG_ADMIN_URL
 EOF
 
-python3 wsgi.py
+gunicorn --bind 0.0.0.0:2000 -t 0 -w 4 wsgi:app
