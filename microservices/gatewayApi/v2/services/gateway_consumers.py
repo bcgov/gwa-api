@@ -26,6 +26,8 @@ class GatewayConsumerService:
 
 
 def make_http_request(action: str, id: str, method: str, **rqst_params):
+    log = app.logger
+
     message = "STARTED"
     mod = __import__('requests')
     method_to_call = getattr(mod, method)
@@ -37,5 +39,6 @@ def make_http_request(action: str, id: str, method: str, **rqst_params):
         res = {message:'done'}
     else:
         message = "FAILED"
+        log.error("%s %s : %s", response.status_code, response.reason, response.text)
         raise Exception("%s %s [%s] %s" % (message, action, response.status_code, response.reason))
     return res
