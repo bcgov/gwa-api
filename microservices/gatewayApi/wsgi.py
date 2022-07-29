@@ -1,8 +1,8 @@
 #!/usr/bin/python
-from gevent import monkey
+#from gevent import monkey
 
 # Patch Sockets to make requests asynchronous
-monkey.patch_all()
+#monkey.patch_all()
 
 import logging
 import sys
@@ -23,7 +23,7 @@ conf = config.Config()
 dictConfig({
     'version': 1,
     'formatters': {'default': {
-        'format': '%(asctime)s %(levelname)5s %(module)-15s: %(message)s',
+        'format': '%(asctime)s [%(process)3d] %(levelname)5s %(module)-15s: %(message)s',
     }},
     'handlers': {'wsgi': {
         'class': 'logging.StreamHandler',
