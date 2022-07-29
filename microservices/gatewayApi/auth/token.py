@@ -1,6 +1,6 @@
 import requests
 import time
-from authlib.jose import jwt
+from authlib.jose import JsonWebToken
 from authlib.jose.errors import JoseError, ExpiredTokenError
 from authlib.oauth2.rfc6749 import TokenMixin
 from authlib.oauth2.rfc6750 import BearerTokenValidator
@@ -47,6 +47,7 @@ class OIDCTokenValidator(BearerTokenValidator):
         self.jwk = jwk_r.json()
 
     def authenticate_token(self, token_string):
+        jwt = JsonWebToken(['RS256'])
         token = jwt.decode(token_string, self.jwk)
         token.validate()
 
