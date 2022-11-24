@@ -45,7 +45,12 @@ def record_gateway_event(event_id, action, result, namespace, message="", blob="
         'name': 'N/A',
         'message': message,
         'refId': '',
-        'namespace': namespace
+        'namespace': namespace,
+        'context': {
+          'message': 'GatewayConfig Update {result} : {message}',
+          'result': result,
+          'message': message
+        }
     }
 
     if not blob == "" and not blob == None:
