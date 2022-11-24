@@ -45,7 +45,16 @@ def record_gateway_event(event_id, action, result, namespace, message="", blob="
         'name': 'N/A',
         'message': message,
         'refId': '',
-        'namespace': namespace
+        'namespace': namespace,
+        'context': {
+          'message': 'GatewayConfig {action} {result} : {message}',
+          'params': {
+            'result': result,
+            'message': message,
+            'action': action
+          }
+        },
+        'filterKey1': 'namespace:%s' % namespace
     }
 
     if not blob == "" and not blob == None:
