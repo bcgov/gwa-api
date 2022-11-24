@@ -48,9 +48,11 @@ def record_gateway_event(event_id, action, result, namespace, message="", blob="
         'namespace': namespace,
         'context': {
           'message': 'GatewayConfig {action} {result} : {message}',
-          'result': result,
-          'message': message,
-          'action': action
+          'params': {
+            'result': result,
+            'message': message,
+            'action': action
+          }
         },
         'filterKey1': 'namespace:%s' % namespace
     }
