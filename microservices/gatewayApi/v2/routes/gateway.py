@@ -397,7 +397,7 @@ def cleanup(dir_path):
         log.error("Error: %s : %s" % (dir_path, e.strerror))
 
 def validate_base_entities(yaml):
-    traversables = ['__plugin_configs', 'services', 'upstreams', 'certificates', 'caCertificates']
+    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates', 'caCertificates']
     for k in yaml:
         if k not in traversables:
             raise Exception("Invalid base entity %s" % k)
