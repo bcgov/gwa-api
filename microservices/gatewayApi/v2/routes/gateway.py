@@ -217,7 +217,6 @@ def write_config(namespace: str) -> object:
     orig_config = prep_submitted_config(yaml_documents)
 
     update_routes_flag = False
-    process_local_hosts = False
 
     for index, gw_config in enumerate(yaml_documents):
         log.info("[%s] Parsing file %s" % (namespace, index))
@@ -289,9 +288,6 @@ def write_config(namespace: str) -> object:
         if update_routes_check(gw_config):
             update_routes_flag = True
 
-        if has_local_hosts(gw_config):
-            process_local_hosts = True
-
     if ns_qualifier is not None:
         selectTag = ns_qualifier
 
@@ -328,10 +324,11 @@ def write_config(namespace: str) -> object:
     elif cmd == "sync" and not local_environment:
         try:
             if update_routes_flag:
+                host_list = get_host_list(tempFolder)
                 session = requests.Session()
                 session.headers.update({"Content-Type": "application/json"})
                 route_payload = {
-                    "hosts": get_host_list(tempFolder),
+                    "hosts": host_list,
                     "select_tag": selectTag,
                     "ns_attributes": ns_attributes.getAttrs()
                 }
@@ -345,7 +342,7 @@ def write_config(namespace: str) -> object:
                     raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
                 session.close()
                 
-                if process_local_hosts:
+                if has_namespace_local_host_permission(ns_attributes):
                     session = requests.Session()
                     session.headers.update({"Content-Type": "application/json"})
                     rqst_url = app.config['data_planes'][dp]["kube-api"]
@@ -459,6 +456,12 @@ def host_transformation(namespace, data_plane, yaml):
 def is_host_local (host):
     return host.endswith(".cluster.local")
 
+def has_namespace_local_host_permission (ns_attributes):
+    for domain in ns_attributes.get('perm-domains', ['.api.gov.bc.ca']):
+        if is_host_local(domain):
+            return True
+    return False
+
 # Validate transformed host: <service>.<namespace>.svc.cluster.local
 def validate_local_host(host):
     if is_host_local(host):
@@ -471,17 +474,6 @@ def transform_local_host(data_plane, host):
     kube_ns = app.config['data_planes'][data_plane]["kube-ns"]
     name_part = host[:-suffix_len]
     return "gw-%s.%s.svc.cluster.local" % (name_part, kube_ns)
-
-def has_local_hosts(yaml):
-    if 'services' in yaml:
-        for service in yaml['services']:
-            if 'routes' in service:
-                for route in service['routes']:
-                    if 'hosts' in route:
-                        for host in route['hosts']:
-                            if is_host_local(host):
-                              return True
-    return False
 
 def transform_host(host):
     if is_host_local(host):
