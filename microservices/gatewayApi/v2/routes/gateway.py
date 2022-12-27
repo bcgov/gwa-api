@@ -20,7 +20,7 @@ from v2.auth.auth import admin_jwt, uma_enforce
 from v2.services.namespaces import NamespaceService
 
 from clients.portal import record_gateway_event
-from clients.kong import get_routes
+from clients.kong import get_routes, register_kong_certs
 from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
 from clients.ocp_routes import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
 from clients.ocp_gateway_secret import prep_submitted_config, prep_and_apply_secret, write_submitted_config
@@ -92,7 +92,7 @@ def delete_config(namespace: str, qualifier="") -> object:
                 "ns_attributes": ns_attributes.getAttrs()
             }
             dp = get_data_plane(ns_attributes)
-            rqst_url = app.config['data_planes'][dp]
+            rqst_url = app.config['data_planes'][dp]["kube-api"]
             log.debug("[%s] - Initiating request to kube API" % (dp))
             res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                 app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
@@ -144,7 +144,6 @@ def delete_config(namespace: str, qualifier="") -> object:
     record_gateway_event(event_id, 'delete', 'completed', namespace)
     return make_response('', http.HTTPStatus.NO_CONTENT)
 
-
 @gw.route('',
           methods=['PUT'], strict_slashes=False)
 @admin_jwt(None)
@@ -162,6 +161,11 @@ def write_config(namespace: str) -> object:
 
     outFolder = namespace
 
+    ns_svc = NamespaceService()
+    ns_attributes = ns_svc.get_namespace_attributes(namespace)
+
+    dp = get_data_plane(ns_attributes)
+
     # Build a list of existing hosts that are outside this namespace
     # They become reserved and any conflict will return an error
     reserved_hosts = []
@@ -173,8 +177,6 @@ def write_config(namespace: str) -> object:
                 reserved_hosts.append(transform_host(host))
     reserved_hosts = list(set(reserved_hosts))
 
-    ns_svc = NamespaceService()
-    ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
     dfile = None
 
@@ -215,9 +217,7 @@ def write_config(namespace: str) -> object:
     orig_config = prep_submitted_config(yaml_documents)
 
     update_routes_flag = False
-
-    if len(yaml_documents) == 0:
-        update_routes_flag = True
+    process_local_hosts = False
 
     for index, gw_config in enumerate(yaml_documents):
         log.info("[%s] Parsing file %s" % (namespace, index))
@@ -230,7 +230,7 @@ def write_config(namespace: str) -> object:
         #######################
 
         # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
-        host_transformation(namespace, gw_config)
+        host_transformation(namespace, dp, gw_config)
 
         # If there is a tag with a pipeline qualifier (i.e./ ns.<namespace>.dev)
         # then add to tags automatically the tag: ns.<namespace>
@@ -289,6 +289,9 @@ def write_config(namespace: str) -> object:
         if update_routes_check(gw_config):
             update_routes_flag = True
 
+        if has_local_hosts(gw_config):
+            process_local_hosts = True
+
     if ns_qualifier is not None:
         selectTag = ns_qualifier
 
@@ -332,8 +335,7 @@ def write_config(namespace: str) -> object:
                     "select_tag": selectTag,
                     "ns_attributes": ns_attributes.getAttrs()
                 }
-                dp = get_data_plane(ns_attributes)
-                rqst_url = app.config['data_planes'][dp]
+                rqst_url = app.config['data_planes'][dp]["kube-api"]
                 log.debug("[%s] - Initiating request to kube API" % (dp))
                 res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                     app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
@@ -341,32 +343,24 @@ def write_config(namespace: str) -> object:
                 if res.status_code != 201:
                     log.debug("[%s] - The kube API could not process the request" % (dp))
                     raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
-
-                # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
-                # log.debug("[%s] - Prepared %d routes" % (namespace, route_count))
-                # if route_count > 0:
-                #     apply_routes(tempFolder)
-                #     log.debug("[%s] - Applied %d routes" % (namespace, route_count))
-                # route_count = prepare_delete_routes(namespace, selectTag, tempFolder)
-                # log.debug("[%s] - Prepared %d deletions" % (namespace, route_count))
-                # if route_count > 0:
-                #     delete_routes(tempFolder)
-
-                # create Network Security Policies (nsp) for any upstream that
-                # has the format: <name>.<ocp_ns>.svc
-                # if should_we_apply_nsp_policies():
-                #     log.debug("[%s] - Update NSPs" % (namespace))
-                #     ocp_ns_list = get_ocp_service_namespaces(tempFolder)
-                #     for ocp_ns in ocp_ns_list:
-                #         if check_nsp(namespace, ocp_ns) is False:
-                #             apply_nsp(namespace, ocp_ns, tempFolder)
-
-                # ok all looks good, so update a secret containing the original submitted request
-                # log.debug("[%s] - Update Original Config" % (namespace))
-                # write_submitted_config(orig_config, tempFolder)
-                # prep_and_apply_secret(namespace, selectTag, tempFolder)
-                # log.debug("[%s] - Updated Original Config" % (namespace))
                 session.close()
+                
+                if process_local_hosts:
+                    session = requests.Session()
+                    session.headers.update({"Content-Type": "application/json"})
+                    rqst_url = app.config['data_planes'][dp]["kube-api"]
+                    log.debug("[%s] - Initiating request to kube API for Certs" % (dp))
+                    res = session.get(rqst_url + "/namespaces/%s/local_tls" % namespace, auth=(
+                        app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+                    log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
+                    if res.status_code != 200:
+                        log.debug("[%s] - The kube API could not process the request" % (dp))
+                        raise Exception("[%s] - Failed to get certs: %s" % (dp, str(res.text)))
+                    cert_data = res.json()
+                    session.close()
+
+                    register_kong_certs(namespace, cert_data)
+                
         except HTTPException as ex:
             traceback.print_exc()
             log.error("[%s] Error updating custom routes. %s" % (namespace, ex))
@@ -442,7 +436,7 @@ def traverse(source, errors, yaml, required_tag, qualifiers):
                 traverse("%s.%s.%s" % (source, k, nm), errors, item, required_tag, qualifiers)
 
 
-def host_transformation(namespace, yaml):
+def host_transformation(namespace, data_plane, yaml):
     log = app.logger
 
     transforms = 0
@@ -454,19 +448,48 @@ def host_transformation(namespace, yaml):
                         if 'hosts' in route:
                             new_hosts = []
                             for host in route['hosts']:
-                                new_hosts.append(transform_host(host))
-                                transforms = transforms + 1
+                                if is_host_local(host):
+                                    new_hosts.append(transform_local_host(data_plane, host))
+                                else:
+                                    new_hosts.append(transform_host(host))
+                                    transforms = transforms + 1
                             route['hosts'] = new_hosts
     log.debug("[%s] Host transformations %d" % (namespace, transforms))
 
+def is_host_local (host):
+    return host.endswith(".cluster.local")
+  
+def validate_local_host(host):
+    if is_host_local(host):
+      if len(host.split('.')) != 3:
+        return False
+    return True
+  
+def transform_local_host(data_plane, host):
+    suffix_len = len(".cluster.local")
+    kube_ns = app.config['data_planes'][data_plane]["kube-ns"]
+    name_part = host[:-suffix_len]
+    return "gw-%s.%s.svc.cluster.local" % (name_part, kube_ns)
+
+def has_local_hosts(yaml):
+    if 'services' in yaml:
+        for service in yaml['services']:
+            if 'routes' in service:
+                for route in service['routes']:
+                    if 'hosts' in route:
+                        for host in route['hosts']:
+                            if is_host_local(host):
+                              return True
+    return False
 
 def transform_host(host):
-    if is_host_transform_enabled():
+    if is_host_local(host):
+        return host
+    elif is_host_transform_enabled():
         conf = app.config['hostTransformation']
         return "%s%s" % (host.replace('.', '-'), conf['baseUrl'])
     else:
         return host
-
 
 def validate_upstream(yaml, ns_attributes, protected_kube_namespaces):
     errors = []
@@ -541,9 +564,11 @@ def validate_hosts(yaml, reserved_hosts, ns_attributes):
                                     service['name'], route['name'], host))
                             if host_valid(host) is False:
                                 errors.append("Host not passing DNS-952 validation '%s'" % host)
+                            if validate_local_host(host):
+                                errors.append("Host failed validation for data plane '%s'" % host)
                             if host_ends_with_one_of_list(host, allowed_domains) is False:
-                                errors.append("Host invalid: %s.  Route hosts must end with one of [%s] for this namespace." % (
-                                    route['name'], ','.join(allowed_domains)))
+                                errors.append("Host invalid: %s %s.  Route hosts must end with one of [%s] for this namespace." % (
+                                    route['name'], host, ','.join(allowed_domains)))
                     else:
                         errors.append("service.%s.route.%s A host must be specified for routes." %
                                       (service['name'], route['name']))

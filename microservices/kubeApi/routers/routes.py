@@ -1,8 +1,10 @@
 import uuid
+import base64
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic.main import BaseModel
 from starlette.responses import Response
 from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
+from clients.ocp_services import get_gwa_ocp_service_secrets, prepare_apply_services, apply_services, prepare_mismatched_services, delete_services
 import traceback
 import os
 from auth.basic_auth import verify_credentials
@@ -28,15 +30,45 @@ class OCPRoute(BaseModel):
 def add_routes(namespace: str, route: OCPRoute):
 
     try:
+        local_hosts = [a for a in route.hosts if a.endswith(".cluster.local")]
+
+        # do local hosts
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
-        route_count = prepare_apply_routes(namespace, route.select_tag, route.hosts,
+        service_count = prepare_apply_services(namespace, route.select_tag, local_hosts,
+                                          source_folder, get_data_plane(route.ns_attributes))
+        logger.debug("[%s] - Prepared %s services" % (namespace, service_count))
+        if service_count > 0:
+            apply_services(source_folder)
+            logger.debug("[%s] - Applied %s services" % (namespace, service_count))
+        service_count = prepare_mismatched_services(route.select_tag, local_hosts, source_folder)
+        logger.debug("[%s] - Prepared %d deletions" % (namespace, service_count))
+        if service_count > 0:
+            logger.debug("[%s] - Prepared deletions" % (namespace))
+            delete_services(source_folder)
+    except Exception as ex:
+        traceback.print_exc()
+        logger.error("[%s] Error creating services. %s" % (namespace, ex))
+        raise HTTPException(status_code=400, detail="[%s] Error creating services. %s" % (namespace, ex))
+    except:
+        traceback.print_exc()
+        logger.error("[%s] Error creating routes. %s" % (namespace, sys.exc_info()[0]))
+        raise HTTPException(status_code=400, detail="[%s] Error creating routes. %s" % (
+            namespace, sys.exc_info()[0]))
+          
+    try:
+        hosts = [a for a in route.hosts if not a.endswith(".cluster.local")]
+        
+        # do routeable hosts
+        source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
+        os.makedirs(source_folder, exist_ok=False)
+        route_count = prepare_apply_routes(namespace, route.select_tag, hosts,
                                            source_folder, get_data_plane(route.ns_attributes))
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)
             logger.debug("[%s] - Applied %s routes" % (namespace, route_count))
-        route_count = prepare_mismatched_routes(route.select_tag, route.hosts, source_folder)
+        route_count = prepare_mismatched_routes(route.select_tag, hosts, source_folder)
         logger.debug("[%s] - Prepared %d deletions" % (namespace, route_count))
         if route_count > 0:
             logger.debug("[%s] - Prepared deletions" % (namespace))
@@ -67,6 +99,33 @@ def delete_route(name: str):
         raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
     return Response(status_code=204)
 
+# RETURNS:
+# [
+#   {
+#      "cert": "",
+#      "key": "",
+#      "snis": [ "name": "abc-host" } ]
+#      "tags": [ "gwa.ns.<namespace>"]
+#   } 
+# ]
+
+@router.get("/namespaces/{namespace}/local_tls", status_code=200, dependencies=[Depends(verify_credentials)])
+def get_tls(namespace: str):
+    logger.debug("[%s] get_tls" % namespace)
+    secrets = get_gwa_ocp_service_secrets(extralabels="aps-namespace=%s" % namespace)
+    
+    kong_certs = []
+    
+    for secret in secrets:
+        cert = {
+          "cert": base64.b64decode(secret['data']['data']['tls.crt']),
+          "key": base64.b64decode(secret['data']['data']['tls.key']),
+          "tags": [ "gwa.ns.%s" % namespace ],
+          "snis": [ secret['host'] ]
+        }
+        kong_certs.append(cert)
+    logger.debug("[%s] returning %d certs" % (namespace, len(kong_certs)))
+    return kong_certs
 
 @router.post("/namespaces/{namespace}/routes/sync", status_code=200, dependencies=[Depends(verify_credentials)])
 async def verify_and_create_routes(namespace: str, request: Request):
