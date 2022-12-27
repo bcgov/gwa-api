@@ -564,7 +564,7 @@ def validate_hosts(yaml, reserved_hosts, ns_attributes):
                                     service['name'], route['name'], host))
                             if host_valid(host) is False:
                                 errors.append("Host not passing DNS-952 validation '%s'" % host)
-                            if validate_local_host(host):
+                            if validate_local_host(host) is False:
                                 errors.append("Host failed validation for data plane '%s'" % host)
                             if host_ends_with_one_of_list(host, allowed_domains) is False:
                                 errors.append("Host invalid: %s %s.  Route hosts must end with one of [%s] for this namespace." % (
