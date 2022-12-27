@@ -144,7 +144,8 @@ def get_gwa_ocp_service_secrets(extralabels=""):
       })
       secret_names.append(secret_name)
 
-    try_secret_fetch(1, secret_names, result_data)
+    if len(secret_names) > 0:
+      try_secret_fetch(1, secret_names, result_data)
 
     return result_data
 
@@ -162,7 +163,8 @@ def try_secret_fetch (tries, secret_names, result_data):
         raise Exception ("Service Serving Certs missing")
 
       logger.info("[secret_fetch] Try # %d" % tries)
-      return try_secret_fetch (tries + 1, secret_names, result_data)
+      time.sleep(2)
+      return try_secret_fetch (tries, secret_names, result_data)
 
 def get_secrets(names):
     args = [
