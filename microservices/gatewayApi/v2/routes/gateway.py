@@ -458,10 +458,11 @@ def host_transformation(namespace, data_plane, yaml):
 
 def is_host_local (host):
     return host.endswith(".cluster.local")
-  
+
+# Validate transformed host: <service>.<namespace>.svc.cluster.local
 def validate_local_host(host):
     if is_host_local(host):
-      if len(host.split('.')) != 3:
+      if len(host.split('.')) != 5:
         return False
     return True
   
