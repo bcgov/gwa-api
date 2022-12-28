@@ -30,3 +30,20 @@ cd /api-serv-infra/dockerfiles/healthapi
 poetry env use 3.9
 poetry install
 ```
+
+#### Docker
+
+```
+docker build --tag kubeapi .
+
+docker run -ti --rm \
+  -p 8080:8080 \
+  -e LOG_LEVEL=DEBUG \
+  -e ACCESS_USER=kubeadmin \
+  -e ACCESS_SECRET=$PASS \
+  -e DEFAULT_DATA_PLANE=dp-silver-kong-proxy \
+  -v ${HOME}/.kube:/root/.kube \
+  -v `pwd`/_tmp:/tmp \
+  kubeapi
+
+```
