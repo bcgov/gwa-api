@@ -89,7 +89,7 @@ def delete_config(namespace: str, qualifier="") -> object:
                 "ns_attributes": ns_attributes.getAttrs()
             }
             dp = get_data_plane(ns_attributes)
-            rqst_url = app.config['data_planes'][dp]
+            rqst_url = app.config['data_planes'][dp]["kube-api"]
             log.debug("[%s] - Initiating request to kube API" % (dp))
             res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                 app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
@@ -330,7 +330,7 @@ def write_config(namespace: str) -> object:
                     "ns_attributes": ns_attributes.getAttrs()
                 }
                 dp = get_data_plane(ns_attributes)
-                rqst_url = app.config['data_planes'][dp]
+                rqst_url = app.config['data_planes'][dp]["kube-api"]
                 log.debug("[%s] - Initiating request to kube API" % (dp))
                 res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                     app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
