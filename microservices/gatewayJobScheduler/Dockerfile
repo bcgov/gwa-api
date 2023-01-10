@@ -10,8 +10,8 @@ RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -
 RUN python -m pip install --upgrade pip
 
 RUN cd /tmp && \
-    curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py > get-poetry.py && \
-    POETRY_HOME=/opt/poetry python get-poetry.py --version 1.0.8 && \
+    curl -sSL https://install.python-poetry.org > get-poetry.py && \
+    POETRY_HOME=/opt/poetry python get-poetry.py --version 1.3.1 && \
     cd /usr/local/bin && \
     ln -s /opt/poetry/bin/poetry && \
     poetry config virtualenvs.create false
