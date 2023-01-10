@@ -11,7 +11,7 @@ RUN python -m pip install --upgrade pip
 
 RUN cd /tmp && \
     curl -sSL https://install.python-poetry.org > get-poetry.py && \
-    POETRY_HOME=/opt/poetry python get-poetry.py --version 1.0.8 && \
+    POETRY_HOME=/opt/poetry python get-poetry.py --version 1.1.7 && \
     cd /usr/local/bin && \
     ln -s /opt/poetry/bin/poetry && \
     poetry config virtualenvs.create false
