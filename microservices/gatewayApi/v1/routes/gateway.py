@@ -246,7 +246,7 @@ def write_config(namespace: str) -> object:
 
         # Validate that the every object is tagged with the namespace
         try:
-            validate_base_entities(gw_config)
+            validate_base_entities(gw_config, ns_attributes)
             validate_tags(gw_config, selectTag)
         except Exception as ex:
             traceback.print_exc()
@@ -392,8 +392,13 @@ def cleanup(dir_path):
     except OSError as e:
         log.error("Error: %s : %s" % (dir_path, e.strerror))
 
-def validate_base_entities(yaml):
+def validate_base_entities(yaml, ns_attributes):
     traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates', 'caCertificates']
+
+    allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
+    if allow_protected_ns:
+        traversables.append('plugins')
+
     for k in yaml:
         if k not in traversables:
             raise Exception("Invalid base entity %s" % k)
