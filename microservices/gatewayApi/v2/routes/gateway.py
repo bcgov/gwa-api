@@ -442,20 +442,21 @@ def host_transformation(namespace, data_plane, yaml):
     log = app.logger
 
     transforms = 0
-    if is_host_transform_enabled():
-        if 'services' in yaml:
-            for service in yaml['services']:
-                if 'routes' in service:
-                    for route in service['routes']:
-                        if 'hosts' in route:
-                            new_hosts = []
-                            for host in route['hosts']:
-                                if is_host_local(host):
-                                    new_hosts.append(transform_local_host(data_plane, host))
-                                else:
-                                    new_hosts.append(transform_host(host))
-                                    transforms = transforms + 1
-                            route['hosts'] = new_hosts
+    if 'services' in yaml:
+        for service in yaml['services']:
+            if 'routes' in service:
+                for route in service['routes']:
+                    if 'hosts' in route:
+                        new_hosts = []
+                        for host in route['hosts']:
+                            if is_host_local(host):
+                                new_hosts.append(transform_local_host(data_plane, host))
+                            elif is_host_transform_enabled():
+                                new_hosts.append(transform_host(host))
+                                transforms = transforms + 1
+                            else:
+                                new_hosts.append(host)
+                        route['hosts'] = new_hosts
     log.debug("[%s] Host transformations %d" % (namespace, transforms))
 
 def is_host_local (host):
