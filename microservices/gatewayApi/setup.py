@@ -44,7 +44,6 @@ setup(
         'flask-compress',
         'gevent',
         'pyyaml',
-        'mongoengine',
         'pyhcl',
         'python-keycloak',
         'requests',
@@ -58,7 +57,6 @@ setup(
         'pytest',
         'pytest-cov',
         'pytest-mock',
-        'mongomock',
         'pycodestyle',
         'pylint'
     ],
