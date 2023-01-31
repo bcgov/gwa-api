@@ -6,14 +6,49 @@ from datetime import datetime
 from clients.ocp_routes import kubectl_apply, files_to_ignore
 from string import Template
 
-def prep_submitted_config (docs):
+def prep_submitted_config (docs, masking = True):
     content = []
     for gw_config in docs:
-        content.append(yaml.dump(gw_config))
+        if masking:
+            content.append(yaml.dump(mask(gw_config)))
+        else:
+            content.append(yaml.dump(gw_config))
     file_content = "\n---\n".join(content)
 
     return file_content
  
+def is_blank (obj, key):
+    if key not in obj:
+        return True
+    str = obj[key]
+    return str is None or str == ""
+
+def mask_traverse(source, errors, yaml):
+    traversables = ['services', 'routes', 'plugins', 'certificates']
+    for k in yaml:
+        if k in traversables:
+            for index, item in enumerate(yaml[k]):
+                if k == 'plugins':
+                    for maskKey in ['username', 'password', 'secret', 'private_key_location', 'public_key_location', 'client_secret', 'redis_password']:
+                        if not is_blank(item['config'], maskKey):
+                            item['config'][maskKey] = '*****'
+                if k == 'certificates':
+                    if not is_blank(item, 'key'):
+                        item['key'] = '*****'
+                    if not is_blank(item, 'cert'):
+                        item['cert'] = item['cert'][:50] + '...' + item['cert'][-50:].strip()
+
+                nm = "[%d]" % index
+                if 'name' in item:
+                    nm = item['name']
+                mask_traverse("%s.%s.%s" % (source, k, nm), errors, item)
+
+
+def mask (obj):
+    errors = []
+    mask_traverse("base", errors, obj)
+    return obj
+
 def write_submitted_config (file_content, rootPath):
     out_filename = "%s/submitted_config.txt" % rootPath
 
