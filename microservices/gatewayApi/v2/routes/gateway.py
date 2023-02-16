@@ -375,7 +375,7 @@ def write_config(namespace: str) -> object:
     if cmd == 'diff':
         message = "Dry-run.  No changes applied."
 
-    record_gateway_event(event_id, 'publish', 'completed', namespace, blob=orig_config)
+    record_gateway_event(event_id, 'published', 'completed', namespace, blob=orig_config)
     return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
 
 

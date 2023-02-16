@@ -37,21 +37,24 @@ def record_namespace_event(event_id, action, result, namespace, message=""):
 
 def record_gateway_event(event_id, action, result, namespace, message="", blob=""):
 
+    entity = 'gateway configuration'
+
     payload = {
         'id': event_id,
         'type': 'GatewayConfig',
         'action': action,
         'result': result,
         'name': 'N/A',
-        'message': message,
+        'message': "%s %s" % (action, entity),
         'refId': '',
         'namespace': namespace,
         'context': {
-          'message': 'GatewayConfig {action} {result} : {message}',
+          'message': '{action} {entity} {result} {message}',
           'params': {
             'result': result,
             'message': message,
-            'action': action
+            'action': action,
+            'entity': entity
           }
         },
         'filterKey1': 'namespace:%s' % namespace
