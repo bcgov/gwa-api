@@ -1,4 +1,4 @@
-from flask import current_app as app
+from flask import g, current_app as app
 import sys
 import requests
 import traceback
@@ -54,7 +54,8 @@ def record_gateway_event(event_id, action, result, namespace, message="", blob="
             'result': result,
             'message': message,
             'action': action,
-            'entity': entity
+            'entity': entity,
+            'actor': g.principal["clientId"]
           }
         },
         'filterKey1': 'namespace:%s' % namespace
