@@ -49,7 +49,7 @@ def record_gateway_event(event_id, action, result, namespace, message="", blob="
         'refId': '',
         'namespace': namespace,
         'context': {
-          'message': '{action} {entity} {result} {message}',
+          'message': '{action} {entity} {message}',
           'params': {
             'result': result,
             'message': message,
