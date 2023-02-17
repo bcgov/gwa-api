@@ -153,7 +153,6 @@ def write_config(namespace: str) -> object:
     enforce_authorization(namespace)
 
     event_id = str(uuid.uuid4())
-    record_gateway_event(event_id, 'publish', 'received', namespace)
 
     log = app.logger
 
@@ -189,6 +188,13 @@ def write_config(namespace: str) -> object:
         log.error(request.content_type)
         log.error(request.headers)
         abort_early(event_id, 'publish', namespace, jsonify(error="Missing input"))
+
+    cmd = "sync"
+    if dry_run == 'true' or dry_run is True:
+        cmd = "diff"
+
+    if cmd == 'sync':
+        record_gateway_event(event_id, 'publish', 'received', namespace)
 
     tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
     os.makedirs(tempFolder, exist_ok=False)
@@ -290,9 +296,6 @@ def write_config(namespace: str) -> object:
         selectTag = ns_qualifier
 
     # Call the 'deck' command
-    cmd = "sync"
-    if dry_run == 'true' or dry_run is True:
-        cmd = "diff"
 
     log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
 
@@ -380,7 +383,8 @@ def write_config(namespace: str) -> object:
     if cmd == 'diff':
         message = "Dry-run.  No changes applied."
 
-    record_gateway_event(event_id, 'publish', 'completed', namespace)
+    if cmd == 'sync':
+        record_gateway_event(event_id, 'publish', 'completed', namespace)
     return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
 
 
