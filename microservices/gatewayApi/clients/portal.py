@@ -39,6 +39,12 @@ def record_gateway_event(event_id, action, result, namespace, message="", blob="
 
     entity = 'gateway configuration'
 
+    actor = "Unknown Actor"
+    if "clientId" in g.principal:
+        actor = g.principal["clientId"]
+    if "name" in g.principal:
+        actor = g.principal["name"]
+
     payload = {
         'id': event_id,
         'type': 'GatewayConfig',
@@ -55,7 +61,7 @@ def record_gateway_event(event_id, action, result, namespace, message="", blob="
             'message': message,
             'action': action,
             'entity': entity,
-            'actor': g.principal["clientId"]
+            'actor': actor
           }
         },
         'filterKey1': 'namespace:%s' % namespace
