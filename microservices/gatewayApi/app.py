@@ -123,7 +123,7 @@ def create_app(test_config=None):
     @app.errorhandler(Exception)
     def other_exception(error):
         log.error("Unexpected error %s", type(error))
-        log.error(error)
+        log.exception(error)
         content = jsonify({"error":"Unexpected Error"})
         return make_response(content, HTTPStatus.BAD_REQUEST)
 
