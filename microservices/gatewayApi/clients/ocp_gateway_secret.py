@@ -30,7 +30,7 @@ def mask_traverse(source, errors, yaml):
             for index, item in enumerate(yaml[k]):
                 if k == 'plugins':
                     for maskKey in ['username', 'password', 'secret', 'private_key_location', 'public_key_location', 'client_secret', 'redis_password']:
-                        if not is_blank(item['config'], maskKey):
+                        if 'config' in item and not is_blank(item['config'], maskKey):
                             item['config'][maskKey] = '*****'
                 if k == 'certificates':
                     if not is_blank(item, 'key'):
