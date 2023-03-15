@@ -9,10 +9,11 @@ from string import Template
 def prep_submitted_config (docs, masking = True):
     content = []
     for gw_config in docs:
-        if masking:
-            content.append(yaml.dump(mask(gw_config)))
-        else:
-            content.append(yaml.dump(gw_config))
+        if gw_config is not None:
+            if masking:
+                content.append(yaml.dump(mask(gw_config)))
+            else:
+                content.append(yaml.dump(gw_config))
     file_content = "\n---\n".join(content)
 
     return file_content
