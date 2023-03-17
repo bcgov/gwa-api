@@ -423,7 +423,7 @@ def validate_tags(yaml, required_tag):
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
 
-def validate_runtime_group_config (errors, yaml, required_tag):
+def validate_runtime_group_config (yaml, required_tag):
     errors = []
     for k in yaml:
         if k == 'plugins':
