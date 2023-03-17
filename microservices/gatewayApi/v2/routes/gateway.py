@@ -164,6 +164,7 @@ def write_config(namespace: str) -> object:
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
     dp = get_data_plane(ns_attributes)
+    runtime_group_admin = is_allowed_to_manage_runtime_group(ns_attributes)
 
     # Build a list of existing hosts that are outside this namespace
     # They become reserved and any conflict will return an error
@@ -235,7 +236,7 @@ def write_config(namespace: str) -> object:
         #######################
 
         # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
-        host_transformation(namespace, dp, gw_config)
+        host_transformation(namespace, dp, runtime_group_admin, gw_config)
 
         # If there is a tag with a pipeline qualifier (i.e./ ns.<namespace>.dev)
         # then add to tags automatically the tag: ns.<namespace>
@@ -256,6 +257,10 @@ def write_config(namespace: str) -> object:
         try:
             validate_base_entities(gw_config, ns_attributes)
             validate_tags(gw_config, selectTag)
+
+            if runtime_group_admin:
+                validate_runtime_group_config (yaml, 'dp.%s' % dp)
+
         except Exception as ex:
             traceback.print_exc()
             log.error("%s - %s" % (namespace, " Tag Validation Errors: %s" % ex))
@@ -395,7 +400,7 @@ def validate_base_entities(yaml, ns_attributes):
     traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates', 'caCertificates']
 
     allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
-    if allow_protected_ns:
+    if allow_protected_ns or is_allowed_to_manage_runtime_group(ns_attributes):
         traversables.append('plugins')
 
     for k in yaml:
@@ -418,6 +423,20 @@ def validate_tags(yaml, required_tag):
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
 
+def validate_runtime_group_config (errors, yaml, required_tag):
+    errors = []
+    for k in yaml:
+        if k == 'plugins':
+            for index, item in enumerate(yaml[k]):
+                if item['enabled'] is True:
+                    errors.append("%s.%s global plugin must have enabled set to false" % (k, item['name'], required_tag))
+                if 'tags' in item:
+                    if required_tag not in item['tags']:
+                        errors.append("%s.%s missing required tag %s" % (k, item['name'], required_tag))
+                else:
+                    errors.append("%s.%s no tags found" % (k, item['name']))
+    if len(errors) != 0:
+        raise Exception('\n'.join(errors))
 
 def traverse(source, errors, yaml, required_tag, qualifiers):
     traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'caCertificates']
@@ -442,7 +461,7 @@ def traverse(source, errors, yaml, required_tag, qualifiers):
                 traverse("%s.%s.%s" % (source, k, nm), errors, item, required_tag, qualifiers)
 
 
-def host_transformation(namespace, data_plane, yaml):
+def host_transformation(namespace, data_plane, runtime_group_admin, yaml):
     log = app.logger
 
     transforms = 0
@@ -453,7 +472,9 @@ def host_transformation(namespace, data_plane, yaml):
                     if 'hosts' in route:
                         new_hosts = []
                         for host in route['hosts']:
-                            if is_host_local(host):
+                            if runtime_group_admin:
+                                new_hosts.append(host)
+                            elif is_host_local(host):
                                 new_hosts.append(transform_local_host(data_plane, host))
                             elif is_host_transform_enabled():
                                 new_hosts.append(transform_host(host))
@@ -465,6 +486,10 @@ def host_transformation(namespace, data_plane, yaml):
 
 def is_host_local (host):
     return host.endswith(".cluster.local")
+
+# Is the namespace responsible for configuring the Runtime Group
+def is_allowed_to_manage_runtime_group (ns_attributes):
+    return ns_attributes.get('perm-manage-runtime-group', [''])[0] == 'allow'
 
 def has_namespace_local_host_permission (ns_attributes):
     for domain in ns_attributes.get('perm-domains', ['.api.gov.bc.ca']):
