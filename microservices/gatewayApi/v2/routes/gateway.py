@@ -259,7 +259,7 @@ def write_config(namespace: str) -> object:
             validate_tags(gw_config, selectTag)
 
             if runtime_group_admin:
-                validate_runtime_group_config (yaml, 'dp.%s' % dp)
+                validate_runtime_group_config (gw_config, dp)
 
         except Exception as ex:
             traceback.print_exc()
@@ -423,7 +423,8 @@ def validate_tags(yaml, required_tag):
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
 
-def validate_runtime_group_config (yaml, required_tag):
+def validate_runtime_group_config (yaml, dp):
+    required_tag = 'dp.%s' % dp
     errors = []
     for k in yaml:
         if k == 'plugins':
