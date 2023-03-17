@@ -430,7 +430,7 @@ def validate_runtime_group_config (yaml, dp):
         if k == 'plugins':
             for index, item in enumerate(yaml[k]):
                 if item['enabled'] is True:
-                    errors.append("%s.%s global plugin must have enabled set to false" % (k, item['name'], required_tag))
+                    errors.append("%s.%s global plugin must have enabled set to false" % (k, item['name']))
                 if 'tags' in item:
                     if required_tag not in item['tags']:
                         errors.append("%s.%s missing required tag %s" % (k, item['name'], required_tag))
