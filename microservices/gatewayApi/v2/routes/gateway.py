@@ -489,7 +489,7 @@ def is_host_local (host):
 
 # Is the namespace responsible for configuring the Runtime Group
 def is_allowed_to_manage_runtime_group (ns_attributes):
-    return ns_attributes.get('perm-manage-runtime-group', [''])[0] == 'allow'
+    return ns_attributes.get('perm-admin-runtime-group', [''])[0] == 'allow'
 
 def has_namespace_local_host_permission (ns_attributes):
     for domain in ns_attributes.get('perm-domains', ['.api.gov.bc.ca']):
