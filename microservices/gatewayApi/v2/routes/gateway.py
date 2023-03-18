@@ -549,7 +549,7 @@ def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_nam
             errors.append("service upstream is invalid (e2)")
         elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
             errors.append("service upstream is invalid (e3)")
-    if host.endswith('svc.cluster.local'):
+    elif host.endswith('svc.cluster.local'):
         partials = host.split('.')
         # get the namespace, and make sure it is not in the protected_kube_namespaces list
         if len(partials) != 5:
