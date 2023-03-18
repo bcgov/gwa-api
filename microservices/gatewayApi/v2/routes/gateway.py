@@ -579,7 +579,7 @@ def validate_hosts(yaml, reserved_hosts, ns_attributes):
                 for route in service['routes']:
                     if 'hosts' in route:
                         for host in route['hosts']:
-                            if host in reserved_hosts:
+                            if transform_host(runtime_group_admin, host) in reserved_hosts:
                                 errors.append("service.%s.route.%s The host is already used in another namespace '%s'" % (
                                     service['name'], route['name'], host))
                             if host_valid(host) is False:
