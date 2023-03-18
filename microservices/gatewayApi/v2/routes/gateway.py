@@ -174,9 +174,8 @@ def write_config(namespace: str) -> object:
     for route in all_routes:
         if tag_match not in route['tags'] and 'hosts' in route:
             for host in route['hosts']:
-                reserved_hosts.append(transform_host(host))
+                reserved_hosts.append(host)
     reserved_hosts = list(set(reserved_hosts))
-
 
     dfile = None
 
@@ -236,7 +235,7 @@ def write_config(namespace: str) -> object:
         #######################
 
         # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
-        host_transformation(namespace, dp, runtime_group_admin, gw_config)
+        host_transformation(runtime_group_admin, gw_config)
 
         # If there is a tag with a pipeline qualifier (i.e./ ns.<namespace>.dev)
         # then add to tags automatically the tag: ns.<namespace>
@@ -462,10 +461,7 @@ def traverse(source, errors, yaml, required_tag, qualifiers):
                 traverse("%s.%s.%s" % (source, k, nm), errors, item, required_tag, qualifiers)
 
 
-def host_transformation(namespace, data_plane, runtime_group_admin, yaml):
-    log = app.logger
-
-    transforms = 0
+def host_transformation(runtime_group_admin, yaml):
     if 'services' in yaml:
         for service in yaml['services']:
             if 'routes' in service:
@@ -473,17 +469,8 @@ def host_transformation(namespace, data_plane, runtime_group_admin, yaml):
                     if 'hosts' in route:
                         new_hosts = []
                         for host in route['hosts']:
-                            if runtime_group_admin:
-                                new_hosts.append(host)
-                            elif is_host_local(host):
-                                new_hosts.append(transform_local_host(data_plane, host))
-                            elif is_host_transform_enabled():
-                                new_hosts.append(transform_host(host))
-                                transforms = transforms + 1
-                            else:
-                                new_hosts.append(host)
+                            new_hosts.append(transform_host(runtime_group_admin, host))
                         route['hosts'] = new_hosts
-    log.debug("[%s] Host transformations %d" % (namespace, transforms))
 
 def is_host_local (host):
     return host.endswith(".cluster.local")
@@ -511,8 +498,10 @@ def transform_local_host(data_plane, host):
     name_part = host[:-suffix_len]
     return "gw-%s.%s.svc.cluster.local" % (name_part, kube_ns)
 
-def transform_host(host):
-    if is_host_local(host):
+def transform_host(runtime_group_admin, host):
+    if runtime_group_admin:
+        return host
+    elif is_host_local(host):
         return host
     elif is_host_transform_enabled():
         conf = app.config['hostTransformation']
@@ -577,6 +566,8 @@ def update_routes_check(yaml):
 def validate_hosts(yaml, reserved_hosts, ns_attributes):
     errors = []
 
+    runtime_group_admin = is_allowed_to_manage_runtime_group(ns_attributes)
+
     allowed_domains = []
     for domain in ns_attributes.get('perm-domains', ['.api.gov.bc.ca']):
         allowed_domains.append("%s" % domain)
@@ -595,7 +586,7 @@ def validate_hosts(yaml, reserved_hosts, ns_attributes):
                                 errors.append("Host not passing DNS-952 validation '%s'" % host)
                             if validate_local_host(host) is False:
                                 errors.append("Host failed validation for data plane '%s'" % host)
-                            if host_ends_with_one_of_list(host, allowed_domains) is False:
+                            if host_ends_with_one_of_list(runtime_group_admin, host, allowed_domains) is False:
                                 errors.append("Host invalid: %s %s.  Route hosts must end with one of [%s] for this namespace." % (
                                     route['name'], host, ','.join(allowed_domains)))
                     else:
@@ -606,9 +597,9 @@ def validate_hosts(yaml, reserved_hosts, ns_attributes):
         raise Exception('\n'.join(errors))
 
 
-def host_ends_with_one_of_list(a_str, a_list):
+def host_ends_with_one_of_list(runtime_group_admin, a_str, a_list):
     for item in a_list:
-        if a_str.endswith(transform_host(item)):
+        if a_str.endswith(transform_host(runtime_group_admin, item)):
             return True
     return False
 
