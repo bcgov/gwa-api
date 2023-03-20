@@ -513,6 +513,7 @@ def validate_upstream(yaml, ns_attributes, protected_kube_namespaces):
     errors = []
 
     allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
+    runtime_group_admin = is_allowed_to_manage_runtime_group(ns_attributes)
 
     # A host must not contain a list of protected
     if 'services' in yaml:
@@ -523,24 +524,24 @@ def validate_upstream(yaml, ns_attributes, protected_kube_namespaces):
                     if u.hostname is None:
                         errors.append("service upstream has invalid url specified (e1)")
                     else:
-                        validate_upstream_host(u.hostname, errors, allow_protected_ns, protected_kube_namespaces)
+                        validate_upstream_host(u.hostname, errors, runtime_group_admin, allow_protected_ns, protected_kube_namespaces)
                 except Exception as e:
                     errors.append("service upstream has invalid url specified (e2)")
 
             if 'host' in service:
                 host = service["host"]
-                validate_upstream_host(host, errors, allow_protected_ns, protected_kube_namespaces)
+                validate_upstream_host(host, errors, runtime_group_admin, allow_protected_ns, protected_kube_namespaces)
 
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
 
 
-def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_namespaces):
+def validate_upstream_host(_host, errors, runtime_group_admin, allow_protected_ns, protected_kube_namespaces):
     host = _host.lower()
 
     restricted = ['localhost', '127.0.0.1', '0.0.0.0']
 
-    if host in restricted:
+    if host in restricted and runtime_group_admin is False:
         errors.append("service upstream is invalid (e1)")
     if host.endswith('svc'):
         partials = host.split('.')
