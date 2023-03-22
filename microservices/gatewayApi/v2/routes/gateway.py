@@ -216,7 +216,7 @@ def write_config(namespace: str) -> object:
     selectTag = "ns.%s" % namespace
     ns_qualifier = None
 
-    orig_config = prep_submitted_config(load_yaml_files(dfile))
+    orig_config = prep_submitted_config(clone_yaml_files(yaml_documents))
 
     update_routes_flag = False
 
@@ -677,3 +677,9 @@ def load_yaml_files (dfile):
     for doc in yaml_documents_iter:
         yaml_documents.append(doc)
     return yaml_documents
+
+def clone_yaml_files (yaml_documents):
+    cloned_yaml = []
+    for doc in yaml_documents:
+        cloned_yaml.append(yaml.load(yaml.dump(doc), Loader=yaml.FullLoader))
+    return cloned_yaml
