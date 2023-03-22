@@ -207,11 +207,7 @@ def write_config(namespace: str) -> object:
     # dfile.save("%s/%s" % (tempFolder, 'config.yaml'))
 
     # log.debug("Saved to %s" % tempFolder)
-    yaml_documents_iter = yaml.load_all(dfile, Loader=yaml.FullLoader)
-
-    yaml_documents = []
-    for doc in yaml_documents_iter:
-        yaml_documents.append(doc)
+    yaml_documents = load_yaml_files(dfile)
 
     if len(yaml_documents) == 0:
         log.error("%s - %s" % (namespace, "Empty Configuration Passed"))
@@ -220,7 +216,7 @@ def write_config(namespace: str) -> object:
     selectTag = "ns.%s" % namespace
     ns_qualifier = None
 
-    orig_config = prep_submitted_config(yaml_documents)
+    orig_config = prep_submitted_config(load_yaml_files(dfile))
 
     update_routes_flag = False
 
@@ -674,3 +670,10 @@ def is_host_transform_enabled():
 def should_we_apply_nsp_policies():
     conf = app.config['applyAporetoNSP']
     return conf is True
+
+def load_yaml_files (dfile):
+    yaml_documents_iter = yaml.load_all(dfile, Loader=yaml.FullLoader)
+    yaml_documents = []
+    for doc in yaml_documents_iter:
+        yaml_documents.append(doc)
+    return yaml_documents
