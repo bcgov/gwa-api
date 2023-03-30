@@ -9,29 +9,12 @@ import config
 from werkzeug.exceptions import HTTPException
 from authlib.jose.errors import JoseError, ExpiredTokenError
 from flask import Flask, g, jsonify, request, make_response, url_for, Response
-from flask.sessions import SecureCookieSessionInterface
 from flask_compress import Compress
 from flask_cors import CORS
 import threading
 
 import v1.v1 as v1
 import v2.v2 as v2
-
-
-class CustomSessionInterface(SecureCookieSessionInterface):
-    """Disable default cookie generation."""
-    def should_set_cookie(self, *args, **kwargs):
-        return False
-
-    """Prevent creating session from API requests."""
-    def save_session(self, *args, **kwargs):
-        if g.get('login_via_header'):
-            print("Custom session login via header")
-            return
-        return super(CustomSessionInterface, self).save_session(*args,
-                                                                **kwargs)
-def disable_session_cookie(app):
-    app.session_interface = CustomSessionInterface()
 
 def create_app(test_config=None):
 
@@ -48,7 +31,6 @@ def create_app(test_config=None):
 
     # app = a.app
     app = Flask(__name__)
-    disable_session_cookie(app)
 
     conf = config.Config()
     if test_config is None:
