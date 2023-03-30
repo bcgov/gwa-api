@@ -48,6 +48,7 @@ def create_app(test_config=None):
 
     # app = a.app
     app = Flask(__name__)
+    disable_session_cookie(app)
 
     conf = config.Config()
     if test_config is None:
