@@ -166,7 +166,7 @@ components:
           schema:
             $ref: "#/components/schemas/errorResponse"
     500InternalServerError:
-      description: Internal Server Error
+      description: Unexpected Error
       content:
         application/json:
           schema:
