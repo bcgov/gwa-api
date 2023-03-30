@@ -135,7 +135,7 @@ def prepare_route_last_version(ns, select_tag):
     return resource_versions
 
 
-def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane, template_version = 'v2'):
+def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane, template_version):
     out_filename = "%s/routes-current.yaml" % rootPath
     ts = int(time.time())
     fmt_time = datetime.now().strftime("%Y.%m-%b.%d")

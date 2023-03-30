@@ -59,11 +59,13 @@ def add_routes(namespace: str, route: OCPRoute):
     try:
         hosts = [a for a in route.hosts if not a.endswith(".cluster.local")]
         
+        template_version = get_template_version(route.ns_attributes)
+
         # do routeable hosts
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
         route_count = prepare_apply_routes(namespace, route.select_tag, hosts,
-                                           source_folder, get_data_plane(route.ns_attributes))
+                                           source_folder, get_data_plane(route.ns_attributes), template_version)
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)
@@ -154,6 +156,10 @@ async def verify_and_create_routes(namespace: str, request: Request):
 
     logger.debug("delete batch: " + str(delete_batch))
 
+    # TODO: We shouldn't assume it is always v2 - caller needs to get
+    # this info from ns_attributes
+    template_version = "v2"
+
     try:
         if len(insert_batch) > 0:
             logger.debug("Creating %s routes" % (len(insert_batch)))
@@ -162,7 +168,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
 
             for route in insert_batch:
                 route_count = prepare_apply_routes(namespace, route['selectTag'], [
-                                                   route['host']], source_folder, route["dataPlane"])
+                                                   route['host']], source_folder, route["dataPlane"], template_version)
                 logger.debug("[%s] - Prepared %d routes" % (namespace, route_count))
                 apply_routes(source_folder)
                 logger.debug("[%s] - Applied %d routes" % (namespace, route_count))
@@ -195,3 +201,6 @@ async def verify_and_create_routes(namespace: str, request: Request):
 def get_data_plane(ns_attributes):
     default_data_plane = settings.defaultDataPlane
     return ns_attributes.get('perm-data-plane', [default_data_plane])[0]
+
+def get_template_version(ns_attributes):
+    return ns_attributes.get('template-version', ["v2"])[0]
