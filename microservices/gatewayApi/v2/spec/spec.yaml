@@ -10,7 +10,7 @@ info:
       * validating Kong Declarative Config and applying it to Kong
       * managing namespaces to segment services
 servers:
-  - url: {{server_url}}
+  - url: { { server_url } }
 tags:
   - name: Status
     description: API status
@@ -35,14 +35,14 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Success
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '400':
-          $ref: '#/components/responses/400BadRequest'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
 
   # /namespaces/{namespace}/serviceaccounts:
   #   get:
@@ -181,7 +181,6 @@ paths:
   #       '500':
   #         $ref: '#/components/responses/500InternalServerError'
 
-
   #   delete:
   #     summary: Delete a namespace
   #     description: Delete a namespace
@@ -291,18 +290,18 @@ paths:
                   type: boolean
                 configFile:
                   type: string
-                  format: binary          
+                  format: binary
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status'
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+                $ref: "#/components/schemas/status"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
 
     delete:
       summary: Delete the gateway config
@@ -316,12 +315,12 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        "204":
           description: Success
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
 
   /namespaces/{namespace}/gateway/{qualifier}:
     delete:
@@ -341,12 +340,12 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        "204":
           description: Success
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
 
   /status:
     get:
@@ -356,16 +355,16 @@ paths:
       tags:
         - Status
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/status'
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+                $ref: "#/components/schemas/status"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
   /whoami:
     get:
       summary: Return key information about authenticated identity
@@ -373,16 +372,16 @@ paths:
       tags:
         - Who Am I
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/profile'
-        '401':
-          $ref: '#/components/responses/401Unauthorized'
-        '500':
-          $ref: '#/components/responses/500InternalServerError'
+                $ref: "#/components/schemas/profile"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
 
 components:
   responses:
@@ -395,13 +394,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/errorResponse'
+            $ref: "#/components/schemas/errorResponse"
     500InternalServerError:
       description: Internal Server Error
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/errorResponse'
+            $ref: "#/components/schemas/errorResponse"
   schemas:
     errorResponse:
       type: object
@@ -440,12 +439,12 @@ components:
           items:
             type: string
           description: Overrides what domain suffixes are valid
-          example: [ 'api.gov.bc.ca']
+          example: ["api.gov.bc.ca"]
 
   securitySchemes:
     oauth2:
-      type: oauth2       
-      x-tokenInfoUrl: "{{tokeninfo_url}}"
+      type: oauth2
+      #x-tokenInfoUrl: "{{tokeninfo_url}}"
       flows:
         clientCredentials:
           tokenUrl: "{{accesstoken_url}}"
@@ -455,14 +454,14 @@ components:
           #   "Access.Write": "Permission to administer access to users"
           # }
     # authorizationCode:
-    #   type: oauth2       
+    #   type: oauth2
     #   x-tokenInfoUrl: "{{tokeninfo_url}}"
     #   flows:
     #     authorizationCode:
     #       authorizationUrl: "{{authorization_url}}"
     #       scopes: {}
     # password:
-    #   type: oauth2       
+    #   type: oauth2
     #   x-tokenInfoUrl: "{{tokeninfo_url}}"
     #   flows:
     #     password:
@@ -471,4 +470,3 @@ components:
 security:
   - oauth2: []
 #  - authorizationCode: []
- 
