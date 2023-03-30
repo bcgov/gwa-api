@@ -10,7 +10,7 @@ info:
       * validating Kong Declarative Config and applying it to Kong
       * managing namespaces to segment services
 servers:
-  - url: { { server_url } }
+  - url: "{{server_url}}"
 tags:
   - name: Status
     description: API status
