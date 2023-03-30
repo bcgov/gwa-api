@@ -34,7 +34,7 @@ def setup_swagger_docs (app, versions):
         # app.view_functions['blah'] = blah
         @app.route("/docs/<ver>/openapi.yaml")
         def openapi_spec(ver:str):
-            return Response(open("%s/%s.yaml" % (conf.data['workingFolder'], ver)).read(), mimetype='application/yaml')
+            return Response(open("%s/%s.yaml" % (conf.data['workingFolder'], ver)).read(), mimetype='text/yaml')
 
         #app.add_url_rule("/%s/docs/openapi.yaml" % version, openapi_spec)
         app.register_blueprint(swaggerui_blueprint)
