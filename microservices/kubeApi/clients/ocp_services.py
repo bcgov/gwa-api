@@ -5,7 +5,7 @@ import json
 import time
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
-from templates.services import SERVICE, SERVICE_HEAD
+from templates.v1.services import SERVICE, SERVICE_HEAD
 from config import settings
 from fastapi.logger import logger
 from clients.ocp_routes import kubectl_apply
