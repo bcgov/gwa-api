@@ -16,15 +16,6 @@ import threading
 import v1.v1 as v1
 import v2.v2 as v2
 
-
-def set_cors_headers_on_response(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'X-Requested-With'
-    response.headers['Access-Control-Allow-Methods'] = 'OPTIONS'
-    return response
-
-    
-
 def create_app(test_config=None):
 
     log = logging.getLogger(__name__)
@@ -65,7 +56,6 @@ def create_app(test_config=None):
 
     @app.after_request
     def after_request(response):
-        set_cors_headers_on_response(response)
         log.debug('Rendered in %ss', g.request_time())
         return response
 

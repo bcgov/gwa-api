@@ -1,12 +1,14 @@
 from string import Template
 
-ROUTE = Template("""
+V2_ROUTE = Template("""
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: ${name}
   resourceVersion: "${resource_version}"
   annotations:
+    haproxy.router.openshift.io/balance: random
+    haproxy.router.openshift.io/disable_cookies: 'true'
     haproxy.router.openshift.io/timeout: 30m
   labels:
     aps-generated-by: "gwa-cli"
@@ -16,6 +18,7 @@ metadata:
     aps-published-ts: "${timestamp}"
     aps-ssl: "${ssl_ref}"
     aps-data-plane: "${data_plane}"
+    aps-template-version: "${template_version}"
 spec:
   host: ${host}
   port:
@@ -39,10 +42,3 @@ status:
     wildcardPolicy: None 
 """)
 
-ROUTE_HEAD = Template("""
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: ${name}
-
-""")
