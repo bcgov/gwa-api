@@ -5,7 +5,8 @@ import json
 import time
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
-from templates.routes import ROUTE, ROUTE_HEAD
+from templates.v1.routes import ROUTE, ROUTE_HEAD
+from templates.v2.routes import V2_ROUTE
 from config import settings
 from fastapi.logger import logger
 
@@ -18,6 +19,14 @@ host_cert_mapping = {
     "apps.gov.bc.ca": "apps.tls"
 }
 
+ROUTES = {
+    "v1": {
+        "ROUTE": ROUTE
+    },
+    "v2": {
+        "ROUTE": V2_ROUTE
+    }
+}
 
 def read_and_indent(full_path, indent):
     pad = "                    "
@@ -126,12 +135,14 @@ def prepare_route_last_version(ns, select_tag):
     return resource_versions
 
 
-def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
+def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane, template_version):
     out_filename = "%s/routes-current.yaml" % rootPath
     ts = int(time.time())
     fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
 
     resource_versions = prepare_route_last_version(ns, select_tag)
+
+    route_template = ROUTES[template_version]["ROUTE"]
 
     with open(out_filename, 'w') as out_file:
         index = 1
@@ -155,8 +166,9 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane):
 
             logger.debug("[%s] Route A %03d wild-%s-%s (ver.%s)" %
                          (select_tag, index, select_tag.replace('.', '-'), host, resource_version))
-            out_file.write(ROUTE.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/',
-                                            ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time, data_plane=data_plane))
+            out_file.write(route_template.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/',
+                                            ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time, data_plane=data_plane,
+                                            template_version=template_version))
             out_file.write('\n---\n')
             index = index + 1
         out_file.close()
