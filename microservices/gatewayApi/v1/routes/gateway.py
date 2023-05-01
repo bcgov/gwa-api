@@ -215,7 +215,7 @@ def write_config(namespace: str) -> object:
     selectTag = "ns.%s" % namespace
     ns_qualifier = None
 
-    orig_config = prep_submitted_config(yaml_documents)
+    orig_config = prep_submitted_config(clone_yaml_files(yaml_documents))
 
     update_routes_flag = False
 
@@ -384,7 +384,7 @@ def write_config(namespace: str) -> object:
         message = "Dry-run.  No changes applied."
 
     if cmd == 'sync':
-        record_gateway_event(event_id, 'publish', 'completed', namespace)
+        record_gateway_event(event_id, 'published', 'completed', namespace, blob=orig_config)
     return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
 
 
@@ -658,3 +658,9 @@ def is_host_transform_enabled():
 def should_we_apply_nsp_policies():
     conf = app.config['applyAporetoNSP']
     return conf is True
+
+def clone_yaml_files (yaml_documents):
+    cloned_yaml = []
+    for doc in yaml_documents:
+        cloned_yaml.append(yaml.load(yaml.dump(doc), Loader=yaml.FullLoader))
+    return cloned_yaml
