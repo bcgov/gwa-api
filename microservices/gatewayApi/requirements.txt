@@ -19,6 +19,6 @@ mocker==1.1.1
 pytest==7.2.1
 pytest-cov==4.0.0
 pytest-mock==3.10.0
-pycodestyle==2.4.0
+pycodestyle==2.10.0
 pylint==1.7.2
 flask-jwt-simple==0.0.3
