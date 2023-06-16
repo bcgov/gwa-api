@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
 from starlette.responses import HTMLResponse
-from routers import routes
+from routers import routes, noop
 from config import settings
 import logging
 import logging.config
@@ -37,6 +37,7 @@ logging.config.dictConfig({
 app = FastAPI(title="GWA Kubernetes API",
               description="Description: API to create resources in Openshift using Kubectl",
               version="1.0.0")
+app.include_router(noop.router)
 app.include_router(routes.router)
 
 logger = logging.getLogger(__name__)

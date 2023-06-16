@@ -164,6 +164,7 @@ def write_config(namespace: str) -> object:
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
     dp = get_data_plane(ns_attributes)
+    runtime_group_admin = is_allowed_to_manage_runtime_group(ns_attributes)
 
     # Build a list of existing hosts that are outside this namespace
     # They become reserved and any conflict will return an error
@@ -175,7 +176,6 @@ def write_config(namespace: str) -> object:
             for host in route['hosts']:
                 reserved_hosts.append(host)
     reserved_hosts = list(set(reserved_hosts))
-
 
     dfile = None
 
@@ -231,7 +231,7 @@ def write_config(namespace: str) -> object:
         #######################
 
         # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
-        host_transformation(namespace, dp, gw_config)
+        host_transformation(runtime_group_admin, gw_config)
 
         # If there is a tag with a pipeline qualifier (i.e./ ns.<namespace>.dev)
         # then add to tags automatically the tag: ns.<namespace>
@@ -252,6 +252,10 @@ def write_config(namespace: str) -> object:
         try:
             validate_base_entities(gw_config, ns_attributes)
             validate_tags(gw_config, selectTag)
+
+            if runtime_group_admin:
+                validate_runtime_group_config (gw_config, dp)
+
         except Exception as ex:
             traceback.print_exc()
             log.error("%s - %s" % (namespace, " Tag Validation Errors: %s" % ex))
@@ -391,7 +395,7 @@ def validate_base_entities(yaml, ns_attributes):
     traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates', 'caCertificates']
 
     allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
-    if allow_protected_ns:
+    if allow_protected_ns or is_allowed_to_manage_runtime_group(ns_attributes):
         traversables.append('plugins')
 
     for k in yaml:
@@ -414,6 +418,21 @@ def validate_tags(yaml, required_tag):
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
 
+def validate_runtime_group_config (yaml, dp):
+    required_tag = 'dp.%s' % dp
+    errors = []
+    for k in yaml:
+        if k == 'plugins':
+            for index, item in enumerate(yaml[k]):
+                if item['enabled'] is True:
+                    errors.append("%s.%s global plugin must have enabled set to false" % (k, item['name']))
+                if 'tags' in item:
+                    if required_tag not in item['tags']:
+                        errors.append("%s.%s missing required tag %s" % (k, item['name'], required_tag))
+                else:
+                    errors.append("%s.%s no tags found" % (k, item['name']))
+    if len(errors) != 0:
+        raise Exception('\n'.join(errors))
 
 def traverse(source, errors, yaml, required_tag, qualifiers):
     traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'caCertificates']
@@ -438,10 +457,7 @@ def traverse(source, errors, yaml, required_tag, qualifiers):
                 traverse("%s.%s.%s" % (source, k, nm), errors, item, required_tag, qualifiers)
 
 
-def host_transformation(namespace, data_plane, yaml):
-    log = app.logger
-
-    transforms = 0
+def host_transformation(runtime_group_admin, yaml):
     if 'services' in yaml:
         for service in yaml['services']:
             if 'routes' in service:
@@ -449,18 +465,15 @@ def host_transformation(namespace, data_plane, yaml):
                     if 'hosts' in route:
                         new_hosts = []
                         for host in route['hosts']:
-                            if is_host_local(host):
-                                new_hosts.append(transform_local_host(data_plane, host))
-                            elif is_host_transform_enabled():
-                                new_hosts.append(transform_host(host))
-                                transforms = transforms + 1
-                            else:
-                                new_hosts.append(host)
+                            new_hosts.append(transform_host(runtime_group_admin, host))
                         route['hosts'] = new_hosts
-    log.debug("[%s] Host transformations %d" % (namespace, transforms))
 
 def is_host_local (host):
     return host.endswith(".cluster.local")
+
+# Is the namespace responsible for configuring the Runtime Group
+def is_allowed_to_manage_runtime_group (ns_attributes):
+    return ns_attributes.get('perm-admin-runtime-group', [''])[0] == 'allow'
 
 def has_namespace_local_host_permission (ns_attributes):
     for domain in ns_attributes.get('perm-domains', ['.api.gov.bc.ca']):
@@ -481,8 +494,10 @@ def transform_local_host(data_plane, host):
     name_part = host[:-suffix_len]
     return "gw-%s.%s.svc.cluster.local" % (name_part, kube_ns)
 
-def transform_host(host):
-    if is_host_local(host):
+def transform_host(runtime_group_admin, host):
+    if runtime_group_admin:
+        return host
+    elif is_host_local(host):
         return host
     elif is_host_transform_enabled():
         conf = app.config['hostTransformation']
@@ -494,6 +509,7 @@ def validate_upstream(yaml, ns_attributes, protected_kube_namespaces):
     errors = []
 
     allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
+    runtime_group_admin = is_allowed_to_manage_runtime_group(ns_attributes)
 
     # A host must not contain a list of protected
     if 'services' in yaml:
@@ -504,24 +520,24 @@ def validate_upstream(yaml, ns_attributes, protected_kube_namespaces):
                     if u.hostname is None:
                         errors.append("service upstream has invalid url specified (e1)")
                     else:
-                        validate_upstream_host(u.hostname, errors, allow_protected_ns, protected_kube_namespaces)
+                        validate_upstream_host(u.hostname, errors, runtime_group_admin, allow_protected_ns, protected_kube_namespaces)
                 except Exception as e:
                     errors.append("service upstream has invalid url specified (e2)")
 
             if 'host' in service:
                 host = service["host"]
-                validate_upstream_host(host, errors, allow_protected_ns, protected_kube_namespaces)
+                validate_upstream_host(host, errors, runtime_group_admin, allow_protected_ns, protected_kube_namespaces)
 
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
 
 
-def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_namespaces):
+def validate_upstream_host(_host, errors, runtime_group_admin, allow_protected_ns, protected_kube_namespaces):
     host = _host.lower()
 
     restricted = ['localhost', '127.0.0.1', '0.0.0.0']
 
-    if host in restricted:
+    if host in restricted and runtime_group_admin is False:
         errors.append("service upstream is invalid (e1)")
     if host.endswith('svc'):
         partials = host.split('.')
@@ -530,7 +546,7 @@ def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_nam
             errors.append("service upstream is invalid (e2)")
         elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
             errors.append("service upstream is invalid (e3)")
-    if host.endswith('svc.cluster.local'):
+    elif host.endswith('svc.cluster.local'):
         partials = host.split('.')
         # get the namespace, and make sure it is not in the protected_kube_namespaces list
         if len(partials) != 5:
@@ -547,6 +563,8 @@ def update_routes_check(yaml):
 def validate_hosts(yaml, reserved_hosts, ns_attributes):
     errors = []
 
+    runtime_group_admin = is_allowed_to_manage_runtime_group(ns_attributes)
+
     allowed_domains = []
     for domain in ns_attributes.get('perm-domains', ['.api.gov.bc.ca']):
         allowed_domains.append("%s" % domain)
@@ -558,14 +576,14 @@ def validate_hosts(yaml, reserved_hosts, ns_attributes):
                 for route in service['routes']:
                     if 'hosts' in route:
                         for host in route['hosts']:
-                            if host in reserved_hosts:
+                            if transform_host(runtime_group_admin, host) in reserved_hosts:
                                 errors.append("service.%s.route.%s The host is already used in another namespace '%s'" % (
                                     service['name'], route['name'], host))
                             if host_valid(host) is False:
                                 errors.append("Host not passing DNS-952 validation '%s'" % host)
                             if validate_local_host(host) is False:
                                 errors.append("Host failed validation for data plane '%s'" % host)
-                            if host_ends_with_one_of_list(host, allowed_domains) is False:
+                            if host_ends_with_one_of_list(runtime_group_admin, host, allowed_domains) is False:
                                 errors.append("Host invalid: %s %s.  Route hosts must end with one of [%s] for this namespace." % (
                                     route['name'], host, ','.join(allowed_domains)))
                     else:
@@ -576,9 +594,9 @@ def validate_hosts(yaml, reserved_hosts, ns_attributes):
         raise Exception('\n'.join(errors))
 
 
-def host_ends_with_one_of_list(a_str, a_list):
+def host_ends_with_one_of_list(runtime_group_admin, a_str, a_list):
     for item in a_list:
-        if a_str.endswith(transform_host(item)):
+        if a_str.endswith(transform_host(runtime_group_admin, item)):
             return True
     return False
 
