@@ -25,6 +25,10 @@ RUN curl -sL https://github.com/kong/deck/releases/download/v1.5.0/deck_1.5.0_li
    tar -xf deck.tar.gz -C /tmp && \
    cp /tmp/deck /usr/local/bin/
 
+RUN curl -sL https://github.com/kong/deck/releases/download/v1.22.0/deck_1.22.0_linux_amd64.tar.gz -o deck.tar.gz && \
+   tar -xf deck.tar.gz -C /tmp && \
+   cp /tmp/deck /usr/local/bin/deck-1.22.0
+
 COPY requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt

@@ -32,6 +32,8 @@ from utils.masking import mask
 gw = Blueprint('gwa_v2', 'gateway')
 local_environment = os.environ.get("LOCAL_ENVIRONMENT", default=False)
 
+deck_command = os.environ.get("DECK_COMMAND", default="deck")
+
 
 def abort_early(event_id, action, namespace, response):
     record_gateway_event(event_id, action, 'failed', namespace, json.dumps(response.get_json()))
@@ -72,7 +74,7 @@ def delete_config(namespace: str, qualifier="") -> object:
 
     log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
     args = [
-        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        deck_command, cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -309,8 +311,32 @@ def write_config(namespace: str) -> object:
         abort_early(event_id, 'validate', namespace, jsonify(
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
+    if deck_command != "deck":
+        log.debug("[%s] Compare Deck Versions..." % (namespace))
+        args = [
+            "deck", "diff", "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        ]
+        with open("%s/out1" % tempFolder, 'w') as f:
+            deck_run = Popen(args, stdout=f, stderr=STDOUT)
+            out, err = deck_run.communicate()
+            if deck_run.returncode != 0:
+                log.error("Deck error %s", out.decode('utf-8'))
+
+        args = [
+            deck_command, "diff", "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        ]
+        with open("%s/out2" % tempFolder, 'w') as f:
+            deck_run = Popen(args, stdout=f, stderr=STDOUT)
+            out, err = deck_run.communicate()
+            if deck_run.returncode != 0:
+                log.error("Deck error %s", out.decode('utf-8'))
+
+        diff_run = Popen(["diff", "%s/out1" % tempFolder, "%s/out2" % tempFolder], stdout=PIPE, stderr=STDOUT)
+        out, err = diff_run.communicate()
+        log.warn("Deck diff %s", out.decode('utf-8'))
+
     args = [
-        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        deck_command, cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)

@@ -40,6 +40,7 @@ docker run -ti --rm \
  -e HOST_TRANSFORM_BASE_URL=api.cloud \
  -e PLUGINS_RATELIMITING_REDIS_PASSWORD="" \
  -e DATA_PLANES_CONFIG_PATH=/dp/data_planes_config.json \
+ -e DECK_COMMAND="deck-1.22.0" \
  -v `pwd`/_tmp:/ssl \
  -v `pwd`/_tmp:/dp/ \
  -v ~/.kube/config:/root/.kube/config \
