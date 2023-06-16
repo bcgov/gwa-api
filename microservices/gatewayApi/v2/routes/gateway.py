@@ -316,6 +316,7 @@ def write_config(namespace: str) -> object:
         args = [
             "deck", "diff", "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
         ]
+        log.debug("[%s] Running %s" % (namespace, args))
         with open("%s/out1" % tempFolder, 'w') as f:
             deck_run = Popen(args, stdout=f, stderr=STDOUT)
             out, err = deck_run.communicate()
@@ -325,6 +326,7 @@ def write_config(namespace: str) -> object:
         args = [
             deck_command, "diff", "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
         ]
+        log.debug("[%s] Running %s" % (namespace, args))
         with open("%s/out2" % tempFolder, 'w') as f:
             deck_run = Popen(args, stdout=f, stderr=STDOUT)
             out, err = deck_run.communicate()
@@ -333,7 +335,10 @@ def write_config(namespace: str) -> object:
 
         diff_run = Popen(["diff", "%s/out1" % tempFolder, "%s/out2" % tempFolder], stdout=PIPE, stderr=STDOUT)
         out, err = diff_run.communicate()
-        log.warn("Deck diff %s", out.decode('utf-8'))
+        log.warn("Deck diff [%d] %s", deck_run.returncode, out.decode('utf-8'))
+
+        os.remove('%s/out1' % tempFolder)
+        os.remove('%s/out2' % tempFolder)
 
     args = [
         deck_command, cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
