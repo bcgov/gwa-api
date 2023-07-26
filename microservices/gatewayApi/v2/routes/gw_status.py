@@ -56,7 +56,11 @@ def get_statuses(namespace: str) -> object:
                 else:
                     u = urlparse(url)
 
-                    headers['Host'] = host
+                    if service['preserve_host']:
+                        headers['Host'] = host
+                    else:
+                        headers['Host'] = u.hostname
+
                     log.info("GET %-30s %s" % ("%s://%s" % (u.scheme, u.netloc), headers))
 
                     urllib3.disable_warnings()
