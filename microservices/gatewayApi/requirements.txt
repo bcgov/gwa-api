@@ -3,7 +3,7 @@ cryptography==38.0.4
 authlib==0.15.3
 flask-swagger-ui==3.36.0
 Jinja2==3.0.3
-PyYAML==5.4
+PyYAML==6.0.1
 munch==2.5.0
 boto3==1.9.12
 flask==2.1.3
