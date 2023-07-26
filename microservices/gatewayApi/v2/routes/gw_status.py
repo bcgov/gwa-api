@@ -38,7 +38,8 @@ def get_statuses(namespace: str) -> object:
         for route in routes:
             if route['service']['id'] == service['id'] and 'hosts' in route:
                 actual_host = route['hosts'][0]
-                host = clean_host(actual_host)
+                if route['preserve_host']:
+                    host = clean_host(actual_host)
 
         try:
             addr = socket.gethostbyname(service['host'])
@@ -56,10 +57,10 @@ def get_statuses(namespace: str) -> object:
                 else:
                     u = urlparse(url)
 
-                    if service['preserve_host']:
-                        headers['Host'] = host
-                    else:
+                    if host is None:
                         headers['Host'] = u.hostname
+                    else:
+                        headers['Host'] = host
 
                     log.info("GET %-30s %s" % ("%s://%s" % (u.scheme, u.netloc), headers))
 
