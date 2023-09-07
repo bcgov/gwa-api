@@ -173,7 +173,7 @@ def write_config(namespace: str) -> object:
     for route in all_routes:
         if tag_match not in route['tags'] and 'hosts' in route:
             for host in route['hosts']:
-                reserved_hosts.append(transform_host(host))
+                reserved_hosts.append(host)
     reserved_hosts = list(set(reserved_hosts))
 
 
