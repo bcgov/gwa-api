@@ -183,9 +183,11 @@ def write_config(namespace: str) -> object:
         log.debug("[%s] %s", namespace, request.files['configFile'])
         dfile = request.files['configFile']
         dry_run = request.values['dryRun']
+        select_tag_qualifier = request.values['qualifier']
     elif request.content_type.startswith("application/json") and not request.json['configFile'] in [None, '']:
         dfile = request.json['configFile']
         dry_run = request.json['dryRun']
+        select_tag_qualifier = request.json['qualifier']
     else:
         log.error("Missing input")
         log.error("%s", request.get_data())
@@ -215,6 +217,8 @@ def write_config(namespace: str) -> object:
 
     selectTag = "ns.%s" % namespace
     ns_qualifier = None
+    if select_tag_qualifier is not None and select_tag_qualifier != "" and "." not in select_tag_qualifier:
+        ns_qualifier = "%s.%s" % (selectTag, select_tag_qualifier)
 
     orig_config = prep_submitted_config(clone_yaml_files(yaml_documents))
 
