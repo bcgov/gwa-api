@@ -178,14 +178,19 @@ def write_config(namespace: str) -> object:
 
 
     dfile = None
+    select_tag_qualifier = None
 
     if 'configFile' in request.files and not request.files['configFile'].filename == '':
         log.debug("[%s] %s", namespace, request.files['configFile'])
         dfile = request.files['configFile']
         dry_run = request.values['dryRun']
+        if "qualifier" in request.values:
+            select_tag_qualifier = request.values['qualifier']
     elif request.content_type.startswith("application/json") and not request.json['configFile'] in [None, '']:
         dfile = request.json['configFile']
         dry_run = request.json['dryRun']
+        if "qualifier" in request.json:
+            select_tag_qualifier = request.json['qualifier']
     else:
         log.error("Missing input")
         log.error("%s", request.get_data())
@@ -215,6 +220,8 @@ def write_config(namespace: str) -> object:
 
     selectTag = "ns.%s" % namespace
     ns_qualifier = None
+    if select_tag_qualifier is not None and select_tag_qualifier != "" and "." not in select_tag_qualifier:
+        ns_qualifier = "%s.%s" % (selectTag, select_tag_qualifier)
 
     orig_config = prep_submitted_config(clone_yaml_files(yaml_documents))
 
@@ -235,7 +242,7 @@ def write_config(namespace: str) -> object:
 
         # If there is a tag with a pipeline qualifier (i.e./ ns.<namespace>.dev)
         # then add to tags automatically the tag: ns.<namespace>
-        tags_transformation(namespace, gw_config)
+        object_count = tags_transformation(namespace, gw_config)
 
         #
         # Enrich the rate-limiting plugin with the appropriate Redis details
@@ -286,6 +293,9 @@ def write_config(namespace: str) -> object:
                             ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))))
             ns_qualifier = nsq
             log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
+        elif ns_qualifier is not None and object_count > 0:
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" %
+                ("Specified qualifier (%s) does not match tags in configuration (%s)" % (ns_qualifier, selectTag))))
 
         if update_routes_check(gw_config):
             update_routes_flag = True
@@ -413,7 +423,6 @@ def validate_tags(yaml, required_tag):
 
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
-
 
 def traverse(source, errors, yaml, required_tag, qualifiers):
     traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'caCertificates']
@@ -584,10 +593,11 @@ def host_ends_with_one_of_list(a_str, a_list):
 
 
 def tags_transformation(namespace, yaml):
-    traverse_tags_transform(yaml, namespace, "ns.%s" % namespace)
+    return traverse_tags_transform(yaml, namespace, "ns.%s" % namespace)
 
 
 def traverse_tags_transform(yaml, namespace, required_tag):
+    object_count = 0
     log = app.logger
     traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'caCertificates']
     for k in yaml:
@@ -602,8 +612,9 @@ def traverse_tags_transform(yaml, namespace, required_tag):
                             log.debug("[%s] Adding base tag %s to %s" % (namespace, required_tag, k))
                             new_tags.append(required_tag)
                     item['tags'] = new_tags
-                traverse_tags_transform(item, namespace, required_tag)
-
+                object_count = object_count + 1
+                object_count = object_count + traverse_tags_transform(item, namespace, required_tag)
+    return object_count
 
 def traverse_has_ns_qualifier(yaml, required_tag):
     log = app.logger
