@@ -178,16 +178,19 @@ def write_config(namespace: str) -> object:
 
 
     dfile = None
+    select_tag_qualifier = None
 
     if 'configFile' in request.files and not request.files['configFile'].filename == '':
         log.debug("[%s] %s", namespace, request.files['configFile'])
         dfile = request.files['configFile']
         dry_run = request.values['dryRun']
-        select_tag_qualifier = request.values['qualifier']
+        if "qualifier" in request.values:
+            select_tag_qualifier = request.values['qualifier']
     elif request.content_type.startswith("application/json") and not request.json['configFile'] in [None, '']:
         dfile = request.json['configFile']
         dry_run = request.json['dryRun']
-        select_tag_qualifier = request.json['qualifier']
+        if "qualifier" in request.json:
+            select_tag_qualifier = request.json['qualifier']
     else:
         log.error("Missing input")
         log.error("%s", request.get_data())
