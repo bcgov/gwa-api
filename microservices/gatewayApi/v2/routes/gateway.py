@@ -258,7 +258,7 @@ def write_config(namespace: str) -> object:
         # Validate that the every object is tagged with the namespace
         try:
             validate_base_entities(gw_config, ns_attributes)
-            validate_tags(gw_config, selectTag)
+            all_select_tags = validate_tags(gw_config, selectTag)
         except Exception as ex:
             traceback.print_exc()
             log.error("%s - %s" % (namespace, " Tag Validation Errors: %s" % ex))
@@ -293,9 +293,9 @@ def write_config(namespace: str) -> object:
                             ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))))
             ns_qualifier = nsq
             log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
-        elif ns_qualifier is not None:
+        elif ns_qualifier is not None and len(all_select_tags) != 0:
             abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" %
-                ("Specified qualifier (%s) does not match tags in configuration (%s)" % (ns_qualifier, selectTag))))
+                ("Specified qualifier (%s) does not match tags in configuration (%s)" % (ns_qualifier, all_select_tags))))
 
         if update_routes_check(gw_config):
             update_routes_flag = True
@@ -424,6 +424,7 @@ def validate_tags(yaml, required_tag):
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
 
+    return qualifiers
 
 def traverse(source, errors, yaml, required_tag, qualifiers):
     traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'caCertificates']
