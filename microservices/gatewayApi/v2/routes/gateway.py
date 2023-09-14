@@ -293,6 +293,9 @@ def write_config(namespace: str) -> object:
                             ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))))
             ns_qualifier = nsq
             log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
+        elif ns_qualifier is not None:
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" %
+                ("Specified qualifier (%s) does not match tags in configuration (%s)" % (ns_qualifier, selectTag))))
 
         if update_routes_check(gw_config):
             update_routes_flag = True
