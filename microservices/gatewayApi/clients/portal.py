@@ -40,9 +40,9 @@ def record_gateway_event(event_id, action, result, namespace, message="", blob="
     entity = 'gateway configuration'
 
     actor = "Unknown Actor"
-    if "clientId" in g.principal:
+    if 'principal' in g and "clientId" in g.principal:
         actor = g.principal["clientId"]
-    if "name" in g.principal:
+    if 'principal' in g and "name" in g.principal:
         actor = g.principal["name"]
 
     payload = {

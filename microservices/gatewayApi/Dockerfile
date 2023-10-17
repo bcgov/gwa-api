@@ -21,9 +21,15 @@ RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -
 
 #COPY --from=build /deck/deck /usr/local/bin
 
+# gwa api v1/v2
 RUN curl -sL https://github.com/kong/deck/releases/download/v1.5.0/deck_1.5.0_linux_amd64.tar.gz -o deck.tar.gz && \
    tar -xf deck.tar.gz -C /tmp && \
    cp /tmp/deck /usr/local/bin/
+
+# gwa api v3
+RUN curl -sL https://github.com/Kong/deck/releases/download/v1.27.1/deck_1.27.1_linux_amd64.tar.gz -o deck.tar.gz && \
+   tar -xf deck.tar.gz -C /tmp && \
+   cp /tmp/deck /usr/local/bin/deck127
 
 COPY requirements.txt requirements.txt
 

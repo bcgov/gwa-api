@@ -37,7 +37,6 @@ def setup_swagger_docs (app, versions):
             return Response(open("%s/%s.yaml" % (conf.data['workingFolder'], ver)).read(), mimetype='application/x-yaml')
 
         #app.add_url_rule("/%s/docs/openapi.yaml" % version, openapi_spec)
-        app.register_blueprint(swaggerui_blueprint)
 
         for version in versions:
             ## Template the spec and write it to a temporary location
@@ -52,9 +51,11 @@ def setup_swagger_docs (app, versions):
                 authorization_url = discovery["authorization_endpoint"],
                 accesstoken_url = discovery["token_endpoint"]
             ))
-
             
             log.info("Configured /%s/docs" % version)
+
+        app.register_blueprint(swaggerui_blueprint)
+        log.info("Swagger UI registered")
 
     except:
         traceback.print_exc(file=sys.stdout)
