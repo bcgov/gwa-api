@@ -21,6 +21,19 @@ def proxy_cache (plugin, plugin_configs=None):
     for k, v in override_config.items():
         plugin_config[k] = v
 
+def upstream_jwt (plugin, plugin_configs=None):
+    override_config = conf['plugins']['upstream_jwt']
+
+    if 'config' in plugin:
+        plugin_config = plugin['config']
+    else:
+        plugin['config'] = {}
+        plugin_config = plugin['config']
+
+    for k, v in override_config.items():
+        plugin_config[k] = v
+
+
 def rate_limiting (plugin, plugin_configs=None):
     override_config = conf['plugins']['rate_limiting']
 
@@ -77,6 +90,8 @@ def traverse_plugins (yaml, plugin_configs = None):
                         rate_limiting(item, plugin_configs)
                     elif item['name'] == 'proxy-cache':
                         proxy_cache(item, plugin_configs)
+                    elif item['name'] == 'kong-upstream-jwt':
+                        upstream_jwt(item, plugin_configs)
                 traverse_plugins (item, plugin_configs)
     
 

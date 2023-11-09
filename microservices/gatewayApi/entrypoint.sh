@@ -45,6 +45,12 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
             "redis_password": "${PLUGINS_RATELIMITING_REDIS_PASSWORD}",
             "redis_timeout": 2000
         },
+        "upstream_jwt": {
+            "key_id": "${PLUGINS_UPSTREAM_JWT_KEY_ID}",
+            "issuer": "${PLUGINS_UPSTREAM_JWT_ISSUER}",
+            "private_key_location": "${PLUGINS_UPSTREAM_JWT_PRIVATE_KEY_FILE}",
+            "public_key_location": "${PLUGINS_UPSTREAM_JWT_PUBLIC_KEY_FILE}"
+        },
         "proxy_cache": {
             "strategy": "memory",
             "memory": { "dictionary_name": "${PLUGINS_PROXYCACHE_MEMORY_DICT:-"aps_proxy_cache"}" }
