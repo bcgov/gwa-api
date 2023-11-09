@@ -398,11 +398,12 @@ def cleanup(dir_path):
         log.error("Error: %s : %s" % (dir_path, e.strerror))
 
 def validate_base_entities(yaml, ns_attributes):
-    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates', 'ca_certificates']
+    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates']
 
     allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
     if allow_protected_ns:
         traversables.append('plugins')
+        traversables.append('ca_certificates')
 
     for k in yaml:
         if k not in traversables:
