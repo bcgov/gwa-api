@@ -47,6 +47,7 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
         },
         "upstream_jwt": {
             "key_id": "${PLUGINS_UPSTREAM_JWT_KEY_ID}",
+            "issuer": "${PLUGINS_UPSTREAM_JWT_ISSUER}",
             "private_key_location": "${PLUGINS_UPSTREAM_JWT_PRIVATE_KEY_FILE}",
             "public_key_location": "${PLUGINS_UPSTREAM_JWT_PUBLIC_KEY_FILE}"
         },
