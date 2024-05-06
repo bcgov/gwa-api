@@ -13,7 +13,7 @@ import yaml
 from werkzeug.exceptions import HTTPException, NotFound
 from flask import Blueprint, config, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
-from clients.ocp_routes import get_host_list
+from clients.ocp_routes import get_host_list, get_route_overrides
 
 from v2.auth.auth import admin_jwt, uma_enforce
 
@@ -339,7 +339,10 @@ def write_config(namespace: str) -> object:
                 route_payload = {
                     "hosts": host_list,
                     "select_tag": selectTag,
-                    "ns_attributes": ns_attributes.getAttrs()
+                    "ns_attributes": ns_attributes.getAttrs(),
+                    "overrides": {
+                        "aps.route.session.cookie.enabled": get_route_overrides(tempFolder, "aps.route.session.cookie.enabled")
+                    }
                 }
                 rqst_url = app.config['data_planes'][dp]["kube-api"]
                 log.debug("[%s] - Initiating request to kube API" % (dp))

@@ -135,18 +135,23 @@ def prepare_route_last_version(ns, select_tag):
     return resource_versions
 
 
-def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane, template_version):
+def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane, ns_template_version, overrides):
     out_filename = "%s/routes-current.yaml" % rootPath
     ts = int(time.time())
     fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
 
     resource_versions = prepare_route_last_version(ns, select_tag)
 
-    route_template = ROUTES[template_version]["ROUTE"]
 
     with open(out_filename, 'w') as out_file:
         index = 1
         for host in hosts:
+            templ_version = ns_template_version
+            if 'aps.route.session.cookie.enabled' in overrides and host in overrides['aps.route.session.cookie.enabled']:
+                templ_version = 'v1'
+            
+            route_template = ROUTES[templ_version]["ROUTE"]
+
             # If host transformation is disabled, then select the appropriate
             # SSL cert based on the suffix mapping
             ssl_ref = "tls"
@@ -168,7 +173,7 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane, template_v
                          (select_tag, index, select_tag.replace('.', '-'), host, resource_version))
             out_file.write(route_template.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/',
                                             ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time, data_plane=data_plane,
-                                            template_version=template_version))
+                                            template_version=templ_version))
             out_file.write('\n---\n')
             index = index + 1
         out_file.close()

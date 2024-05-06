@@ -24,6 +24,7 @@ class OCPRoute(BaseModel):
     hosts: list
     select_tag: str
     ns_attributes: dict
+    overrides: dict
 
 
 @router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(verify_credentials)])
@@ -59,13 +60,13 @@ def add_routes(namespace: str, route: OCPRoute):
     try:
         hosts = [a for a in route.hosts if not a.endswith(".cluster.local")]
         
-        template_version = get_template_version(route.ns_attributes)
+        ns_template_version = get_template_version(route.ns_attributes)
 
         # do routeable hosts
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
         route_count = prepare_apply_routes(namespace, route.select_tag, hosts,
-                                           source_folder, get_data_plane(route.ns_attributes), template_version)
+                                           source_folder, get_data_plane(route.ns_attributes), ns_template_version, route.overrides)
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)
@@ -158,7 +159,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
 
     # TODO: We shouldn't assume it is always v2 - caller needs to get
     # this info from ns_attributes
-    template_version = "v2"
+    ns_template_version = "v2"
 
     try:
         if len(insert_batch) > 0:
@@ -167,8 +168,11 @@ async def verify_and_create_routes(namespace: str, request: Request):
             os.makedirs(source_folder, exist_ok=False)
 
             for route in insert_batch:
+                overrides = {}
+                if route['session_cookie_enabled']:
+                    overrides['aps.route.session.cookie.enabled'] = [ route['host'] ]
                 route_count = prepare_apply_routes(namespace, route['selectTag'], [
-                                                   route['host']], source_folder, route["dataPlane"], template_version)
+                                                   route['host']], source_folder, route["dataPlane"], ns_template_version, overrides)
                 logger.debug("[%s] - Prepared %d routes" % (namespace, route_count))
                 apply_routes(source_folder)
                 logger.debug("[%s] - Applied %d routes" % (namespace, route_count))
