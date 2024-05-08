@@ -22,6 +22,23 @@ jobs:
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: |
+          apt update
+          apt install -y pipx git
+          pipx ensurepath
+          pipx install poetry
+      - name: Test coverage for Kube API
+        run: |
+          cd microservices/kubeApi
+          export PATH=/root/.local/bin:$PATH
+          poetry install --no-root
+          ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
+          poetry run coverage run --branch --source=auth,clients,routers -m pytest -s
+          poetry run coverage xml
 
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
