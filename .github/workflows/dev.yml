@@ -44,6 +44,8 @@ jobs:
         uses: sonarsource/sonarcloud-github-action@master
         with:
           projectBaseDir: /home/runner/work/gwa-api/gwa-api
+          args: >
+            -DprojectBaseDir=/home/runner/work/gwa-api/gwa-api
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
