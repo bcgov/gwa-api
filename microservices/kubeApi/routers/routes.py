@@ -211,7 +211,11 @@ def get_template_version(ns_attributes):
     return ns_attributes.get('template-version', ["v2"])[0]
 
 def in_list (match, list):
+    match_ref =  build_ref(match)
     for item in list:
-        if item['name'] == match['name']:
+        if build_ref(item) == match_ref:
             return True
     return False
+
+def build_ref(v):
+    return "%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'])
