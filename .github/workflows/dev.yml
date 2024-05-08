@@ -33,8 +33,12 @@ jobs:
           pipx install poetry
       - name: Test coverage for Kube API
         run: |
-          cd microservices/kubeApi
+          pwd
+          cd $GITHUB_WORKSPACE
+          pwd
+          ls -l
           export PATH=/root/.local/bin:$PATH
+          cd $GITHUB_WORKSPACE/microservices/kubeApi
           poetry install --no-root
           ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
           poetry run coverage run --branch --source=auth,clients,routers -m pytest -s
