@@ -12,6 +12,7 @@ import sys
 from datetime import datetime
 from fastapi.logger import logger
 from config import settings
+from typing import Optional
 
 router = APIRouter(
     prefix="",
@@ -24,12 +25,11 @@ class OCPRoute(BaseModel):
     hosts: list
     select_tag: str
     ns_attributes: dict
-    overrides: dict
+    overrides: dict | None = None
 
 
 @router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(verify_credentials)])
 def add_routes(namespace: str, route: OCPRoute):
-
     try:
         local_hosts = [a for a in route.hosts if a.endswith(".cluster.local")]
 
@@ -163,13 +163,14 @@ async def verify_and_create_routes(namespace: str, request: Request):
 
     try:
         if len(insert_batch) > 0:
-            logger.debug("Creating %s routes" % (len(insert_batch)))
             source_folder = "%s/%s" % ('/tmp/sync', f'{datetime.now():%Y%m%d%H%M%S}')
             os.makedirs(source_folder, exist_ok=False)
 
+            logger.debug("Creating %s routes - tmp %s" % (len(insert_batch), source_folder))
+
             for route in insert_batch:
                 overrides = {}
-                if route['session_cookie_enabled']:
+                if 'session_cookie_enabled' in route and route['session_cookie_enabled']:
                     overrides['aps.route.session.cookie.enabled'] = [ route['host'] ]
                 route_count = prepare_apply_routes(namespace, route['selectTag'], [
                                                    route['host']], source_folder, route["dataPlane"], ns_template_version, overrides)
@@ -199,7 +200,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 traceback.print_exc()
                 logger.error("Failed deleting route %s" % route["name"])
                 raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
-    return Response(status_code=200)
+    return Response(status_code=200, content='{"message": "synced"}')
 
 
 def get_data_plane(ns_attributes):

@@ -2,6 +2,7 @@
 name = "gwa-kube-api"
 version = "1.0.0"
 description = ""
+package-mode = false
 authors = ["Nithin Shekar Kuruba <nithinshekar.kuruba@gov.bc.ca>"]
 
 [tool.poetry.dependencies]
@@ -11,10 +12,14 @@ uvicorn = "^0.15.0"
 PyYAML = "^6.0"
 python-keycloak = "^0.26.1"
 Authlib = "^0.15.4"
-httpx = "^0.20.0"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.7"
+pytest = "^8.2.0"
+freezegun = "^1.5.0"
+httpx = "^0.20.0"
+pytest-cov = "^5.0.0"
+pytest-mock = "^3.14.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

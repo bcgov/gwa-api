@@ -47,3 +47,20 @@ docker run -ti --rm \
   kubeapi
 
 ```
+
+### Development
+
+Locally running:
+
+```sh
+ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
+uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+```
+
+Testing:
+
+```
+ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
+coverage run --branch --source=auth,clients,routers -m pytest -s
+coverage xml html
+```

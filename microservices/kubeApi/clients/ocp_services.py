@@ -132,7 +132,6 @@ def get_gwa_ocp_services(extralabels=""):
     return json.loads(out)['items']
 
 def get_gwa_ocp_service_secrets(extralabels=""):
-
     secret_names = []
     result_data = []
     services = get_gwa_ocp_services(extralabels=extralabels)

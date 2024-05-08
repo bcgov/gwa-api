@@ -137,17 +137,16 @@ def prepare_route_last_version(ns, select_tag):
 
 def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane, ns_template_version, overrides):
     out_filename = "%s/routes-current.yaml" % rootPath
-    ts = int(time.time())
-    fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
+    ts = time_secs()
+    fmt_time = datetime.fromtimestamp(ts).strftime("%Y.%m-%b.%d")
 
     resource_versions = prepare_route_last_version(ns, select_tag)
-
 
     with open(out_filename, 'w') as out_file:
         index = 1
         for host in hosts:
             templ_version = ns_template_version
-            if 'aps.route.session.cookie.enabled' in overrides and host in overrides['aps.route.session.cookie.enabled']:
+            if overrides and 'aps.route.session.cookie.enabled' in overrides and host in overrides['aps.route.session.cookie.enabled']:
                 templ_version = 'v1'
             
             route_template = ROUTES[templ_version]["ROUTE"]
@@ -196,3 +195,6 @@ def get_gwa_ocp_routes(extralabels=""):
         raise Exception("Failed to get existing routes")
 
     return json.loads(out)['items']
+
+def time_secs():
+    return int(time.time())
