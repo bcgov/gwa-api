@@ -27,8 +27,8 @@ jobs:
           python-version: "3.12"
       - name: Install deps
         run: |
-          apt update
-          apt install -y pipx git
+          sudo apt update
+          sudo apt install -y pipx git
           pipx ensurepath
           pipx install poetry
       - name: Test coverage for Kube API
