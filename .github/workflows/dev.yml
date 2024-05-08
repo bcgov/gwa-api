@@ -36,9 +36,11 @@ jobs:
           pwd
           cd $GITHUB_WORKSPACE
           pwd
+          cd /github/workspace
+          pwd
           ls -l
           export PATH=/root/.local/bin:$PATH
-          cd $GITHUB_WORKSPACE/microservices/kubeApi
+          cd /github/workspace/microservices/kubeApi
           poetry install --no-root
           ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
           poetry run coverage run --branch --source=auth,clients,routers -m pytest -s
