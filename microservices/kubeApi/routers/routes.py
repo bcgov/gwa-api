@@ -9,6 +9,7 @@ import traceback
 import os
 from auth.basic_auth import verify_credentials
 import sys
+import secrets
 from datetime import datetime
 from fastapi.logger import logger
 from config import settings
@@ -163,7 +164,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
 
     try:
         if len(insert_batch) > 0:
-            source_folder = "%s/%s" % ('/tmp/sync', f'{datetime.now():%Y%m%d%H%M%S}')
+            source_folder = "%s/%s-%s" % ('/tmp/sync', f'{datetime.now():%Y%m%d%H%M%S}', secrets.token_hex(5))
             os.makedirs(source_folder, exist_ok=False)
 
             logger.debug("Creating %s routes - tmp %s" % (len(insert_batch), source_folder))

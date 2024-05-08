@@ -240,3 +240,28 @@ def get_host_list(rootPath):
 
     host_list.sort()
     return host_list
+
+def get_route_overrides(rootPath, override_tag):
+
+    host_list = []
+
+    for x in os.walk(rootPath):
+        for file in x[2]:
+            if file not in files_to_ignore:
+                full_path = "%s/%s" % (x[0],file)
+
+                stream = open(full_path, 'r')
+                data = yaml.load(stream, Loader=yaml.SafeLoader)
+
+                if data is not None and 'services' in data:
+                    for service in data['services']:
+                        if 'routes' in service:
+                            for route in service['routes']:
+                                if 'hosts' in route:
+                                    if override_tag in route['tags']:
+                                        for host in route['hosts']:
+                                            if host not in host_list:
+                                                host_list.append(host)
+
+    host_list.sort()
+    return host_list
