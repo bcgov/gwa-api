@@ -62,5 +62,5 @@ Testing:
 ```
 ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
 coverage run --branch --source=auth,clients,routers -m pytest -s
-coverage xml html
+coverage xml
 ```
