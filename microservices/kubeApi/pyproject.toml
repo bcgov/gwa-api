@@ -23,6 +23,9 @@ pytest-mock = "^3.14.0"
 
 [tool.coverage.run]
 relative_files = true
+omit = [
+    "tests"
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
