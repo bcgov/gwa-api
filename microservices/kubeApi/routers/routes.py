@@ -52,7 +52,9 @@ def add_routes(namespace: str, route: OCPRoute):
         traceback.print_exc()
         logger.error("[%s] Error creating services. %s" % (namespace, ex))
         raise HTTPException(status_code=400, detail="[%s] Error creating services. %s" % (namespace, ex))
-    except:
+    except SystemExit as ex:
+        raise ex
+    except BaseException:
         traceback.print_exc()
         logger.error("[%s] Error creating routes. %s" % (namespace, sys.exc_info()[0]))
         raise HTTPException(status_code=400, detail="[%s] Error creating routes. %s" % (
@@ -81,7 +83,9 @@ def add_routes(namespace: str, route: OCPRoute):
         traceback.print_exc()
         logger.error("[%s] Error creating routes. %s" % (namespace, ex))
         raise HTTPException(status_code=400, detail="[%s] Error creating routes. %s" % (namespace, ex))
-    except:
+    except SystemExit as ex:
+        raise ex
+    except BaseException:
         traceback.print_exc()
         logger.error("[%s] Error creating routes. %s" % (namespace, sys.exc_info()[0]))
         raise HTTPException(status_code=400, detail="[%s] Error creating routes. %s" % (
@@ -97,7 +101,9 @@ def delete_route(name: str):
         traceback.print_exc()
         logger.error("Failed deleting route %s" % name)
         raise HTTPException(status_code=400, detail=str(ex))
-    except:
+    except SystemExit as ex:
+        raise ex
+    except BaseException:
         traceback.print_exc()
         logger.error("Failed deleting route %s" % name)
         raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
@@ -181,7 +187,9 @@ async def verify_and_create_routes(namespace: str, request: Request):
         traceback.print_exc()
         logger.error("Error creating routes. %s" % (ex))
         raise HTTPException(status_code=400, detail="Error creating routes. %s" % (ex))
-    except:
+    except SystemExit as ex:
+        raise ex
+    except BaseException:
         traceback.print_exc()
         logger.error("Error creating routes. %s" % (sys.exc_info()[0]))
         raise HTTPException(status_code=400, detail="Error creating routes. %s" % (sys.exc_info()[0]))
@@ -196,7 +204,9 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 traceback.print_exc()
                 logger.error("Failed deleting route %s" % route["name"])
                 raise HTTPException(status_code=400, detail=str(ex))
-            except:
+            except SystemExit as ex:
+                raise ex
+            except BaseException:
                 traceback.print_exc()
                 logger.error("Failed deleting route %s" % route["name"])
                 raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))

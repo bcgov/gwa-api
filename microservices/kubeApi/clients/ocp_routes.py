@@ -49,8 +49,9 @@ def kubectl_apply(fileName):
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to apply", out, err)
-        raise HTTPException(status_code=400, detail="Failed to apply routes")
+        ERR_MSG="Failed to apply routes"
+        logger.error(ERR_MSG, out, err)
+        raise HTTPException(status_code=400, detail=ERR_MSG)
 
 
 def kubectl_delete(type, name):
@@ -60,8 +61,9 @@ def kubectl_delete(type, name):
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to delete", out, err)
-        raise HTTPException(status_code=400, detail="Failed to delete %s %s" % (type, name))
+        ERR_MSG="Failed to delete %s %s" % (type, name)
+        logger.error(ERR_MSG, out, err)
+        raise HTTPException(status_code=400, detail=ERR_MSG)
 
 
 def delete_routes(rootPath):
@@ -72,8 +74,9 @@ def delete_routes(rootPath):
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to delete routes", out, err)
-        raise Exception("Failed to delete routes")
+        ERR_MSG="Failed to delete routes"
+        logger.error(ERR_MSG, out, err)
+        raise Exception(ERR_MSG)
 
 def prepare_mismatched_routes(select_tag, hosts, rootPath):
 
@@ -83,8 +86,9 @@ def prepare_mismatched_routes(select_tag, hosts, rootPath):
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to get existing routes", out, err)
-        raise Exception("Failed to get existing routes")
+        ERR_MSG="Failed to get existing routes"
+        logger.error(ERR_MSG, out, err)
+        raise Exception(ERR_MSG)
 
     current_routes = []
 
@@ -124,8 +128,9 @@ def prepare_route_last_version(ns, select_tag):
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to get existing routes", out, err)
-        raise Exception("Failed to get existing routes")
+        ERR_MSG="Failed to get existing routes"
+        logger.error(ERR_MSG, out, err)
+        raise Exception(ERR_MSG)
 
     resource_versions = {}
 
@@ -191,8 +196,9 @@ def get_gwa_ocp_routes(extralabels=""):
     out, err = run.communicate()
 
     if run.returncode != 0:
-        logger.error("Failed to get existing routes", out, err)
-        raise Exception("Failed to get existing routes")
+        ERR_MSG="Failed to get existing routes"
+        logger.error(ERR_MSG, out, err)
+        raise Exception(ERR_MSG)
 
     return json.loads(out)['items']
 
