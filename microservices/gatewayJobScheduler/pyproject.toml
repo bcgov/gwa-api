@@ -13,6 +13,15 @@ python-keycloak = "^0.26.1"
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.7"
 python-dotenv = "^0.19.1"
+pytest = "^8.2.0"
+pytest-cov = "^5.0.0"
+pytest-mock = "^3.14.0"
+
+[tool.coverage.run]
+relative_files = true
+omit = [
+    "tests"
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
