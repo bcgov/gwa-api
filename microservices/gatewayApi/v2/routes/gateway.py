@@ -186,7 +186,9 @@ def write_config(namespace: str) -> object:
         dry_run = request.values['dryRun']
         if "qualifier" in request.values:
             select_tag_qualifier = request.values['qualifier']
-    elif request.content_type.startswith("application/json") and not request.json['configFile'] in [None, '']:
+    elif request.content_type.startswith("application/json") \
+        and 'configFile' in request.json \
+        and not request.json['configFile'] in [None, '']:
         dfile = request.json['configFile']
         dry_run = request.json['dryRun']
         if "qualifier" in request.json:
@@ -483,8 +485,7 @@ def has_namespace_local_host_permission (ns_attributes):
 
 # Validate transformed host: <service>.<namespace>.svc.cluster.local
 def validate_local_host(host):
-    if is_host_local(host):
-      if len(host.split('.')) != 5:
+    if is_host_local(host) and len(host.split('.')) != 5:
         return False
     return True
   

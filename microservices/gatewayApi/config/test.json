@@ -1,6 +1,6 @@
 {
   "logLevel": "DEBUG",
-  "defaultDataPlane": "test-dp",
+  "defaultDataPlane": "test-default-dp",
   "kongAdminUrl": "http://kong",
   "portal": {
     "url": "http://portal"
@@ -14,5 +14,15 @@
   },
   "hostTransformation": {
     "enabled": false
+  },
+  "data_planes": {
+    "test-default-dp": {
+      "kube-api": "http://kube-api",
+      "kube-ns": "abcd-1234"
+    }
+  },
+  "kubeApiCreds": {
+    "kubeApiPass": "password",
+    "kubeApiUser": "username"
   }
 }
