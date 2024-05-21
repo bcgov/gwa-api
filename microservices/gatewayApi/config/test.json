@@ -1,0 +1,28 @@
+{
+  "logLevel": "DEBUG",
+  "defaultDataPlane": "test-default-dp",
+  "kongAdminUrl": "http://kong",
+  "portal": {
+    "url": "http://portal"
+  },
+  "protectedKubeNamespaces": "[\"platform\"]",
+  "plugins": {
+    "rate_limiting": {
+      "redis_host": "redishost",
+      "redis_password": "redispassword"
+    }
+  },
+  "hostTransformation": {
+    "enabled": false
+  },
+  "data_planes": {
+    "test-default-dp": {
+      "kube-api": "http://kube-api",
+      "kube-ns": "abcd-1234"
+    }
+  },
+  "kubeApiCreds": {
+    "kubeApiPass": "password",
+    "kubeApiUser": "username"
+  }
+}

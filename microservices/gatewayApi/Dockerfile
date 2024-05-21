@@ -5,8 +5,7 @@
 #  && go mod download \
 #  && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o deck \
 #       -ldflags "-s -w -X github.com/kong/deck/cmd.VERSION=$TAG -X github.com/kong/deck/cmd.COMMIT=$COMMIT"
-
-FROM python:3.8.15-alpine3.16
+FROM python:3.9-alpine3.18
 
 RUN mkdir /.kube
 
@@ -31,9 +30,18 @@ RUN curl -sL https://github.com/Kong/deck/releases/download/v1.27.1/deck_1.27.1_
    tar -xf deck.tar.gz -C /tmp && \
    cp /tmp/deck /usr/local/bin/deck127
 
-COPY requirements.txt requirements.txt
-
-RUN pip install -r requirements.txt
+RUN python -m pip install --upgrade pip
+# FIX: No module named 'urllib3.packages.six'
+RUN pip uninstall urllib3 && pip install urllib3
+RUN cd /tmp && \
+    curl -sSL https://install.python-poetry.org > get-poetry.py && \
+    POETRY_HOME=/opt/poetry python get-poetry.py --version 1.8.2 && \
+    cd /usr/local/bin && \
+    ln -s /opt/poetry/bin/poetry && \
+    poetry config virtualenvs.create false
+COPY pyproject.toml /tmp/
+COPY poetry.lock /tmp/
+RUN cd /tmp && poetry install --no-root --no-dev
 
 COPY . .
 

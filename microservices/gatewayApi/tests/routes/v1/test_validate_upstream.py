@@ -125,3 +125,4 @@ services:
 '''
     y = yaml.load(payload, Loader=yaml.FullLoader)
     validate_upstream (y, { "perm-protected-ns": ["deny"]}, ['my-namespace']) 
+

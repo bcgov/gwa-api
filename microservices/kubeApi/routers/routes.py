@@ -9,9 +9,11 @@ import traceback
 import os
 from auth.basic_auth import verify_credentials
 import sys
+import secrets
 from datetime import datetime
 from fastapi.logger import logger
 from config import settings
+from typing import Optional
 
 router = APIRouter(
     prefix="",
@@ -24,11 +26,24 @@ class OCPRoute(BaseModel):
     hosts: list
     select_tag: str
     ns_attributes: dict
+    overrides: dict | None = None
 
 
+class BulkSyncRequest(BaseModel):
+    # Name of the Route
+    name: str
+    # Namespace with optional qualifier
+    selectTag: str
+    # Dataplane (Kubernetes Service name for the particular Kong data plane)
+    dataPlane: str
+    # Route host
+    host: str
+    # Indicator of whether session cookies should be enabled by the Kube-API
+    sessionCookieEnabled: bool
+
+    
 @router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(verify_credentials)])
 def add_routes(namespace: str, route: OCPRoute):
-
     try:
         local_hosts = [a for a in route.hosts if a.endswith(".cluster.local")]
 
@@ -50,7 +65,9 @@ def add_routes(namespace: str, route: OCPRoute):
         traceback.print_exc()
         logger.error("[%s] Error creating services. %s" % (namespace, ex))
         raise HTTPException(status_code=400, detail="[%s] Error creating services. %s" % (namespace, ex))
-    except:
+    except SystemExit as ex:
+        raise ex
+    except BaseException:
         traceback.print_exc()
         logger.error("[%s] Error creating routes. %s" % (namespace, sys.exc_info()[0]))
         raise HTTPException(status_code=400, detail="[%s] Error creating routes. %s" % (
@@ -59,13 +76,13 @@ def add_routes(namespace: str, route: OCPRoute):
     try:
         hosts = [a for a in route.hosts if not a.endswith(".cluster.local")]
         
-        template_version = get_template_version(route.ns_attributes)
+        ns_template_version = get_template_version(route.ns_attributes)
 
         # do routeable hosts
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
         route_count = prepare_apply_routes(namespace, route.select_tag, hosts,
-                                           source_folder, get_data_plane(route.ns_attributes), template_version)
+                                           source_folder, get_data_plane(route.ns_attributes), ns_template_version, route.overrides)
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)
@@ -79,7 +96,9 @@ def add_routes(namespace: str, route: OCPRoute):
         traceback.print_exc()
         logger.error("[%s] Error creating routes. %s" % (namespace, ex))
         raise HTTPException(status_code=400, detail="[%s] Error creating routes. %s" % (namespace, ex))
-    except:
+    except SystemExit as ex:
+        raise ex
+    except BaseException:
         traceback.print_exc()
         logger.error("[%s] Error creating routes. %s" % (namespace, sys.exc_info()[0]))
         raise HTTPException(status_code=400, detail="[%s] Error creating routes. %s" % (
@@ -95,7 +114,9 @@ def delete_route(name: str):
         traceback.print_exc()
         logger.error("Failed deleting route %s" % name)
         raise HTTPException(status_code=400, detail=str(ex))
-    except:
+    except SystemExit as ex:
+        raise ex
+    except BaseException:
         traceback.print_exc()
         logger.error("Failed deleting route %s" % name)
         raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
@@ -132,6 +153,9 @@ def get_tls(namespace: str):
 @router.post("/namespaces/{namespace}/routes/sync", status_code=200, dependencies=[Depends(verify_credentials)])
 async def verify_and_create_routes(namespace: str, request: Request):
 
+    # We don't use BulkSyncRequest because it will give the error
+    # 'object is not subscriptable'
+    # source_routes: list[BulkSyncRequest]
     source_routes = await request.json()
 
     existing_routes_json = get_gwa_ocp_routes(extralabels="aps-namespace=%s" % namespace)
@@ -148,9 +172,8 @@ async def verify_and_create_routes(namespace: str, request: Request):
             }
         )
 
-    insert_batch = [x for x in source_routes if x not in existing_routes]
-
-    delete_batch = [y for y in existing_routes if y not in source_routes]
+    insert_batch = [x for x in source_routes if not in_list(x, existing_routes)]
+    delete_batch = [y for y in existing_routes if not in_list(y, source_routes)]
 
     logger.debug("insert batch: " + str(insert_batch))
 
@@ -158,17 +181,21 @@ async def verify_and_create_routes(namespace: str, request: Request):
 
     # TODO: We shouldn't assume it is always v2 - caller needs to get
     # this info from ns_attributes
-    template_version = "v2"
+    ns_template_version = "v2"
 
     try:
         if len(insert_batch) > 0:
-            logger.debug("Creating %s routes" % (len(insert_batch)))
-            source_folder = "%s/%s" % ('/tmp/sync', f'{datetime.now():%Y%m%d%H%M%S}')
+            source_folder = "%s/%s-%s" % ('/tmp/sync', f'{datetime.now():%Y%m%d%H%M%S}', secrets.token_hex(5))
             os.makedirs(source_folder, exist_ok=False)
 
+            logger.debug("Creating %s routes - tmp %s" % (len(insert_batch), source_folder))
+
             for route in insert_batch:
+                overrides = {}
+                if 'sessionCookieEnabled' in route and route['sessionCookieEnabled']:
+                    overrides['aps.route.session.cookie.enabled'] = [ route['host'] ]
                 route_count = prepare_apply_routes(namespace, route['selectTag'], [
-                                                   route['host']], source_folder, route["dataPlane"], template_version)
+                                                   route['host']], source_folder, route["dataPlane"], ns_template_version, overrides)
                 logger.debug("[%s] - Prepared %d routes" % (namespace, route_count))
                 apply_routes(source_folder)
                 logger.debug("[%s] - Applied %d routes" % (namespace, route_count))
@@ -176,7 +203,9 @@ async def verify_and_create_routes(namespace: str, request: Request):
         traceback.print_exc()
         logger.error("Error creating routes. %s" % (ex))
         raise HTTPException(status_code=400, detail="Error creating routes. %s" % (ex))
-    except:
+    except SystemExit as ex:
+        raise ex
+    except BaseException:
         traceback.print_exc()
         logger.error("Error creating routes. %s" % (sys.exc_info()[0]))
         raise HTTPException(status_code=400, detail="Error creating routes. %s" % (sys.exc_info()[0]))
@@ -191,11 +220,13 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 traceback.print_exc()
                 logger.error("Failed deleting route %s" % route["name"])
                 raise HTTPException(status_code=400, detail=str(ex))
-            except:
+            except SystemExit as ex:
+                raise ex
+            except BaseException:
                 traceback.print_exc()
                 logger.error("Failed deleting route %s" % route["name"])
                 raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
-    return Response(status_code=200)
+    return Response(status_code=200, content='{"message": "synced"}')
 
 
 def get_data_plane(ns_attributes):
@@ -204,3 +235,13 @@ def get_data_plane(ns_attributes):
 
 def get_template_version(ns_attributes):
     return ns_attributes.get('template-version', ["v2"])[0]
+
+def in_list (match, list):
+    match_ref =  build_ref(match)
+    for item in list:
+        if build_ref(item) == match_ref:
+            return True
+    return False
+
+def build_ref(v):
+    return "%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'])

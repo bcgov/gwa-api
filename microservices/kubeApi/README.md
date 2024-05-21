@@ -20,14 +20,13 @@ brew update
 brew install pyenv
 pyenv install 3.9
 pyenv global 3.9
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+curl -sSL https://install.python-poetry.org | python3 -
 ```
 
 #### Requirements
 
 ```bash
-cd /api-serv-infra/dockerfiles/healthapi
-poetry env use 3.9
+poetry env use 3.9 # (optional)
 poetry install
 ```
 
@@ -46,4 +45,22 @@ docker run -ti --rm \
   -v `pwd`/_tmp:/tmp \
   kubeapi
 
+```
+
+### Development
+
+Locally running:
+
+```sh
+ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
+uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+```
+
+Testing:
+
+```sh
+ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
+poetry run coverage run --branch -m pytest -s
+
+poetry run coverage xml
 ```
