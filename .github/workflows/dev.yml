@@ -37,7 +37,17 @@ jobs:
           cd microservices/gatewayApi
           poetry install --no-root
           ENV=test GITHASH=11223344 \
-          poetry run coverage run --branch -m pytest -s
+          poetry run coverage run --branch -m pytest -s -v
+          poetry run coverage xml
+
+      - name: Test coverage for Scheduler API
+        run: |
+          export PATH=/root/.local/bin:$PATH
+          cd microservices/gatewayJobScheduler
+          poetry install --no-root
+          SYNC_INTERVAL=1000 \
+          DATA_PLANE=test-dp \
+          poetry run coverage run --branch -m pytest -s -v
           poetry run coverage xml
 
       - name: Test coverage for Kube API
@@ -46,7 +56,7 @@ jobs:
           cd microservices/kubeApi
           poetry install --no-root
           ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
-          poetry run coverage run --branch -m pytest -s
+          poetry run coverage run --branch -m pytest -s -v
           poetry run coverage xml
 
       - name: SonarCloud Scan

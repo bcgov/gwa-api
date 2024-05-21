@@ -1,13 +1,14 @@
 [tool.poetry]
 name = "gatewayapischeduler"
 version = "1.0.0"
+package-mode = false
 description = "Job scheduler to run jobs at specified intervals"
 authors = ["Nithin Shekar Kuruba <nithinshekar.kuruba@gov.bc.ca>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
 requests = "^2.26.0"
-schedule = "^1.1.0"
+schedule = "^1.2.1"
 python-keycloak = "^0.26.1"
 
 [tool.poetry.dev-dependencies]

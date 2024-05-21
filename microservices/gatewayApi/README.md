@@ -84,5 +84,6 @@ Testing:
 ```sh
 ENV=test GITHASH=11223344 \
 poetry run coverage run --branch -m pytest -s
+
 coverage xml
 ```

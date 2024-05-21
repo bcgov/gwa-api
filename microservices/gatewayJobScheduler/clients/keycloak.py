@@ -1,7 +1,6 @@
 from keycloak import KeycloakAdmin
 import os
 
-
 def admin_api():
 
     keycloak_admin = KeycloakAdmin(server_url=os.getenv('KC_SERVER_URL'),
