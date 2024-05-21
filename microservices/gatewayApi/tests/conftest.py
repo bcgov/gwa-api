@@ -18,35 +18,14 @@ def app(mocker):
     mock_deck(mocker)
     mock_kubeapi(mocker)
 
-    #mocker.patch("auth.authz.enforce_authorization", return_value=True)
-
-    # def mock_resource_protector():
-    #     raise Exception ("Hhu")
-
-    #     return True
-    # mocker.patch("authlib.integrations.flask_oauth2.ResourceProtector", return_value=mock_resource_protector)
-    # mocker.patch("auth.auth.do_validate", return_value=mock_resource_protector)
-    #mocker.patch("v2.routes.gateway.uma_enforce", mock_resource_protector)
-    #mocker.patch("clients.keycloak.admin_api", return_value=mock_kc_admin)
-
-
     from app import create_app
-
     app = create_app()
-
     yield app
-
 
 @pytest.fixture
 def client(app):
     """A test client for the app."""
     return app.test_client()
-
-
-# @pytest.fixture
-# def runner(app):
-#     """A test runner for the app's Click commands."""
-#     return app.test_cli_runner()
 
 def mock_auth(mocker):
     def mock_decorator(f):
