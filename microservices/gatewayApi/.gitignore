@@ -203,7 +203,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-config/*.json
+config/default.json
 
 LOCAL.md
 _tmp

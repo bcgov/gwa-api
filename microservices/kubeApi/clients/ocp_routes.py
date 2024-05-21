@@ -38,19 +38,21 @@ def read_and_indent(full_path, indent):
     return result
 
 
-def apply_routes(rootPath):
-    kubectl_apply("%s/routes-current.yaml" % rootPath)
+def apply_routes(root_path):
+    kubectl_apply("%s/routes-current.yaml" % root_path)
 
 
-def kubectl_apply(fileName):
+def kubectl_apply(file_name):
     args = [
-        "kubectl", "apply", "-f", fileName
+        "kubectl", "apply", "-f", file_name
     ]
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
+
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to apply", out, err)
-        raise HTTPException(status_code=400, detail="Failed to apply routes")
+        ERR_MSG="Failed to apply routes"
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
+        raise HTTPException(status_code=400, detail=ERR_MSG)
 
 
 def kubectl_delete(type, name):
@@ -60,22 +62,23 @@ def kubectl_delete(type, name):
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to delete", out, err)
-        raise HTTPException(status_code=400, detail="Failed to delete %s %s" % (type, name))
+        ERR_MSG="Failed to delete %s %s" % (type, name)
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
+        raise HTTPException(status_code=400, detail=ERR_MSG)
 
 
-def delete_routes(rootPath):
-    print(rootPath)
+def delete_routes(root_path):
     args = [
-        "kubectl", "delete", "-f", "%s/routes-deletions.yaml" % rootPath
+        "kubectl", "delete", "-f", "%s/routes-deletions.yaml" % root_path
     ]
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to delete routes", out, err)
-        raise Exception("Failed to delete routes")
+        ERR_MSG="Failed to delete routes"
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
+        raise Exception(ERR_MSG)
 
-def prepare_mismatched_routes(select_tag, hosts, rootPath):
+def prepare_mismatched_routes(select_tag, hosts, root_path):
 
     args = [
         "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
@@ -83,8 +86,9 @@ def prepare_mismatched_routes(select_tag, hosts, rootPath):
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to get existing routes", out, err)
-        raise Exception("Failed to get existing routes")
+        ERR_MSG="Failed to get existing routes"
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
+        raise Exception(ERR_MSG)
 
     current_routes = []
 
@@ -101,7 +105,7 @@ def prepare_mismatched_routes(select_tag, hosts, rootPath):
         if match == False:
             delete_list.append(route_name)
 
-    out_filename = "%s/routes-deletions.yaml" % rootPath
+    out_filename = "%s/routes-deletions.yaml" % root_path
 
     with open(out_filename, 'w') as out_file:
         index = 1
@@ -124,8 +128,9 @@ def prepare_route_last_version(ns, select_tag):
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to get existing routes", out, err)
-        raise Exception("Failed to get existing routes")
+        ERR_MSG="Failed to get existing routes"
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
+        raise Exception(ERR_MSG)
 
     resource_versions = {}
 
@@ -135,18 +140,22 @@ def prepare_route_last_version(ns, select_tag):
     return resource_versions
 
 
-def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane, template_version):
-    out_filename = "%s/routes-current.yaml" % rootPath
-    ts = int(time.time())
-    fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
+def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_template_version, overrides):
+    out_filename = "%s/routes-current.yaml" % root_path
+    ts = time_secs()
+    fmt_time = datetime.fromtimestamp(ts).strftime("%Y.%m-%b.%d")
 
     resource_versions = prepare_route_last_version(ns, select_tag)
-
-    route_template = ROUTES[template_version]["ROUTE"]
 
     with open(out_filename, 'w') as out_file:
         index = 1
         for host in hosts:
+            templ_version = ns_template_version
+            if overrides and 'aps.route.session.cookie.enabled' in overrides and host in overrides['aps.route.session.cookie.enabled']:
+                templ_version = 'v1'
+            
+            route_template = ROUTES[templ_version]["ROUTE"]
+
             # If host transformation is disabled, then select the appropriate
             # SSL cert based on the suffix mapping
             ssl_ref = "tls"
@@ -168,7 +177,7 @@ def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane, template_v
                          (select_tag, index, select_tag.replace('.', '-'), host, resource_version))
             out_file.write(route_template.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/',
                                             ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time, data_plane=data_plane,
-                                            template_version=template_version))
+                                            template_version=templ_version))
             out_file.write('\n---\n')
             index = index + 1
         out_file.close()
@@ -187,7 +196,11 @@ def get_gwa_ocp_routes(extralabels=""):
     out, err = run.communicate()
 
     if run.returncode != 0:
-        logger.error("Failed to get existing routes", out, err)
-        raise Exception("Failed to get existing routes")
+        ERR_MSG="Failed to get existing routes"
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
+        raise Exception(ERR_MSG)
 
     return json.loads(out)['items']
+
+def time_secs():
+    return int(time.time())

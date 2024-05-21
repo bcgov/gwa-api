@@ -8,7 +8,7 @@ host_transformation = {
     "enabled": config('HOST_TRANSFORM_ENABLED', cast=bool, default=False)
 }
 
-log_level = config('LOG_LEVEL')
+log_level = config('LOG_LEVEL', default='DEBUG' )
 
 access_credentials = {
     "accessUser": config('ACCESS_USER'),

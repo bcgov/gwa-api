@@ -10,21 +10,22 @@ from config import settings
 from fastapi.logger import logger
 from clients.ocp_routes import kubectl_apply
 
-def apply_services(rootPath):
-    kubectl_apply("%s/services-current.yaml" % rootPath)
+def apply_services(root_path):
+    kubectl_apply("%s/services-current.yaml" % root_path)
 
-def delete_services(rootPath):
-    print(rootPath)
+def delete_services(root_path):
+    print(root_path)
     args = [
-        "kubectl", "delete", "-f", "%s/services-deletions.yaml" % rootPath
+        "kubectl", "delete", "-f", "%s/services-deletions.yaml" % root_path
     ]
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to delete services", out, err)
-        raise Exception("Failed to delete services")
+        ERR_MSG="Failed to delete services"
+        logger.error(ERR_MSG, out, err)
+        raise Exception(ERR_MSG)
 
-def prepare_mismatched_services(select_tag, hosts, rootPath):
+def prepare_mismatched_services(select_tag, hosts, root_path):
 
     args = [
         "kubectl", "get", "services", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
@@ -32,8 +33,9 @@ def prepare_mismatched_services(select_tag, hosts, rootPath):
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to get existing services", out, err)
-        raise Exception("Failed to get existing services")
+        ERR_MSG="Failed to get existing services"
+        logger.error(ERR_MSG, out, err)
+        raise Exception(ERR_MSG)
 
     current_services = []
 
@@ -51,7 +53,7 @@ def prepare_mismatched_services(select_tag, hosts, rootPath):
         if match == False:
             delete_list.append(service_name)
 
-    out_filename = "%s/services-deletions.yaml" % rootPath
+    out_filename = "%s/services-deletions.yaml" % root_path
 
     with open(out_filename, 'w') as out_file:
         index = 1
@@ -74,8 +76,9 @@ def prepare_service_last_version(ns, select_tag):
     run = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = run.communicate()
     if run.returncode != 0:
-        logger.error("Failed to get existing services", out, err)
-        raise Exception("Failed to get existing services")
+        ERR_MSG="Failed to get existing services"
+        logger.error(ERR_MSG, out, err)
+        raise Exception(ERR_MSG)
 
     resource_versions = {}
 
@@ -85,8 +88,8 @@ def prepare_service_last_version(ns, select_tag):
     return resource_versions
 
 
-def prepare_apply_services(ns, select_tag, hosts, rootPath, data_plane):
-    out_filename = "%s/services-current.yaml" % rootPath
+def prepare_apply_services(ns, select_tag, hosts, root_path, data_plane):
+    out_filename = "%s/services-current.yaml" % root_path
     ts = int(time.time())
     fmt_time = datetime.now().strftime("%Y.%m-%b.%d")
 
@@ -126,13 +129,13 @@ def get_gwa_ocp_services(extralabels=""):
     out, err = run.communicate()
 
     if run.returncode != 0:
-        logger.error("Failed to get existing services", out, err)
-        raise Exception("Failed to get existing services")
+        ERR_MSG="Failed to get existing services"
+        logger.error(ERR_MSG, out, err)
+        raise Exception(ERR_MSG)
 
     return json.loads(out)['items']
 
 def get_gwa_ocp_service_secrets(extralabels=""):
-
     secret_names = []
     result_data = []
     services = get_gwa_ocp_services(extralabels=extralabels)
@@ -179,8 +182,9 @@ def get_secrets(names):
     out, err = run.communicate()
 
     if run.returncode != 0:
-        logger.error("Failed to get existing secrets", out, err)
-        raise Exception("Failed to get existing secrets")
+        ERR_MSG="Failed to get existing secrets"
+        logger.error(ERR_MSG, out, err)
+        raise Exception(ERR_MSG)
 
     json_out = json.loads(out)
     if 'items' in json_out:

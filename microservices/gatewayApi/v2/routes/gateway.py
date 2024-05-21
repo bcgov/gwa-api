@@ -13,7 +13,7 @@ import yaml
 from werkzeug.exceptions import HTTPException, NotFound
 from flask import Blueprint, config, jsonify, request, Response, make_response, abort, g, current_app as app
 from io import TextIOWrapper
-from clients.ocp_routes import get_host_list
+from clients.ocp_routes import get_host_list, get_route_overrides
 
 from v2.auth.auth import admin_jwt, uma_enforce
 
@@ -137,10 +137,6 @@ def delete_config(namespace: str, qualifier="") -> object:
 
     log.debug("[%s] The exit code was: %d" % (namespace, deck_run.returncode))
 
-    message = "Sync successful."
-    if cmd == 'diff':
-        message = "Dry-run.  No changes applied."
-
     record_gateway_event(event_id, 'delete', 'completed', namespace)
     return make_response('', http.HTTPStatus.NO_CONTENT)
 
@@ -186,7 +182,9 @@ def write_config(namespace: str) -> object:
         dry_run = request.values['dryRun']
         if "qualifier" in request.values:
             select_tag_qualifier = request.values['qualifier']
-    elif request.content_type.startswith("application/json") and not request.json['configFile'] in [None, '']:
+    elif request.content_type.startswith("application/json") \
+        and 'configFile' in request.json \
+        and not request.json['configFile'] in [None, '']:
         dfile = request.json['configFile']
         dry_run = request.json['dryRun']
         if "qualifier" in request.json:
@@ -315,7 +313,7 @@ def write_config(namespace: str) -> object:
     out, err = deck_validate.communicate()
 
     if deck_validate.returncode != 0:
-        log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
+        log.warning("[%s] - %s" % (namespace, out.decode('utf-8')))
         abort_early(event_id, 'validate', namespace, jsonify(
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
@@ -339,7 +337,10 @@ def write_config(namespace: str) -> object:
                 route_payload = {
                     "hosts": host_list,
                     "select_tag": selectTag,
-                    "ns_attributes": ns_attributes.getAttrs()
+                    "ns_attributes": ns_attributes.getAttrs(),
+                    "overrides": {
+                        "aps.route.session.cookie.enabled": get_route_overrides(tempFolder, "aps.route.session.cookie.enabled")
+                    }
                 }
                 rqst_url = app.config['data_planes'][dp]["kube-api"]
                 log.debug("[%s] - Initiating request to kube API" % (dp))
@@ -480,8 +481,7 @@ def has_namespace_local_host_permission (ns_attributes):
 
 # Validate transformed host: <service>.<namespace>.svc.cluster.local
 def validate_local_host(host):
-    if is_host_local(host):
-      if len(host.split('.')) != 5:
+    if is_host_local(host) and len(host.split('.')) != 5:
         return False
     return True
   
