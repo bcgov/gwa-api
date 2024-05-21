@@ -1,0 +1,18 @@
+{
+  "logLevel": "DEBUG",
+  "defaultDataPlane": "test-dp",
+  "kongAdminUrl": "http://kong",
+  "portal": {
+    "url": "http://portal"
+  },
+  "protectedKubeNamespaces": "[\"platform\"]",
+  "plugins": {
+    "rate_limiting": {
+      "redis_host": "redishost",
+      "redis_password": "redispassword"
+    }
+  },
+  "hostTransformation": {
+    "enabled": false
+  }
+}
