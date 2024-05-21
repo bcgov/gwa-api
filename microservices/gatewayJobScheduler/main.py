@@ -107,7 +107,7 @@ def transform_data_by_ns(data):
                 for host in route_obj['hosts']:
                     name = 'wild-%s-%s' % (select_tag.replace(".", "-"), host)
                     ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host,
-                                               "session_cookie_enabled": session_cookie_enabled,
+                                               "sessionCookieEnabled": session_cookie_enabled,
                                                "dataPlane": os.getenv('DATA_PLANE')})
         return ns_dict
     except Exception as err:

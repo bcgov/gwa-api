@@ -29,6 +29,19 @@ class OCPRoute(BaseModel):
     overrides: dict | None = None
 
 
+class BulkSyncRequest(BaseModel):
+    # Name of the Route
+    name: str
+    # Namespace with optional qualifier
+    selectTag: str
+    # Dataplane (Kubernetes Service name for the particular Kong data plane)
+    dataPlane: str
+    # Route host
+    host: str
+    # Indicator of whether session cookies should be enabled by the Kube-API
+    sessionCookieEnabled: bool
+
+    
 @router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(verify_credentials)])
 def add_routes(namespace: str, route: OCPRoute):
     try:
@@ -138,9 +151,7 @@ def get_tls(namespace: str):
     return kong_certs
 
 @router.post("/namespaces/{namespace}/routes/sync", status_code=200, dependencies=[Depends(verify_credentials)])
-async def verify_and_create_routes(namespace: str, request: Request):
-
-    source_routes = await request.json()
+async def verify_and_create_routes(namespace: str, source_routes: list[BulkSyncRequest]):
 
     existing_routes_json = get_gwa_ocp_routes(extralabels="aps-namespace=%s" % namespace)
 
@@ -176,7 +187,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
 
             for route in insert_batch:
                 overrides = {}
-                if 'session_cookie_enabled' in route and route['session_cookie_enabled']:
+                if 'sessionCookieEnabled' in route and route['sessionCookieEnabled']:
                     overrides['aps.route.session.cookie.enabled'] = [ route['host'] ]
                 route_count = prepare_apply_routes(namespace, route['selectTag'], [
                                                    route['host']], source_folder, route["dataPlane"], ns_template_version, overrides)
