@@ -76,8 +76,7 @@ helm upgrade --install gwa-kong-api --namespace ocwa bcgov/generic-api
 Locally running:
 
 ```sh
-ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
-uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+uvicorn wsgi:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 Testing:
