@@ -47,10 +47,11 @@ def kubectl_apply(file_name):
         "kubectl", "apply", "-f", file_name
     ]
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
+
     out, err = run.communicate()
     if run.returncode != 0:
         ERR_MSG="Failed to apply routes"
-        logger.error(ERR_MSG, out, err)
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
         raise HTTPException(status_code=400, detail=ERR_MSG)
 
 
@@ -62,12 +63,11 @@ def kubectl_delete(type, name):
     out, err = run.communicate()
     if run.returncode != 0:
         ERR_MSG="Failed to delete %s %s" % (type, name)
-        logger.error(ERR_MSG, out, err)
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
         raise HTTPException(status_code=400, detail=ERR_MSG)
 
 
 def delete_routes(root_path):
-    print(root_path)
     args = [
         "kubectl", "delete", "-f", "%s/routes-deletions.yaml" % root_path
     ]
@@ -75,7 +75,7 @@ def delete_routes(root_path):
     out, err = run.communicate()
     if run.returncode != 0:
         ERR_MSG="Failed to delete routes"
-        logger.error(ERR_MSG, out, err)
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
         raise Exception(ERR_MSG)
 
 def prepare_mismatched_routes(select_tag, hosts, root_path):
@@ -87,7 +87,7 @@ def prepare_mismatched_routes(select_tag, hosts, root_path):
     out, err = run.communicate()
     if run.returncode != 0:
         ERR_MSG="Failed to get existing routes"
-        logger.error(ERR_MSG, out, err)
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
         raise Exception(ERR_MSG)
 
     current_routes = []
@@ -129,7 +129,7 @@ def prepare_route_last_version(ns, select_tag):
     out, err = run.communicate()
     if run.returncode != 0:
         ERR_MSG="Failed to get existing routes"
-        logger.error(ERR_MSG, out, err)
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
         raise Exception(ERR_MSG)
 
     resource_versions = {}
@@ -197,7 +197,7 @@ def get_gwa_ocp_routes(extralabels=""):
 
     if run.returncode != 0:
         ERR_MSG="Failed to get existing routes"
-        logger.error(ERR_MSG, out, err)
+        logger.error("%s : %s %s" % (ERR_MSG, out, err))
         raise Exception(ERR_MSG)
 
     return json.loads(out)['items']
