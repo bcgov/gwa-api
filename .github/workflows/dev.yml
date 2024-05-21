@@ -31,6 +31,15 @@ jobs:
           sudo apt install -y pipx git
           pipx ensurepath
           pipx install poetry
+      - name: Test coverage for Gateway API
+        run: |
+          export PATH=/root/.local/bin:$PATH
+          cd microservices/gatewayApi
+          poetry install --no-root
+          ENV=test GITHASH=11223344 \
+          poetry run coverage run --branch -m pytest -s
+          poetry run coverage xml
+
       - name: Test coverage for Kube API
         run: |
           export PATH=/root/.local/bin:$PATH
