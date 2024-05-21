@@ -15,7 +15,6 @@ import threading
 
 import v1.v1 as v1
 import v2.v2 as v2
-import v3.v3 as v3
 
 def create_app(test_config=None):
 
@@ -44,7 +43,6 @@ def create_app(test_config=None):
     ##Routes##
     v1.Register(app)
     v2.Register(app)
-    v3.Register(app)
     Compress(app)
 
     @app.before_request

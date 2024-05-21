@@ -315,7 +315,7 @@ def write_config(namespace: str) -> object:
     out, err = deck_validate.communicate()
 
     if deck_validate.returncode != 0:
-        log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
+        log.warning("[%s] - %s" % (namespace, out.decode('utf-8')))
         abort_early(event_id, 'validate', namespace, jsonify(
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
