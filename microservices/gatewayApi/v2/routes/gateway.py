@@ -137,10 +137,6 @@ def delete_config(namespace: str, qualifier="") -> object:
 
     log.debug("[%s] The exit code was: %d" % (namespace, deck_run.returncode))
 
-    message = "Sync successful."
-    if cmd == 'diff':
-        message = "Dry-run.  No changes applied."
-
     record_gateway_event(event_id, 'delete', 'completed', namespace)
     return make_response('', http.HTTPStatus.NO_CONTENT)
 

@@ -144,6 +144,12 @@ def mock_kubeapi(mocker):
                 # def json():
                 #     return {}
             return Response
+        elif (url == 'http://kube-api/namespaces/ns1/routes'):
+            class Response:
+                status_code = 201
+                # def json():
+                #     return {}
+            return Response
         else:
             raise Exception(url)
     
