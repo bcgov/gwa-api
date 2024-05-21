@@ -38,13 +38,13 @@ def read_and_indent(full_path, indent):
     return result
 
 
-def apply_routes(rootPath):
-    kubectl_apply("%s/routes-current.yaml" % rootPath)
+def apply_routes(root_path):
+    kubectl_apply("%s/routes-current.yaml" % root_path)
 
 
-def kubectl_apply(fileName):
+def kubectl_apply(file_name):
     args = [
-        "kubectl", "apply", "-f", fileName
+        "kubectl", "apply", "-f", file_name
     ]
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
@@ -66,10 +66,10 @@ def kubectl_delete(type, name):
         raise HTTPException(status_code=400, detail=ERR_MSG)
 
 
-def delete_routes(rootPath):
-    print(rootPath)
+def delete_routes(root_path):
+    print(root_path)
     args = [
-        "kubectl", "delete", "-f", "%s/routes-deletions.yaml" % rootPath
+        "kubectl", "delete", "-f", "%s/routes-deletions.yaml" % root_path
     ]
     run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = run.communicate()
@@ -78,7 +78,7 @@ def delete_routes(rootPath):
         logger.error(ERR_MSG, out, err)
         raise Exception(ERR_MSG)
 
-def prepare_mismatched_routes(select_tag, hosts, rootPath):
+def prepare_mismatched_routes(select_tag, hosts, root_path):
 
     args = [
         "kubectl", "get", "routes", "-l", "aps-select-tag=%s" % select_tag, "-o", "json"
@@ -105,7 +105,7 @@ def prepare_mismatched_routes(select_tag, hosts, rootPath):
         if match == False:
             delete_list.append(route_name)
 
-    out_filename = "%s/routes-deletions.yaml" % rootPath
+    out_filename = "%s/routes-deletions.yaml" % root_path
 
     with open(out_filename, 'w') as out_file:
         index = 1
@@ -140,8 +140,8 @@ def prepare_route_last_version(ns, select_tag):
     return resource_versions
 
 
-def prepare_apply_routes(ns, select_tag, hosts, rootPath, data_plane, ns_template_version, overrides):
-    out_filename = "%s/routes-current.yaml" % rootPath
+def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_template_version, overrides):
+    out_filename = "%s/routes-current.yaml" % root_path
     ts = time_secs()
     fmt_time = datetime.fromtimestamp(ts).strftime("%Y.%m-%b.%d")
 
