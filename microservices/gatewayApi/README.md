@@ -1,6 +1,6 @@
 # GWA Kong API
 
-## Installation
+## Getting Started
 
 Install requires access to the Kong Admin API.
 
@@ -65,25 +65,25 @@ Replace the configuration values as necessary and LOCALPORT with the local port 
 
 Go to: http://localhost:2000/docs/
 
-## Helm
-
-### Helm Install (Kubernetes)
+### Helm Install
 
 ```sh
 helm upgrade --install gwa-kong-api --namespace ocwa bcgov/generic-api
 ```
 
-## Test
+### Development
+
+Locally running:
 
 ```sh
-pip install '.[test]'
-ENVIRONMENT=test pytest --verbose
+ACCESS_USER=kubeuser ACCESS_SECRET=s3cret \
+uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-Run with coverage support. The report will be generated in htmlcov/index.html.
+Testing:
 
 ```sh
-coverage run -m pytest
-coverage report
-coverage html
+ENV=test GITHASH=11223344 \
+poetry run coverage run --branch -m pytest -s
+coverage xml
 ```
