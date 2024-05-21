@@ -151,7 +151,12 @@ def get_tls(namespace: str):
     return kong_certs
 
 @router.post("/namespaces/{namespace}/routes/sync", status_code=200, dependencies=[Depends(verify_credentials)])
-async def verify_and_create_routes(namespace: str, source_routes: list[BulkSyncRequest]):
+async def verify_and_create_routes(namespace: str, request: Request):
+
+    # We don't use BulkSyncRequest because it will give the error
+    # 'object is not subscriptable'
+    # source_routes: list[BulkSyncRequest]
+    source_routes = await request.json()
 
     existing_routes_json = get_gwa_ocp_routes(extralabels="aps-namespace=%s" % namespace)
 

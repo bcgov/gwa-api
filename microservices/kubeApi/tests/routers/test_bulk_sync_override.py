@@ -71,7 +71,7 @@ def test_bulk_sync_new_route(client):
                             "selectTag": "ns.EXAMPLE-NS",
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
-                            "session_cookie_enabled": True
+                            "sessionCookieEnabled": True
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200
