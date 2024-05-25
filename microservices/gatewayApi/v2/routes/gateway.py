@@ -342,6 +342,7 @@ def write_config(namespace: str) -> object:
                         "aps.route.session.cookie.enabled": get_route_overrides(tempFolder, "aps.route.session.cookie.enabled")
                     }
                 }
+                log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload))
                 rqst_url = app.config['data_planes'][dp]["kube-api"]
                 log.debug("[%s] - Initiating request to kube API" % (dp))
                 res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(

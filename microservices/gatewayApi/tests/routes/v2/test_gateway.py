@@ -74,3 +74,26 @@ def test_happy_sync_gateway_call(client):
     response = client.put('/v2/namespaces/mytest/gateway', json=data)
     assert response.status_code == 200
     assert json.dumps(response.json) == '{"message": "Sync successful.", "results": "Deck reported no changes"}'
+
+def test_happy_with_session_cookie_gateway_call(client):
+    configFile = '''
+        services:
+        - name: my-service
+          host: myupstream.local
+          tags: ["ns.sescookie.dev", "another"]
+          routes:
+          - name: route-1
+            hosts: [ myapi.api.gov.bc.ca ]
+            tags: ["ns.sescookie.dev", "aps.route.session.cookie.enabled"]
+            plugins:
+            - name: acl-auth
+              tags: ["ns.sescookie.dev"]
+        '''
+
+    data={
+        "configFile": configFile,
+        "dryRun": False
+    }
+    response = client.put('/v2/namespaces/sescookie/gateway', json=data)
+    assert response.status_code == 200
+    assert json.dumps(response.json) == '{"message": "Sync successful.", "results": "Deck reported no changes"}'
