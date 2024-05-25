@@ -153,6 +153,8 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
             templ_version = ns_template_version
             if overrides and 'aps.route.session.cookie.enabled' in overrides and host in overrides['aps.route.session.cookie.enabled']:
                 templ_version = 'v1'
+            else:
+                logger.debug("[%s] %s No override applied %s", select_tag, hosts, str(overrides))
             
             route_template = ROUTES[templ_version]["ROUTE"]
 

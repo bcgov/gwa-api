@@ -21,7 +21,7 @@ from v1.services.namespaces import NamespaceService
 from clients.portal import record_gateway_event
 from clients.kong import get_routes
 from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
-from clients.ocp_routes import get_host_list, prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
+from clients.ocp_routes import get_host_list, get_route_overrides
 from clients.ocp_gateway_secret import prep_submitted_config, prep_and_apply_secret, write_submitted_config
 
 from utils.validators import host_valid
@@ -330,11 +330,14 @@ def write_config(namespace: str) -> object:
                 route_payload = {
                     "hosts": get_host_list(tempFolder),
                     "select_tag": selectTag,
-                    "ns_attributes": ns_attributes.getAttrs()
+                    "ns_attributes": ns_attributes.getAttrs(),
+                    "overrides": {
+                        "aps.route.session.cookie.enabled": get_route_overrides(tempFolder, "aps.route.session.cookie.enabled")
+                    }
                 }
                 dp = get_data_plane(ns_attributes)
+                log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload))
                 rqst_url = app.config['data_planes'][dp]["kube-api"]
-                log.debug("[%s] - Initiating request to kube API" % (dp))
                 res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                     app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
                 log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
