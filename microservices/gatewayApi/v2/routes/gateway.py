@@ -427,7 +427,12 @@ def validate_tags(yaml, required_tag):
         raise Exception('\n'.join(errors))
 
 def traverse(source, errors, yaml, required_tag, qualifiers):
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    # If at root level, allow different resources than if its traversed down a level
+    if source == "":
+        traversables = ['services', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    else:
+        traversables = ['routes', 'plugins']
+
     for k in yaml:
         if k in traversables:
             for index, item in enumerate(yaml[k]):
