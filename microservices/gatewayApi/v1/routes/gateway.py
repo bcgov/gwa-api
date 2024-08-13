@@ -418,11 +418,11 @@ def validate_tags(yaml, required_tag):
 
     if traverse_has_ns_qualifier(yaml, required_tag) and traverse_has_ns_tag_only(yaml, required_tag):
         errors.append(
-            "Tags for the namespace can not have a mix of 'ns.<namespace>' and 'ns.<namespace>.<qualifier>'.  Rejecting request.")
+            "Tags for the gateway can not have a mix of 'ns.<gateway>' and 'ns.<gateway>.<qualifier>'.  Rejecting request.")
 
     traverse("", errors, yaml, required_tag, qualifiers)
     if len(qualifiers) > 1:
-        errors.append("Too many different qualified namespaces (%s).  Rejecting request." % qualifiers)
+        errors.append("Too many different qualified gateways (%s).  Rejecting request." % qualifiers)
 
     if len(errors) != 0:
         raise Exception('\n'.join(errors))
@@ -553,12 +553,12 @@ def validate_hosts(yaml, reserved_hosts, ns_attributes):
                     if 'hosts' in route:
                         for host in route['hosts']:
                             if host in reserved_hosts:
-                                errors.append("service.%s.route.%s The host is already used in another namespace '%s'" % (
+                                errors.append("service.%s.route.%s The host is already used in another gateway '%s'" % (
                                     service['name'], route['name'], host))
                             if host_valid(host) is False:
                                 errors.append("Host not passing DNS-952 validation '%s'" % host)
                             if host_ends_with_one_of_list(host, allowed_domains) is False:
-                                errors.append("Host invalid: %s.  Route hosts must end with one of [%s] for this namespace." % (
+                                errors.append("Host invalid: %s.  Route hosts must end with one of [%s] for this gateway." % (
                                     route['name'], ','.join(allowed_domains)))
                     else:
                         errors.append("service.%s.route.%s A host must be specified for routes." %

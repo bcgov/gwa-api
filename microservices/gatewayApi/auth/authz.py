@@ -19,7 +19,7 @@ def enforce_authorization(namespace):
     # It can be in two formats: '/ns/<namespace>' or '<namespace>'
     ns = g.principal[the_ns_claim]
     if ns != namespace and ns != ('/%s/%s' % (users_group_root(), namespace)):
-        abort(make_response(jsonify(error="Not authorized to use %s namespace." % namespace), 403))
+        abort(make_response(jsonify(error="Not authorized to use %s gateway." % namespace), 403))
 
 def enforce_role_authorization(role):
     return

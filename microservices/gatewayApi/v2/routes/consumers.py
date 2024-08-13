@@ -143,7 +143,7 @@ def validate_tags(data, required_tag):
 
         if traverse_has_ns_qualifier(data, required_tag):
             errors.append(
-                "Tags for the namespace can not have a mix of 'ns.<namespace>' and 'ns.<namespace>.<qualifier>'.  Rejecting request.")
+                "Tags for the gateway can not have a mix of 'ns.<gateway>' and 'ns.<gateway>.<qualifier>'.  Rejecting request.")
     else:
         errors.append("no tags found")
 

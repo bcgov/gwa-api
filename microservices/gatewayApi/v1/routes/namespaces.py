@@ -35,7 +35,7 @@ def create_namespace() -> object:
 
     if not namespace_valid(namespace):
         log.error("Namespace validation failed %s", namespace)
-        abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
+        abort(make_response(jsonify(error="Gateway name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
 
     try:
         svc = NamespaceService()
@@ -50,11 +50,11 @@ def create_namespace() -> object:
         if err.response_code == 409:
             log.error("Namespace %s already created." % namespace)
             log.error(err)
-            abort(make_response(jsonify(error="Namespace is already created."), 400))
+            abort(make_response(jsonify(error="Gateway is already created."), 400))
         else:
             log.error("Failed to create namespace %s" % namespace)
             log.error(err)
-            abort(make_response(jsonify(error="Failed to add namespace"), 400))
+            abort(make_response(jsonify(error="Failed to add gateway"), 400))
 
     return ('', 201)
 
@@ -69,7 +69,7 @@ def update_namespace(namespace: str) -> object:
 
     if not namespace_valid(namespace):
         log.error("Namespace validation failed %s", namespace)
-        abort(make_response(jsonify(error="Namespace name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
+        abort(make_response(jsonify(error="Gateway name validation failed.  Reference regular expression '%s'." % namespace_validation_rule), 400))
 
     log.info("Updating namespace %s" % namespace)
 
@@ -84,7 +84,7 @@ def update_namespace(namespace: str) -> object:
     except KeycloakGetError as err:
         log.error("Failed to update namespace %s", namespace)
         log.error(err)
-        abort(make_response(jsonify(error="Failed to update namespace"), 400))
+        abort(make_response(jsonify(error="Failed to update gateway"), 400))
 
     return make_response(jsonify())
 
@@ -105,7 +105,7 @@ def delete_namespace(namespace: str) -> object:
 
     except KeycloakGetError as err:
         log.error(err)
-        abort(make_response(jsonify(error="Failed to delete namespace"), 400))
+        abort(make_response(jsonify(error="Failed to delete gateway"), 400))
 
     return ('', 204)
 
