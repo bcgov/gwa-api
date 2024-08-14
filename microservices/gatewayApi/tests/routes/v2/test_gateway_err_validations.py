@@ -49,7 +49,7 @@ def test_conflicting_qualifier(client):
     }
     response = client.put('/v2/namespaces/mytest/gateway', json=data)
     assert response.status_code == 400
-    assert json.dumps(response.json) == '{"error": "Validation Errors:\\nToo many different qualified namespaces ([\'ns.mytest.dev\', \'ns.mytest.prod\']).  Rejecting request."}'
+    assert json.dumps(response.json) == '{"error": "Validation Errors:\\nToo many different qualified gateways ([\'ns.mytest.dev\', \'ns.mytest.prod\']).  Rejecting request."}'
 
 
 def test_invalid_host(client):
@@ -73,7 +73,7 @@ def test_invalid_host(client):
     }
     response = client.put('/v2/namespaces/mytest/gateway', json=data)
     assert response.status_code == 400
-    assert json.dumps(response.json) == '{"error": "Validation Errors:\\nHost invalid: route-1 myapi.invalid.site.  Route hosts must end with one of [.api.gov.bc.ca,.cluster.local] for this namespace."}'
+    assert json.dumps(response.json) == '{"error": "Validation Errors:\\nHost invalid: route-1 myapi.invalid.site.  Route hosts must end with one of [.api.gov.bc.ca,.cluster.local] for this gateway."}'
 
 
 def test_conflicting_host(client):
@@ -97,7 +97,7 @@ def test_conflicting_host(client):
     }
     response = client.put('/v2/namespaces/mytest/gateway', json=data)
     assert response.status_code == 400
-    assert json.dumps(response.json) == '{"error": "Validation Errors:\\nservice.my-service.route.route-1 The host is already used in another namespace \'ns1-service.api.gov.bc.ca\'"}'
+    assert json.dumps(response.json) == '{"error": "Validation Errors:\\nservice.my-service.route.route-1 The host is already used in another gateway \'ns1-service.api.gov.bc.ca\'"}'
 
 def test_invalid_upstream(client):
     configFile = '''
