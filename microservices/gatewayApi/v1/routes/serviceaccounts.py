@@ -74,7 +74,7 @@ def create_service_account(namespace: str) -> object:
         return ({'client_id': cid, 'client_secret': r['value']}, 201)
     except KeycloakGetError as err:
         if err.response_code == 409:
-            abort(make_response(jsonify(error="Service Account for this namespace is already created."), 400))
+            abort(make_response(jsonify(error="Service Account for this gateway is already created."), 400))
         else:
             log.error(err)
             abort(make_response(jsonify(error="Failed to add service account"), 400))
@@ -97,7 +97,7 @@ def update_service_account_credentials(namespace: str, client_id: str) -> object
         return ({'client_id': client_id, 'client_secret': r['value']}, 201)
     except KeycloakGetError as err:
         if err.response_code == 409:
-            abort(make_response(jsonify(error="Service Account for this namespace is already created."), 400))
+            abort(make_response(jsonify(error="Service Account for this gateway is already created."), 400))
         else:
             log.error(err)
             abort(make_response(jsonify(error="Failed to add service account"), 400))
