@@ -169,7 +169,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 "selectTag": route["metadata"]["labels"]["aps-select-tag"],
                 "host": route["spec"]["host"],
                 "dataPlane": route["spec"]["to"]["name"],
-                "sessionCookieEnabled": route["metadata"]["labels"]["aps-template-version"] == "v1"
+                "sessionCookieEnabled": True if route["metadata"]["labels"].get("aps-template-version") == "v1" else False
             }
         )
 
