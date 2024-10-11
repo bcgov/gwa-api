@@ -6,7 +6,8 @@ def test_bulk_sync(client):
             "metadata": {
                 "name": "wild-ns-example",
                 "labels": {
-                    "aps-select-tag": "ns.EXAMPLE-NS"
+                    "aps-select-tag": "ns.EXAMPLE-NS",
+                    "aps-template-version": "v1"
                 }
             },
             "spec": {
