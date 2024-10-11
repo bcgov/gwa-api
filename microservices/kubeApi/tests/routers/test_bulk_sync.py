@@ -28,7 +28,8 @@ def test_bulk_sync(client):
                     "name": "wild-ns-example",
                     "selectTag": "ns.EXAMPLE-NS",
                     "dataPlane": "data-plane-1",
-                    "host": "abc.api.gov.bc.ca"
+                    "host": "abc.api.gov.bc.ca",
+                    "sessionCookieEnabled": True
                 }]
                 response = client.post('/namespaces/examplens/routes/sync', json=data)
                 assert response.status_code == 200
