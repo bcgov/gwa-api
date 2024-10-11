@@ -21,7 +21,7 @@ def transform_data_by_ns(data):
 
             logger.debug("%s - %s" % (namespace, ns_attr_dict[namespace].get('perm-data-plane', [''])))
 
-            # check if namespace has data plane attribute
+            # check if namespace has data plane attribute and needs to be synced
             if ns_attr_dict[namespace].get('perm-data-plane', [''])[0] == os.getenv('DATA_PLANE'):
                 session_cookie_enabled = False
                 if 'aps.route.session.cookie.enabled' in route_obj['tags']:
