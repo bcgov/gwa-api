@@ -6,7 +6,7 @@ description = "Gateway API for multi-tenant configuration on Kong API Gateway"
 authors = []
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.12"
 werkzeug = "2.2.2"
 ply = "3.10"
 cryptography = "38.0.4"
