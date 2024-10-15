@@ -31,12 +31,12 @@ jobs:
           sudo apt install -y pipx git
           pipx ensurepath
           pipx install poetry
-          poetry env list
 
       - name: Clean Poetry Environment
         run: |
           export PATH=/root/.local/bin:$PATH
           cd microservices/gatewayApi
+          poetry env list
           poetry env remove python || true
 
       - name: Test coverage for Gateway API
