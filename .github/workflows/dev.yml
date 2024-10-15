@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
       - name: Install deps
         run: |
           sudo apt update
@@ -34,7 +34,7 @@ jobs:
 
       - name: Clean Poetry Environment
         run: poetry env remove python || true
-        
+
       - name: Test coverage for Gateway API
         run: |
           export PATH=/root/.local/bin:$PATH
