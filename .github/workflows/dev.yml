@@ -32,17 +32,11 @@ jobs:
           pipx ensurepath
           pipx install poetry
 
-      - name: Clean Poetry Environment
-        run: |
-          export PATH=/root/.local/bin:$PATH
-          cd microservices/gatewayApi
-          poetry env list
-          poetry env remove python || true
-
       - name: Test coverage for Gateway API
         run: |
           export PATH=/root/.local/bin:$PATH
           cd microservices/gatewayApi
+          poetry env use 3.11
           poetry install --no-root --no-cache
           ENV=test GITHASH=11223344 \
           poetry run coverage run --branch -m pytest -s -v
