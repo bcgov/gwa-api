@@ -175,10 +175,6 @@ async def verify_and_create_routes(namespace: str, request: Request):
 
     insert_batch = [x for x in source_routes if not in_list(x, existing_routes)]
     delete_batch = [y for y in existing_routes if not in_list(y, source_routes)]
-
-    if namespace == "gw-41c0c":
-        logger.debug("source routes: " + str(source_routes))
-        logger.debug("existing routes: " + str(existing_routes))
         
     logger.debug("insert batch: " + str(insert_batch))
 
