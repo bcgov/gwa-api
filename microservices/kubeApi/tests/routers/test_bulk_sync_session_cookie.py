@@ -7,7 +7,7 @@ def test_bulk_sync(client):
                 "name": "wild-ns-example",
                 "labels": {
                     "aps-select-tag": "ns.EXAMPLE-NS",
-                    "aps-template-version": "v2"
+                    "aps-template-version": "v1"
                 }
             },
             "spec": {
@@ -30,7 +30,7 @@ def test_bulk_sync(client):
                     "selectTag": "ns.EXAMPLE-NS",
                     "dataPlane": "data-plane-1",
                     "host": "abc.api.gov.bc.ca",
-                    "sessionCookieEnabled": False
+                    "sessionCookieEnabled": True
                 }]
                 response = client.post('/namespaces/examplens/routes/sync', json=data)
                 assert response.status_code == 200

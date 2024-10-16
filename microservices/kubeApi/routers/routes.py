@@ -249,4 +249,4 @@ def in_list (match, list):
     return False
 
 def build_ref(v):
-    return "%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'], v['sessionCookieEnabled'])
+    return "%s%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'], v['sessionCookieEnabled'])
