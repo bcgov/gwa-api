@@ -1,6 +1,7 @@
 import uuid
 import base64
 from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
 from pydantic.main import BaseModel
 from starlette.responses import Response
 from clients.ocp_routes import get_gwa_ocp_routes, kubectl_delete, prepare_apply_routes, apply_routes, prepare_mismatched_routes, delete_routes
@@ -168,13 +169,14 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 "name": route["metadata"]["name"],
                 "selectTag": route["metadata"]["labels"]["aps-select-tag"],
                 "host": route["spec"]["host"],
-                "dataPlane": route["spec"]["to"]["name"]
+                "dataPlane": route["spec"]["to"]["name"],
+                "sessionCookieEnabled": True if route["metadata"]["labels"].get("aps-template-version") == "v1" else False
             }
         )
 
     insert_batch = [x for x in source_routes if not in_list(x, existing_routes)]
     delete_batch = [y for y in existing_routes if not in_list(y, source_routes)]
-
+        
     logger.debug("insert batch: " + str(insert_batch))
 
     logger.debug("delete batch: " + str(delete_batch))
@@ -182,6 +184,9 @@ async def verify_and_create_routes(namespace: str, request: Request):
     # TODO: We shouldn't assume it is always v2 - caller needs to get
     # this info from ns_attributes
     ns_template_version = "v2"
+
+    inserted_count = 0
+    deleted_count = 0
 
     try:
         if len(insert_batch) > 0:
@@ -193,22 +198,20 @@ async def verify_and_create_routes(namespace: str, request: Request):
             for route in insert_batch:
                 overrides = {}
                 if 'sessionCookieEnabled' in route and route['sessionCookieEnabled']:
-                    overrides['aps.route.session.cookie.enabled'] = [ route['host'] ]
+                    overrides['aps.route.session.cookie.enabled'] = [route['host']]
+                
                 route_count = prepare_apply_routes(namespace, route['selectTag'], [
                                                    route['host']], source_folder, route["dataPlane"], ns_template_version, overrides)
+                
                 logger.debug("[%s] - Prepared %d routes" % (namespace, route_count))
                 apply_routes(source_folder)
                 logger.debug("[%s] - Applied %d routes" % (namespace, route_count))
+
+                inserted_count += route_count
     except Exception as ex:
         traceback.print_exc()
         logger.error("Error creating routes. %s" % (ex))
         raise HTTPException(status_code=400, detail="Error creating routes. %s" % (ex))
-    except SystemExit as ex:
-        raise ex
-    except BaseException:
-        traceback.print_exc()
-        logger.error("Error creating routes. %s" % (sys.exc_info()[0]))
-        raise HTTPException(status_code=400, detail="Error creating routes. %s" % (sys.exc_info()[0]))
 
     if len(delete_batch) > 0:
         logger.debug("Deleting %s routes" % (len(delete_batch)))
@@ -216,18 +219,17 @@ async def verify_and_create_routes(namespace: str, request: Request):
             try:
                 kubectl_delete('route', route["name"])
                 logger.debug("[%s] - Deleted route %s" % (namespace, route["name"]))
+                deleted_count += 1
             except Exception as ex:
                 traceback.print_exc()
                 logger.error("Failed deleting route %s" % route["name"])
                 raise HTTPException(status_code=400, detail=str(ex))
-            except SystemExit as ex:
-                raise ex
-            except BaseException:
-                traceback.print_exc()
-                logger.error("Failed deleting route %s" % route["name"])
-                raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
-    return Response(status_code=200, content='{"message": "synced"}')
 
+    return JSONResponse(status_code=200, content={
+        "message": "synced",
+        "inserted_count": inserted_count,
+        "deleted_count": deleted_count
+    })
 
 def get_data_plane(ns_attributes):
     default_data_plane = settings.defaultDataPlane
@@ -244,4 +246,4 @@ def in_list (match, list):
     return False
 
 def build_ref(v):
-    return "%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'])
+    return "%s%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'], v['sessionCookieEnabled'])
