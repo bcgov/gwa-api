@@ -212,6 +212,12 @@ async def verify_and_create_routes(namespace: str, request: Request):
         traceback.print_exc()
         logger.error("Error creating routes. %s" % (ex))
         raise HTTPException(status_code=400, detail="Error creating routes. %s" % (ex))
+    except SystemExit as ex:
+        raise ex
+    except BaseException:
+        traceback.print_exc()
+        logger.error("Error creating routes. %s" % (sys.exc_info()[0]))
+        raise HTTPException(status_code=400, detail="Error creating routes. %s" % (sys.exc_info()[0]))
 
     if len(delete_batch) > 0:
         logger.debug("Deleting %s routes" % (len(delete_batch)))
@@ -224,6 +230,12 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 traceback.print_exc()
                 logger.error("Failed deleting route %s" % route["name"])
                 raise HTTPException(status_code=400, detail=str(ex))
+            except SystemExit as ex:
+                raise ex
+            except BaseException:
+                traceback.print_exc()
+                logger.error("Failed deleting route %s" % route["name"])
+                raise HTTPException(status_code=400, detail=str(sys.exc_info()[0]))
 
     return JSONResponse(status_code=200, content={
         "message": "synced",
