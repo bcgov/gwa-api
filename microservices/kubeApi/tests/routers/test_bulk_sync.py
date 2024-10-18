@@ -6,7 +6,8 @@ def test_bulk_sync(client):
             "metadata": {
                 "name": "wild-ns-example",
                 "labels": {
-                    "aps-select-tag": "ns.EXAMPLE-NS"
+                    "aps-select-tag": "ns.EXAMPLE-NS",
+                    "aps-template-version": "v2"
                 }
             },
             "spec": {
@@ -28,8 +29,12 @@ def test_bulk_sync(client):
                     "name": "wild-ns-example",
                     "selectTag": "ns.EXAMPLE-NS",
                     "dataPlane": "data-plane-1",
-                    "host": "abc.api.gov.bc.ca"
+                    "host": "abc.api.gov.bc.ca",
+                    "sessionCookieEnabled": False
                 }]
                 response = client.post('/namespaces/examplens/routes/sync', json=data)
                 assert response.status_code == 200
                 assert response.json()['message'] == 'synced'
+                assert response.json()['inserted_count'] == 0
+                assert response.json()['deleted_count'] == 0
+
