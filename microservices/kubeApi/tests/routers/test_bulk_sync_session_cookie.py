@@ -77,4 +77,4 @@ def test_bulk_sync_session_cookie_change(client):
                         assert response.status_code == 200
                         assert response.json()['message'] == 'synced'
                         assert response.json()['inserted_count'] == 1
-                        assert response.json()['deleted_count'] == 1
+                        assert response.json()['deleted_count'] == 0

@@ -175,7 +175,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
         )
 
     insert_batch = [x for x in source_routes if not in_list(x, existing_routes)]
-    delete_batch = [y for y in existing_routes if not in_list(y, source_routes)]
+    delete_batch = [y for y in existing_routes if not in_list_by_name(y, source_routes)]
         
     logger.debug("insert batch: " + str(insert_batch))
 
@@ -250,7 +250,7 @@ def get_data_plane(ns_attributes):
 def get_template_version(ns_attributes):
     return ns_attributes.get('template-version', ["v2"])[0]
 
-def in_list (match, list):
+def in_list(match, list):
     match_ref =  build_ref(match)
     for item in list:
         if build_ref(item) == match_ref:
@@ -259,3 +259,9 @@ def in_list (match, list):
 
 def build_ref(v):
     return "%s%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'], v['sessionCookieEnabled'])
+
+def in_list_by_name(match, list):
+    for item in list:
+        if item['name'] == match['name']:
+            return True
+    return False
