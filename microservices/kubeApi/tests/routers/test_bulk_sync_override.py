@@ -76,4 +76,4 @@ def test_bulk_sync_new_route(client):
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200
                         assert response.json()['message'] == 'synced'
-
+                        assert response.json()['inserted_count'] == 1
