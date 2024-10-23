@@ -10,26 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
-
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
       - name: Install deps
         run: |
           sudo apt update
           sudo apt install -y pipx git
           pipx ensurepath
           pipx install poetry
+
       - name: Test coverage for Gateway API
         run: |
           export PATH=/root/.local/bin:$PATH
           cd microservices/gatewayApi
-          poetry install --no-root
+          poetry env use 3.11
+          poetry install --no-root --no-cache
           ENV=test GITHASH=11223344 \
           poetry run coverage run --branch -m pytest -s -v
           poetry run coverage xml
