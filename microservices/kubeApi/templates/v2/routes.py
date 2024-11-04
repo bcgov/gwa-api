@@ -10,6 +10,7 @@ metadata:
     haproxy.router.openshift.io/balance: random
     haproxy.router.openshift.io/disable_cookies: 'true'
     haproxy.router.openshift.io/timeout: 30m
+${data_class_annotation}
   labels:
     aps-generated-by: "gwa-cli"
     aps-published-on: "${fmt_time}"

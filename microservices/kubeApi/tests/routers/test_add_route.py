@@ -11,6 +11,7 @@ metadata:
     haproxy.router.openshift.io/balance: random
     haproxy.router.openshift.io/disable_cookies: 'true'
     haproxy.router.openshift.io/timeout: 30m
+
   labels:
     aps-generated-by: "gwa-cli"
     aps-published-on: "2024.05-May.08"
@@ -50,7 +51,7 @@ def mock_apply_routes (rootPath):
     with open("%s/routes-current.yaml" % rootPath) as f:
         assert routes_current_yaml == f.read()
 
-def test_add_route_override(client):
+def test_add_route(client):
     with mock.patch('clients.ocp_routes.time_secs') as dt:
         dt.return_value = 1715153983
 
