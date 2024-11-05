@@ -343,6 +343,7 @@ def write_config(namespace: str) -> object:
                         "aps.route.dataclass.low": get_route_overrides(tempFolder, "aps.route.dataclass.low"),
                         "aps.route.dataclass.medium": get_route_overrides(tempFolder, "aps.route.dataclass.medium"),
                         "aps.route.dataclass.high": get_route_overrides(tempFolder, "aps.route.dataclass.high"),
+                        "aps.route.dataclass.public": get_route_overrides(tempFolder, "aps.route.dataclass.public"),
                     }
                 }
                 log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload))

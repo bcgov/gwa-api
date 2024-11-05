@@ -150,7 +150,11 @@ def mock_kubeapi(mocker):
                 'hosts': ['myapi.api.gov.bc.ca'], 
                 'ns_attributes': {'perm-domains': ['.api.gov.bc.ca', '.cluster.local']}, 
                 'overrides': {
-                    'aps.route.session.cookie.enabled': ['myapi.api.gov.bc.ca']
+                    'aps.route.session.cookie.enabled': ['myapi.api.gov.bc.ca'],
+                    "aps.route.dataclass.low": [],
+                    "aps.route.dataclass.medium": [],
+                    "aps.route.dataclass.high": [],
+                    "aps.route.dataclass.public": []
                 }, 
                 'select_tag': 'ns.sescookie.dev'
             }
