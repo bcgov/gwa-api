@@ -242,9 +242,6 @@ def write_config(namespace: str) -> object:
         # then add to tags automatically the tag: ns.<namespace>
         object_count = tags_transformation(namespace, gw_config)
 
-        # Pass down dataclass tag to routes in a service
-        service_tags_to_routes(gw_config, 'aps.route.dataclass')
-
         #
         # Enrich the rate-limiting plugin with the appropriate Redis details
         plugins_transformations(namespace, gw_config)
@@ -629,26 +626,6 @@ def traverse_tags_transform(yaml, namespace, required_tag):
                 object_count = object_count + traverse_tags_transform(item, namespace, required_tag)
     return object_count
 
-def service_tags_to_routes(yaml, tag_prefix):
-    traversables = ['services']
-    
-    for k in yaml:
-        if k in traversables:
-            for service in yaml[k]:
-                # Identify the single qualifying tag in the service
-                qualifying_tag = next((tag for tag in service.get('tags', []) if tag.startswith(tag_prefix)), None)
-                
-                # Proceed if a qualifying tag was found and there are routes in the service
-                if qualifying_tag and 'routes' in service:
-                    for route in service['routes']:
-                        # Check if the route already has a dataclass tag
-                        has_qualifying_tag = any(tag.startswith(tag_prefix) for tag in route.get('tags', []))
-                        
-                        # Only add the service's dataclass tag if the route doesn't have one
-                        if not has_qualifying_tag:
-                            if 'tags' not in route:
-                                route['tags'] = []
-                            route['tags'].append(qualifying_tag)
 
 def traverse_has_ns_qualifier(yaml, required_tag):
     log = app.logger
