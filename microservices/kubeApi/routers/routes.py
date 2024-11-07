@@ -41,6 +41,8 @@ class BulkSyncRequest(BaseModel):
     host: str
     # Indicator of whether session cookies should be enabled by the Kube-API
     sessionCookieEnabled: bool
+    # Data class for Emerald Cluster routes
+    dataClass: str
 
     
 @router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(verify_credentials)])
@@ -170,7 +172,8 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 "selectTag": route["metadata"]["labels"]["aps-select-tag"],
                 "host": route["spec"]["host"],
                 "dataPlane": route["spec"]["to"]["name"],
-                "sessionCookieEnabled": True if route["metadata"]["labels"].get("aps-template-version") == "v1" else False
+                "sessionCookieEnabled": True if route["metadata"]["labels"].get("aps-template-version") == "v1" else False,
+                "dataClass": route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name").split("-")[-1] if route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name") else None
             }
         )
 
@@ -199,6 +202,9 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 overrides = {}
                 if 'sessionCookieEnabled' in route and route['sessionCookieEnabled']:
                     overrides['aps.route.session.cookie.enabled'] = [route['host']]
+
+                if 'dataClass' in route and route['dataClass']:
+                    overrides[f'aps.route.dataclass.{route["dataClass"]}'] = [route['host']]
                 
                 route_count = prepare_apply_routes(namespace, route['selectTag'], [
                                                    route['host']], source_folder, route["dataPlane"], ns_template_version, overrides)
@@ -258,7 +264,7 @@ def in_list(match, list):
     return False
 
 def build_ref(v):
-    return "%s%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'], v['sessionCookieEnabled'])
+    return "%s%s%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'], v['sessionCookieEnabled'], v['dataClass'])
 
 def in_list_by_name(match, list):
     for item in list:

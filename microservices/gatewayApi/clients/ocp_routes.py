@@ -263,10 +263,12 @@ def get_route_overrides(root_path, override_tag):
 def eval_services(host_list, override_tag, data):
     if data is not None and 'services' in data:
         for service in data['services']:
+            service_has_tag = 'tags' in service and override_tag in service['tags']
+            
             if 'routes' in service:
                 for route in service['routes']:
-                    if 'hosts' in route:
-                        if override_tag in route['tags']:
+                    if service_has_tag or ('tags' in route and override_tag in route['tags']):
+                        if 'hosts' in route:
                             for host in route['hosts']:
                                 if host not in host_list:
                                     host_list.append(host)

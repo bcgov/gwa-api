@@ -15,9 +15,9 @@ def test_happy_transform_data_by_ns():
                 ]
             }
         ]
-        assert json.dumps(transform_data_by_ns(data)) == '{"ns1": [{"name": "wild-ns-ns1-host-1", "selectTag": "ns.ns1", "host": "host-1", "sessionCookieEnabled": false, "dataPlane": "test-dp"}]}'
+        assert json.dumps(transform_data_by_ns(data)) == '{"ns1": [{"name": "wild-ns-ns1-host-1", "selectTag": "ns.ns1", "host": "host-1", "sessionCookieEnabled": false, "dataClass": null, "dataPlane": "test-dp"}]}'
 
-def test_happy_transform_data_by_ns_with_override():
+def test_happy_transform_data_by_ns_with_override_session_cookie():
     with mock.patch('clients.namespace.admin_api') as mock_admin_api:
         set_mock_admin_api_response(mock_admin_api)
 
@@ -30,8 +30,22 @@ def test_happy_transform_data_by_ns_with_override():
                 ]
             }
         ]
-        assert json.dumps(transform_data_by_ns(data)) == '{"ns1": [{"name": "wild-ns-ns1-host-1", "selectTag": "ns.ns1", "host": "host-1", "sessionCookieEnabled": true, "dataPlane": "test-dp"}]}'
+        assert json.dumps(transform_data_by_ns(data)) == '{"ns1": [{"name": "wild-ns-ns1-host-1", "selectTag": "ns.ns1", "host": "host-1", "sessionCookieEnabled": true, "dataClass": null, "dataPlane": "test-dp"}]}'
 
+def test_happy_transform_data_by_ns_with_override_data_plane():
+    with mock.patch('clients.namespace.admin_api') as mock_admin_api:
+        set_mock_admin_api_response(mock_admin_api)
+
+        data = [
+            {
+                "name": "route-1",
+                "tags": [ "ns.ns1", "aps.route.dataclass.high"],
+                "hosts": [
+                    "host-1"
+                ]
+            }
+        ]
+        assert json.dumps(transform_data_by_ns(data)) == '{"ns1": [{"name": "wild-ns-ns1-host-1", "selectTag": "ns.ns1", "host": "host-1", "sessionCookieEnabled": false, "dataClass": "high", "dataPlane": "test-dp"}]}'
 
 def set_mock_admin_api_response(dt):
     class mock_admin_api:
