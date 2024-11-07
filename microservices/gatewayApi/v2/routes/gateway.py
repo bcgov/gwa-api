@@ -339,7 +339,11 @@ def write_config(namespace: str) -> object:
                     "select_tag": selectTag,
                     "ns_attributes": ns_attributes.getAttrs(),
                     "overrides": {
-                        "aps.route.session.cookie.enabled": get_route_overrides(tempFolder, "aps.route.session.cookie.enabled")
+                        "aps.route.session.cookie.enabled": get_route_overrides(tempFolder, "aps.route.session.cookie.enabled"),
+                        "aps.route.dataclass.low": get_route_overrides(tempFolder, "aps.route.dataclass.low"),
+                        "aps.route.dataclass.medium": get_route_overrides(tempFolder, "aps.route.dataclass.medium"),
+                        "aps.route.dataclass.high": get_route_overrides(tempFolder, "aps.route.dataclass.high"),
+                        "aps.route.dataclass.public": get_route_overrides(tempFolder, "aps.route.dataclass.public"),
                     }
                 }
                 log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload))
@@ -621,6 +625,7 @@ def traverse_tags_transform(yaml, namespace, required_tag):
                 object_count = object_count + 1
                 object_count = object_count + traverse_tags_transform(item, namespace, required_tag)
     return object_count
+
 
 def traverse_has_ns_qualifier(yaml, required_tag):
     log = app.logger

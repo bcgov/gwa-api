@@ -91,7 +91,8 @@ def mock_kong(mocker):
                     }
             return Response
         elif (path == 'http://kong/certificates?tags=gwa.ns.mytest' or
-              path == 'http://kong/certificates?tags=gwa.ns.sescookie'):
+              path == 'http://kong/certificates?tags=gwa.ns.sescookie' or
+              path == 'http://kong/certificates?tags=gwa.ns.dclass'):
             class Response:
                 def json():
                     return {
@@ -150,9 +151,31 @@ def mock_kubeapi(mocker):
                 'hosts': ['myapi.api.gov.bc.ca'], 
                 'ns_attributes': {'perm-domains': ['.api.gov.bc.ca', '.cluster.local']}, 
                 'overrides': {
-                    'aps.route.session.cookie.enabled': ['myapi.api.gov.bc.ca']
+                    'aps.route.session.cookie.enabled': ['myapi.api.gov.bc.ca'],
+                    "aps.route.dataclass.low": [],
+                    "aps.route.dataclass.medium": [],
+                    "aps.route.dataclass.high": [],
+                    "aps.route.dataclass.public": []
                 }, 
                 'select_tag': 'ns.sescookie.dev'
+            }
+
+            assert json.dumps(kwargs['json'], sort_keys=True) == json.dumps(matched, sort_keys=True)
+            return Response
+        elif (url == 'http://kube-api/namespaces/dclass/routes'):
+            class Response:
+                status_code = 201
+            matched = {
+                'hosts': ['myapi.api.gov.bc.ca'], 
+                'ns_attributes': {'perm-domains': ['.api.gov.bc.ca', '.cluster.local']}, 
+                'overrides': {
+                    'aps.route.session.cookie.enabled': [],
+                    "aps.route.dataclass.low": [],
+                    "aps.route.dataclass.medium": [],
+                    "aps.route.dataclass.high": ['myapi.api.gov.bc.ca'],
+                    "aps.route.dataclass.public": []
+                }, 
+                'select_tag': 'ns.dclass.dev'
             }
 
             assert json.dumps(kwargs['json'], sort_keys=True) == json.dumps(matched, sort_keys=True)
@@ -174,6 +197,12 @@ def mock_kubeapi(mocker):
                     return {}
             return Response
         elif (url == 'http://kube-api/namespaces/sescookie/local_tls'):
+            class Response:
+                status_code = 200
+                def json():
+                    return {}
+            return Response
+        elif (url == 'http://kube-api/namespaces/dclass/local_tls'):
             class Response:
                 status_code = 200
                 def json():

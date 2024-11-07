@@ -11,6 +11,7 @@ metadata:
     haproxy.router.openshift.io/balance: random
     haproxy.router.openshift.io/disable_cookies: 'true'
     haproxy.router.openshift.io/timeout: 30m
+
   labels:
     aps-generated-by: "gwa-cli"
     aps-published-on: "2024.05-May.08"
@@ -73,7 +74,8 @@ def test_bulk_sync_new_route(client):
                             "selectTag": "ns.EXAMPLE-NS",
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
-                            "sessionCookieEnabled": False
+                            "sessionCookieEnabled": False,
+                            "dataClass": None
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200

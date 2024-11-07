@@ -28,6 +28,13 @@ ROUTES = {
     }
 }
 
+data_class_mapping = {
+    'aps.route.dataclass.low': 'low',
+    'aps.route.dataclass.medium': 'medium',
+    'aps.route.dataclass.high': 'high',
+    'aps.route.dataclass.public': 'public'
+}
+
 def read_and_indent(full_path, indent):
     pad = "                    "
     stream = open(full_path, 'r')
@@ -150,12 +157,21 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
     with open(out_filename, 'w') as out_file:
         index = 1
         for host in hosts:
+            data_class_annotation = ''
             templ_version = ns_template_version
-            if overrides and 'aps.route.session.cookie.enabled' in overrides and host in overrides['aps.route.session.cookie.enabled']:
-                templ_version = 'v1'
+            if overrides:
+                if 'aps.route.session.cookie.enabled' in overrides and host in overrides['aps.route.session.cookie.enabled']:
+                    templ_version = 'v1'
+                    logger.debug("[%s] %s Template version override applied %s", select_tag, host, templ_version)
+
+                for tag, value in data_class_mapping.items():
+                    if overrides.get(tag) and host in overrides[tag]:
+                        data_class = value
+                        data_class_annotation = f'    aviinfrasetting.ako.vmware.com/name: "dataclass-{value}"'
+                        logger.debug("[%s] %s Dataclass override applied %s -> %s", select_tag, host, tag, data_class)
             else:
                 logger.debug("[%s] %s No override applied %s", select_tag, hosts, str(overrides))
-            
+
             route_template = ROUTES[templ_version]["ROUTE"]
 
             # If host transformation is disabled, then select the appropriate
@@ -179,7 +195,7 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
                          (select_tag, index, select_tag.replace('.', '-'), host, resource_version))
             out_file.write(route_template.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/',
                                             ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time, data_plane=data_plane,
-                                            template_version=templ_version))
+                                            data_class_annotation=data_class_annotation, template_version=templ_version))
             out_file.write('\n---\n')
             index = index + 1
         out_file.close()

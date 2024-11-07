@@ -8,6 +8,8 @@ def test_bulk_sync(client):
                 "labels": {
                     "aps-select-tag": "ns.EXAMPLE-NS",
                     "aps-template-version": "v2"
+                },
+                "annotations": {
                 }
             },
             "spec": {
@@ -30,7 +32,8 @@ def test_bulk_sync(client):
                     "selectTag": "ns.EXAMPLE-NS",
                     "dataPlane": "data-plane-1",
                     "host": "abc.api.gov.bc.ca",
-                    "sessionCookieEnabled": False
+                    "sessionCookieEnabled": False,
+                    "dataClass": None
                 }]
                 response = client.post('/namespaces/examplens/routes/sync', json=data)
                 assert response.status_code == 200
@@ -46,6 +49,8 @@ def test_bulk_sync_change_host(client):
                 "labels": {
                     "aps-select-tag": "ns.EXAMPLE-NS",
                     "aps-template-version": "v2"
+                },
+                "annotations": {
                 }
             },
             "spec": {
@@ -74,7 +79,8 @@ def test_bulk_sync_change_host(client):
                             "selectTag": "ns.EXAMPLE-NS",
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
-                            "sessionCookieEnabled": False
+                            "sessionCookieEnabled": False,
+                            "dataClass": None
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200
