@@ -485,20 +485,25 @@ def is_host_local(host):
     return host.endswith(".cluster.local")
 
 def is_host_custom_domain(host):
+    log = app.logger
+
     non_custom_suffixes = [
         '.cluster.local', 
         '.api.gov.bc.ca', 
         '.data.gov.bc.ca', 
         '.webapps.gov.bc.ca', 
         '.maps.gov.bc.ca', 
-        '.openmaps.gov.bc.ca'
+        '.openmaps.gov.bc.ca',
+        '.apps.gov.bc.ca',
+        '.apis.gov.bc.ca'
     ]
     
-    # Check if the host ends with any of the non-custom suffixes
+    # Check if the host is one of the standard cert domains or a subdomain of them
     for suffix in non_custom_suffixes:
-        if host.endswith(suffix):
+        if host == suffix[1:] or host.endswith(suffix):
             return False
     
+    log.debug("Host %s is custom" % (host))
     return True
 
 def has_namespace_local_host_permission(ns_attributes):
