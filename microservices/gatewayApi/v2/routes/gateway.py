@@ -20,9 +20,7 @@ from v2.auth.auth import admin_jwt, uma_enforce
 from v2.services.namespaces import NamespaceService
 
 from clients.portal import record_gateway_event
-from clients.kong import get_routes, register_kong_certs
-from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
-from clients.ocp_routes import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
+from clients.kong import get_routes, get_public_certs_by_ns, register_kong_certs
 from clients.ocp_gateway_secret import prep_submitted_config, prep_and_apply_secret, write_submitted_config
 
 from utils.validators import host_valid
@@ -332,6 +330,7 @@ def write_config(namespace: str) -> object:
         try:
             if update_routes_flag:
                 host_list = get_host_list(tempFolder)
+                certs = get_public_certs_by_ns(namespace)
                 session = requests.Session()
                 session.headers.update({"Content-Type": "application/json"})
                 route_payload = {
@@ -344,7 +343,8 @@ def write_config(namespace: str) -> object:
                         "aps.route.dataclass.medium": get_route_overrides(tempFolder, "aps.route.dataclass.medium"),
                         "aps.route.dataclass.high": get_route_overrides(tempFolder, "aps.route.dataclass.high"),
                         "aps.route.dataclass.public": get_route_overrides(tempFolder, "aps.route.dataclass.public"),
-                    }
+                    },
+                    "certificates": certs
                 }
                 log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload))
                 rqst_url = app.config['data_planes'][dp]["kube-api"]
@@ -471,6 +471,8 @@ def host_transformation(namespace, data_plane, yaml):
                         for host in route['hosts']:
                             if is_host_local(host):
                                 new_hosts.append(transform_local_host(data_plane, host))
+                            if is_host_custom_domain(host):
+                                new_hosts.append(host)
                             elif is_host_transform_enabled():
                                 new_hosts.append(transform_host(host))
                                 transforms = transforms + 1
@@ -479,10 +481,27 @@ def host_transformation(namespace, data_plane, yaml):
                         route['hosts'] = new_hosts
     log.debug("[%s] Host transformations %d" % (namespace, transforms))
 
-def is_host_local (host):
+def is_host_local(host):
     return host.endswith(".cluster.local")
 
-def has_namespace_local_host_permission (ns_attributes):
+def is_host_custom_domain(host):
+    non_custom_suffixes = [
+        '.cluster.local', 
+        '.api.gov.bc.ca', 
+        '.data.gov.bc.ca', 
+        '.webapps.gov.bc.ca', 
+        '.maps.gov.bc.ca', 
+        '.openmaps.gov.bc.ca'
+    ]
+    
+    # Check if the host ends with any of the non-custom suffixes
+    for suffix in non_custom_suffixes:
+        if host.endswith(suffix):
+            return False
+    
+    return True
+
+def has_namespace_local_host_permission(ns_attributes):
     for domain in ns_attributes.get('perm-domains', ['.api.gov.bc.ca']):
         if is_host_local(domain):
             return True
