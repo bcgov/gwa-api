@@ -28,6 +28,7 @@ class OCPRoute(BaseModel):
     select_tag: str
     ns_attributes: dict
     overrides: dict | None = None
+    certificates: list | None = None
 
 
 class BulkSyncRequest(BaseModel):
@@ -85,7 +86,8 @@ def add_routes(namespace: str, route: OCPRoute):
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
         route_count = prepare_apply_routes(namespace, route.select_tag, hosts,
-                                           source_folder, get_data_plane(route.ns_attributes), ns_template_version, route.overrides)
+                                           source_folder, get_data_plane(route.ns_attributes), ns_template_version, route.overrides,
+                                           route.certificates)
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)

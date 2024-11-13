@@ -147,7 +147,7 @@ def prepare_route_last_version(ns, select_tag):
     return resource_versions
 
 
-def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_template_version, overrides):
+def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_template_version, overrides, certificates=None):
     out_filename = "%s/routes-current.yaml" % root_path
     ts = time_secs()
     fmt_time = datetime.fromtimestamp(ts).strftime("%Y.%m-%b.%d")
@@ -174,16 +174,28 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
 
             route_template = ROUTES[templ_version]["ROUTE"]
 
-            # If host transformation is disabled, then select the appropriate
-            # SSL cert based on the suffix mapping
+            # Modified certificate selection logic
             ssl_ref = "tls"
-            if not settings.host_transformation['enabled']:
+            custom_cert_found = False
+            
+            if certificates:
+                # Look for a matching certificate by SNI
+                for cert in certificates:
+                    if host in cert['snis']:
+                        ssl_key = read_and_indent(cert['key'], 8)
+                        ssl_crt = read_and_indent(cert['cert'], 8)
+                        logger.debug("[%s] Route A %03d using custom cert with SNI match for %s" % (select_tag, index, host))
+                        custom_cert_found = True
+                        break
+            
+            if not custom_cert_found and not settings.host_transformation['enabled']:
+                # Fall back to existing cert mapping logic
                 for host_match, ssl_file_prefix in host_cert_mapping.items():
                     if host.endswith(host_match):
                         ssl_ref = ssl_file_prefix
                         logger.debug("[%s] Route A %03d matched ssl cert %s" % (select_tag, index, ssl_ref))
-            ssl_key = read_and_indent("/ssl/%s.key" % ssl_ref, 8)
-            ssl_crt = read_and_indent("/ssl/%s.crt" % ssl_ref, 8)
+                ssl_key = read_and_indent("/ssl/%s.key" % ssl_ref, 8)
+                ssl_crt = read_and_indent("/ssl/%s.crt" % ssl_ref, 8)
 
             name = "wild-%s-%s" % (select_tag.replace('.', '-'), host)
 

@@ -338,7 +338,7 @@ def write_config(namespace: str) -> object:
                         break
                 if custom_domain_in_host_list:
                     certs = get_public_certs_by_ns(namespace)
-                    log.debug("[%s] Found %d certs for %s" % (namespace, len(certs), host))
+                    log.debug("[%s] Found %d certs in namespace" % (namespace, len(certs)))
                 session = requests.Session()
                 session.headers.update({"Content-Type": "application/json"})
                 route_payload = {
