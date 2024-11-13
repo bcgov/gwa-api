@@ -44,6 +44,12 @@ def read_and_indent(full_path, indent):
         result = "%s%s%s" % (result, pad[:indent], line)
     return result
 
+def format_pem_data(pem_string, indent=8):
+    """Format PEM data with proper line breaks and indentation"""
+    lines = pem_string.split('\n')
+    formatted_lines = [' ' * indent + line for line in lines if line]
+    return '\n'.join(formatted_lines)
+
 
 def apply_routes(root_path):
     kubectl_apply("%s/routes-current.yaml" % root_path)
@@ -182,8 +188,8 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
                 # Look for a matching certificate by SNI
                 for cert in certificates:
                     if host in cert['snis']:
-                        ssl_key = read_and_indent(cert['key'], 8)
-                        ssl_crt = read_and_indent(cert['cert'], 8)
+                        ssl_key = format_pem_data(cert['key'])
+                        ssl_crt = format_pem_data(cert['cert'])
                         logger.debug("[%s] Route A %03d using custom cert with SNI match for %s" % (select_tag, index, host))
                         custom_cert_found = True
                         break
