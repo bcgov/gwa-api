@@ -533,7 +533,7 @@ def transform_local_host(data_plane, host):
     return "gw-%s.%s.svc.cluster.local" % (name_part, kube_ns)
 
 def transform_host(host):
-    if is_host_local(host):
+    if is_host_local(host) or is_host_custom_domain(host):
         return host
     elif is_host_transform_enabled():
         conf = app.config['hostTransformation']
