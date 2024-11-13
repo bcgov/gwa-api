@@ -330,7 +330,15 @@ def write_config(namespace: str) -> object:
         try:
             if update_routes_flag:
                 host_list = get_host_list(tempFolder)
-                certs = get_public_certs_by_ns(namespace)
+                certs = []
+                custom_domain_in_host_list = False
+                for host in host_list:
+                    if is_host_custom_domain(host):
+                        custom_domain_in_host_list = True
+                        break
+                if custom_domain_in_host_list:
+                    certs = get_public_certs_by_ns(namespace)
+                    log.debug("[%s] Found %d certs for %s" % (namespace, len(certs), host))
                 session = requests.Session()
                 session.headers.update({"Content-Type": "application/json"})
                 route_payload = {
@@ -471,7 +479,7 @@ def host_transformation(namespace, data_plane, yaml):
                         for host in route['hosts']:
                             if is_host_local(host):
                                 new_hosts.append(transform_local_host(data_plane, host))
-                            if is_host_custom_domain(host):
+                            elif is_host_custom_domain(host):
                                 new_hosts.append(host)
                             elif is_host_transform_enabled():
                                 new_hosts.append(transform_host(host))

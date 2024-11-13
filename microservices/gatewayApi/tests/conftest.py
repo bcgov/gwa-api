@@ -157,7 +157,8 @@ def mock_kubeapi(mocker):
                     "aps.route.dataclass.high": [],
                     "aps.route.dataclass.public": []
                 }, 
-                'select_tag': 'ns.sescookie.dev'
+                'select_tag': 'ns.sescookie.dev',
+                'certificates': []
             }
 
             assert json.dumps(kwargs['json'], sort_keys=True) == json.dumps(matched, sort_keys=True)
@@ -175,7 +176,8 @@ def mock_kubeapi(mocker):
                     "aps.route.dataclass.high": ['myapi.api.gov.bc.ca'],
                     "aps.route.dataclass.public": []
                 }, 
-                'select_tag': 'ns.dclass.dev'
+                'select_tag': 'ns.dclass.dev',
+                'certificates': []
             }
 
             assert json.dumps(kwargs['json'], sort_keys=True) == json.dumps(matched, sort_keys=True)
