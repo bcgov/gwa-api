@@ -121,6 +121,31 @@ def test_happy_with_data_class_gateway_call(client):
     assert response.status_code == 200
     assert json.dumps(response.json) == '{"message": "Sync successful.", "results": "Deck reported no changes"}'
 
+def test_happy_with_custom_domain_gateway_call(client):
+    configFile = '''
+        services:
+        - name: my-service
+          host: myupstream.local
+          ca_certificates: [ "0000-0000-0000-0000" ]
+          certificate: "41d14845-669f-4dcd-aff2-926fb32a4b25"
+          tags: ["ns.customcert"]
+          routes:
+          - name: route-1
+            hosts: [ test.custom.gov.bc.ca ]
+            tags: ["ns.customcert"]
+            plugins:
+            - name: acl-auth
+              tags: ["ns.customcert"]
+        '''
+
+    data={
+        "configFile": configFile,
+        "dryRun": False
+    }
+    response = client.put('/v2/namespaces/customcert/gateway', json=data)
+    assert response.status_code == 200
+    assert json.dumps(response.json) == '{"message": "Sync successful.", "results": "Deck reported no changes"}'
+
 def test_success_mtls_reference(client):
     configFile = '''
         services:
