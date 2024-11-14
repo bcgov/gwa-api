@@ -512,13 +512,16 @@ def validate_upstream(yaml, ns_attributes, protected_kube_namespaces, do_validat
 
 
 def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_namespaces, do_validate_upstreams, perm_upstreams):
+    log = app.logger
     host = _host.lower()
 
     restricted = ['localhost', '127.0.0.1', '0.0.0.0']
 
+    log.debug("[%s] Upstream validation %s %s" % (_host, do_validate_upstreams, perm_upstreams))
+
     if host in restricted:
         errors.append("service upstream is invalid (e1)")
-    if host.endswith('svc'):
+    elif host.endswith('svc'):
         partials = host.split('.')
         # get the namespace, and make sure it is not in the protected_kube_namespaces list
         if len(partials) != 3:
@@ -527,7 +530,7 @@ def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_nam
             errors.append("service upstream is invalid (e3)")
         elif do_validate_upstreams and (partials[1] in perm_upstreams) is False:
             errors.append("service upstream is invalid (e6)")
-    if host.endswith('svc.cluster.local'):
+    elif host.endswith('svc.cluster.local'):
         partials = host.split('.')
         # get the namespace, and make sure it is not in the protected_kube_namespaces list
         if len(partials) != 5:
@@ -536,6 +539,8 @@ def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_nam
             errors.append("service upstream is invalid (e5)")
         elif do_validate_upstreams and (partials[1] in perm_upstreams) is False:
             errors.append("service upstream is invalid (e6)")
+    elif do_validate_upstreams:
+        errors.append("service upstream is invalid (e6)")
 
 # Handle the two cases:
 # - pass in an empty config expecting all routes to be deleted ('upstreams' not in yaml)
