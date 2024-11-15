@@ -21,6 +21,7 @@ metadata:
     aps-ssl: "data-api.tls"
     aps-data-plane: "data-plane-1"
     aps-template-version: "v2"
+
 spec:
   host: abc.api.gov.bc.ca
   port:
@@ -75,7 +76,8 @@ def test_bulk_sync_new_route(client):
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
-                            "dataClass": None
+                            "dataClass": None,
+                            "sslCertificateId": "default"
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200

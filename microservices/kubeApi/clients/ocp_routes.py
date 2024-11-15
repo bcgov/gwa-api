@@ -182,7 +182,7 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
 
             # Modified certificate selection logic
             ssl_ref = "tls"
-            cert_id = ''
+            custom_cert_label= ''
             custom_cert_found = False
             
             if is_host_custom_domain(host):

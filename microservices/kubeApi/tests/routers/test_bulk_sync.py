@@ -33,7 +33,8 @@ def test_bulk_sync(client):
                     "dataPlane": "data-plane-1",
                     "host": "abc.api.gov.bc.ca",
                     "sessionCookieEnabled": False,
-                    "dataClass": None
+                    "dataClass": None,
+                    "sslCertificateId": "default"
                 }]
                 response = client.post('/namespaces/examplens/routes/sync', json=data)
                 assert response.status_code == 200
@@ -80,7 +81,8 @@ def test_bulk_sync_change_host(client):
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
-                            "dataClass": None
+                            "dataClass": None,
+                            "sslCertificateId": "default"
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200

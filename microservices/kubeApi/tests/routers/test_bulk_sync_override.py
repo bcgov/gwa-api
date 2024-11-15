@@ -32,7 +32,8 @@ def test_bulk_sync_no_change(client):
                     "dataPlane": "data-plane-1",
                     "host": "abc.api.gov.bc.ca",
                     "sessionCookieEnabled": True,
-                    "dataClass": None
+                    "dataClass": None,
+                    "sslCertificateId": "default"
                 }]
                 response = client.post('/namespaces/examplens/routes/sync', json=data)
                 assert response.status_code == 200
@@ -56,6 +57,7 @@ metadata:
     aps-ssl: "data-api.tls"
     aps-data-plane: "data-plane-1"
     aps-template-version: "v1"
+
 spec:
   host: abc.api.gov.bc.ca
   port:
@@ -109,7 +111,8 @@ def test_bulk_sync_new_route_session_cookie(client):
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": True,
-                            "dataClass": None
+                            "dataClass": None,
+                            "sslCertificateId": "default"
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200
@@ -154,7 +157,8 @@ def test_bulk_sync_change_session_cookie(client):
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": True,
-                            "dataClass": None
+                            "dataClass": None,
+                            "sslCertificateId": "default"
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200
@@ -182,6 +186,7 @@ metadata:
     aps-ssl: "data-api.tls"
     aps-data-plane: "data-plane-1"
     aps-template-version: "v2"
+
 spec:
   host: abc.api.gov.bc.ca
   port:
@@ -236,7 +241,8 @@ def test_bulk_sync_new_route_data_class(client):
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
-                            "dataClass": "high"
+                            "dataClass": "high",
+                            "sslCertificateId": "default"
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200
@@ -281,7 +287,8 @@ def test_bulk_sync_add_data_class(client):
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
-                            "dataClass": "high"
+                            "dataClass": "high",
+                            "sslCertificateId": "default"
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200
@@ -328,7 +335,8 @@ def test_bulk_sync_remove_data_class(client):
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": True,
-                            "dataClass": None
+                            "dataClass": None,
+                            "sslCertificateId": "default"
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200
@@ -375,7 +383,8 @@ def test_bulk_sync_change_data_class(client):
                             "dataPlane": "data-plane-1",
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
-                            "dataClass": "high"
+                            "dataClass": "high",
+                            "sslCertificateId": "default"
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200

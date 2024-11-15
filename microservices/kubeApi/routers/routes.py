@@ -44,6 +44,8 @@ class BulkSyncRequest(BaseModel):
     sessionCookieEnabled: bool
     # Data class for Emerald Cluster routes
     dataClass: str
+    # SSL Certificate ID for custom domains
+    sslCertificateId: str
 
     
 @router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(verify_credentials)])
@@ -176,7 +178,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 "dataPlane": route["spec"]["to"]["name"],
                 "sessionCookieEnabled": True if route["metadata"]["labels"].get("aps-template-version") == "v1" else False,
                 "dataClass": route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name").split("-")[-1] if route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name") else None,
-                "customCertificateId": route["metadata"]["labels"].get("aps-certificate-id")
+                "sslCertificateId": route["metadata"]["labels"].get("aps-certificate-id", "default")
             }
         )
 
@@ -267,7 +269,7 @@ def in_list(match, list):
     return False
 
 def build_ref(v):
-    return "%s%s%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'], v['sessionCookieEnabled'], v['dataClass'], v['customCertificateId'])
+    return f"{v['name']}{v['selectTag']}{v['host']}{v['dataPlane']}{v['sessionCookieEnabled']}{v['dataClass']}{v['sslCertificateId']}"
 
 def in_list_by_name(match, list):
     for item in list:
