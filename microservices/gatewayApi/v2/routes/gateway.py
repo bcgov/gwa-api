@@ -19,7 +19,7 @@ from v2.services.namespaces import NamespaceService
 from clients.portal import record_gateway_event
 from clients.kong import get_routes, register_kong_certs
 from clients.ocp_gateway_secret import prep_submitted_config
-from utils.validators import host_valid
+from utils.validators import host_valid, validate_upstream
 from utils.transforms import plugins_transformations
 from utils.masking import mask
 
@@ -508,62 +508,6 @@ def transform_host(host):
         return "%s%s" % (host.replace('.', '-'), conf['baseUrl'])
     else:
         return host
-
-def validate_upstream(yaml, ns_attributes, protected_kube_namespaces, do_validate_upstreams: bool = False):
-    errors = []
-
-    perm_upstreams = ns_attributes.get('perm-upstreams', [])
-
-    allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
-
-    # A host must not contain a list of protected
-    if 'services' in yaml:
-        for service in yaml['services']:
-            if 'url' in service:
-                try:
-                    u = urlparse(service["url"])
-                    if u.hostname is None:
-                        errors.append("service upstream has invalid url specified (e1)")
-                    else:
-                        validate_upstream_host(u.hostname, errors, allow_protected_ns, protected_kube_namespaces, do_validate_upstreams, perm_upstreams)
-                except Exception as e:
-                    errors.append("service upstream has invalid url specified (e2)")
-
-            if 'host' in service:
-                host = service["host"]
-                validate_upstream_host(host, errors, allow_protected_ns, protected_kube_namespaces, do_validate_upstreams, perm_upstreams)
-
-    if len(errors) != 0:
-        raise Exception('\n'.join(errors))
-
-
-def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_namespaces, do_validate_upstreams, perm_upstreams):
-    host = _host.lower()
-
-    restricted = ['localhost', '127.0.0.1', '0.0.0.0']
-
-    if host in restricted:
-        errors.append("service upstream is invalid (e1)")
-    elif host.endswith('svc'):
-        partials = host.split('.')
-        # get the namespace, and make sure it is not in the protected_kube_namespaces list
-        if len(partials) != 3:
-            errors.append("service upstream is invalid (e2)")
-        elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
-            errors.append("service upstream is invalid (e3)")
-        elif do_validate_upstreams and (partials[1] in perm_upstreams) is False:
-            errors.append("service upstream is invalid (e6)")
-    elif host.endswith('svc.cluster.local'):
-        partials = host.split('.')
-        # get the namespace, and make sure it is not in the protected_kube_namespaces list
-        if len(partials) != 5:
-            errors.append("service upstream is invalid (e4)")
-        elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
-            errors.append("service upstream is invalid (e5)")
-        elif do_validate_upstreams and (partials[1] in perm_upstreams) is False:
-            errors.append("service upstream is invalid (e6)")
-    elif do_validate_upstreams:
-        errors.append("service upstream is invalid (e6)")
 
 def update_routes_check(yaml):
     if 'services' in yaml or 'upstreams' not in yaml:

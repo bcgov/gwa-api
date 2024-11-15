@@ -6,7 +6,7 @@
 
 import yaml
 import pytest
-from v1.routes.gateway import validate_upstream
+from utils.validators import validate_upstream
 
 def test_upstream_good(app):
     payload = '''
