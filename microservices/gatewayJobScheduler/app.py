@@ -6,12 +6,12 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-def transform_data_by_ns(data):
+def transform_data_by_ns(routes, certs):
     ns_svc = NamespaceService()
     try:
         ns_dict = {}
         ns_attr_dict = {}
-        for route_obj in data:
+        for route_obj in routes:
             select_tag = get_select_tag(route_obj['tags'])
             namespace = select_tag.split(".")[1]
 
@@ -34,11 +34,26 @@ def transform_data_by_ns(data):
                         break
 
                 for host in route_obj['hosts']:
+                    # Look for a matching certificate by SNI for custom domains
+                    custom_cert_found = False
+                    if is_host_custom_domain(host):
+                        logger.debug("%s - Searching for custom cert for %s" % (namespace, host))
+                        if certs:
+                            for cert in certs:
+                                if host in cert['snis']:
+                                    cert_id = cert['id']
+                                    logger.debug("%s - Found custom cert with SNI match for %s - %s" % (namespace, host, cert_id))
+                                    custom_cert_found = True
+                                    break
+                            if not custom_cert_found:
+                                raise Exception("Custom certificate not found for host %s" % host)
+                            
                     name = 'wild-%s-%s' % (select_tag.replace(".", "-"), host)
                     ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host,
                                                "sessionCookieEnabled": session_cookie_enabled,
                                                "dataClass": data_class,
-                                               "dataPlane": os.getenv('DATA_PLANE')})
+                                               "dataPlane": os.getenv('DATA_PLANE'),
+                                               "customCertificateId": cert_id})
         return ns_dict
     except Exception as err:
         traceback.print_exc()
@@ -53,3 +68,21 @@ def get_select_tag(tags):
                 required_tag = tag
                 break
     return required_tag
+
+def is_host_custom_domain(host):
+    non_custom_suffixes = [
+        '.cluster.local', 
+        '.api.gov.bc.ca', 
+        '.data.gov.bc.ca', 
+        '.maps.gov.bc.ca', 
+        '.openmaps.gov.bc.ca',
+        '.apps.gov.bc.ca',
+        '.apis.gov.bc.ca'
+    ]
+    
+    # Check if the host is one of the standard cert domains or a subdomain of them
+    for suffix in non_custom_suffixes:
+        if host == suffix[1:] or host.endswith(suffix):
+            return False
+
+    return True

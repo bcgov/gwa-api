@@ -175,7 +175,8 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 "host": route["spec"]["host"],
                 "dataPlane": route["spec"]["to"]["name"],
                 "sessionCookieEnabled": True if route["metadata"]["labels"].get("aps-template-version") == "v1" else False,
-                "dataClass": route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name").split("-")[-1] if route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name") else None
+                "dataClass": route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name").split("-")[-1] if route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name") else None,
+                "customCertificateId": route["metadata"]["labels"].get("aps-certificate-id")
             }
         )
 
@@ -266,7 +267,7 @@ def in_list(match, list):
     return False
 
 def build_ref(v):
-    return "%s%s%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'], v['sessionCookieEnabled'], v['dataClass'])
+    return "%s%s%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'], v['sessionCookieEnabled'], v['dataClass'], v['customCertificateId'])
 
 def in_list_by_name(match, list):
     for item in list:

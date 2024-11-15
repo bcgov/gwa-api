@@ -182,6 +182,7 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
 
             # Modified certificate selection logic
             ssl_ref = "tls"
+            cert_id = ''
             custom_cert_found = False
             
             if is_host_custom_domain(host):
@@ -192,6 +193,8 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
                         if host in cert['snis']:
                             ssl_key = format_pem_data(cert['key'])
                             ssl_crt = format_pem_data(cert['cert'])
+                            cert_id = cert['id']
+                            custom_cert_label = f'    aps-certificate-id: "{cert_id}"'
                             logger.debug("[%s] Route A %03d Found custom cert with SNI match for %s" % (select_tag, index, host))
                             custom_cert_found = True
                             break
@@ -217,7 +220,7 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
                          (select_tag, index, select_tag.replace('.', '-'), host, resource_version))
             out_file.write(route_template.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/',
                                             ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time, data_plane=data_plane,
-                                            data_class_annotation=data_class_annotation, template_version=templ_version))
+                                            data_class_annotation=data_class_annotation, template_version=templ_version, custom_cert_label=custom_cert_label))
             out_file.write('\n---\n')
             index = index + 1
         out_file.close()
