@@ -114,3 +114,34 @@ def test_invalid_upstream(client):
     response = client.put('/v2/namespaces/mytest/gateway', json=data)
     assert response.status_code == 400
     assert json.dumps(response.json) == '{"error": "Validation Errors:\\nservice upstream is invalid (e1)"}'
+
+def test_invalid_strict_dp_upstream(client):
+    configFile = '''
+        services:
+        - name: my-service
+          host: myservice.ns1.svc
+          tags: ["ns.mytest2", "another"]
+        '''
+
+    data={
+        "configFile": configFile,
+        "dryRun": True
+    }
+    response = client.put('/v2/namespaces/mytest2/gateway', json=data)
+    assert response.status_code == 400
+    assert json.dumps(response.json) == '{"error": "Validation Errors:\\nservice upstream is invalid (e6)"}'
+
+def test_valid_strict_dp_upstream(client):
+    configFile = '''
+        services:
+        - name: my-service
+          host: myservice.ns1.svc
+          tags: ["ns.mytest3", "another"]
+        '''
+
+    data={
+        "configFile": configFile,
+        "dryRun": True
+    }
+    response = client.put('/v2/namespaces/mytest3/gateway', json=data)
+    assert response.status_code == 200

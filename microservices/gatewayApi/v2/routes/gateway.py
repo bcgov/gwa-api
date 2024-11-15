@@ -274,10 +274,11 @@ def write_config(namespace: str) -> object:
         try:
             protected_kube_namespaces = json.loads(app.config['protectedKubeNamespaces'])
 
-            do_validate_upstreams = app.config['data_planes'][dp]["validate-upstreams"]
+            do_validate_upstreams = app.config['data_planes'][dp].get("validate-upstreams")
             if do_validate_upstreams is None:
                 do_validate_upstreams = False
 
+            log.debug("Validate upstreams %s %s" % (dp, do_validate_upstreams))
             validate_upstream(gw_config, ns_attributes, protected_kube_namespaces, do_validate_upstreams)
         except Exception as ex:
             traceback.print_exc()
@@ -543,12 +544,9 @@ def validate_upstream(yaml, ns_attributes, protected_kube_namespaces, do_validat
 
 
 def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_namespaces, do_validate_upstreams, perm_upstreams):
-    log = app.logger
     host = _host.lower()
 
     restricted = ['localhost', '127.0.0.1', '0.0.0.0']
-
-    log.debug("[%s] Upstream validation %s %s" % (_host, do_validate_upstreams, perm_upstreams))
 
     if host in restricted:
         errors.append("service upstream is invalid (e1)")
