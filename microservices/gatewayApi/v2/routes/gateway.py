@@ -499,7 +499,6 @@ def is_host_custom_domain(host):
         '.cluster.local', 
         '.api.gov.bc.ca', 
         '.data.gov.bc.ca', 
-        '.webapps.gov.bc.ca', 
         '.maps.gov.bc.ca', 
         '.openmaps.gov.bc.ca',
         '.apps.gov.bc.ca',
