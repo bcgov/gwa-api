@@ -35,6 +35,7 @@ def transform_data_by_ns(routes, certs):
 
                 for host in route_obj['hosts']:
                     # Look for a matching certificate by SNI for custom domains
+                    cert_id = None
                     custom_cert_found = False
                     if is_host_custom_domain(host):
                         logger.debug("%s - Searching for custom cert for %s" % (namespace, host))

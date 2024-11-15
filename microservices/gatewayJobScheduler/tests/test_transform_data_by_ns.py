@@ -6,46 +6,78 @@ def test_happy_transform_data_by_ns():
     with mock.patch('clients.namespace.admin_api') as mock_admin_api:
         set_mock_admin_api_response(mock_admin_api)
 
-        data = [
+        routes = [
             {
                 "name": "route-1",
                 "tags": [ "ns.ns1"],
                 "hosts": [
-                    "host-1"
+                    "test.api.gov.bc.ca"
                 ]
             }
         ]
-        assert json.dumps(transform_data_by_ns(data)) == '{"ns1": [{"name": "wild-ns-ns1-host-1", "selectTag": "ns.ns1", "host": "host-1", "sessionCookieEnabled": false, "dataClass": null, "dataPlane": "test-dp"}]}'
+        certs = []
+        assert json.dumps(transform_data_by_ns(routes, certs)) == '{"ns1": [{"name": "wild-ns-ns1-test.api.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.api.gov.bc.ca", "sessionCookieEnabled": false, "dataClass": null, "dataPlane": "test-dp", "customCertificateId": null}]}'
 
 def test_happy_transform_data_by_ns_with_override_session_cookie():
     with mock.patch('clients.namespace.admin_api') as mock_admin_api:
         set_mock_admin_api_response(mock_admin_api)
 
-        data = [
+        routes = [
             {
                 "name": "route-1",
                 "tags": [ "ns.ns1", "aps.route.session.cookie.enabled"],
                 "hosts": [
-                    "host-1"
+                    "test.api.gov.bc.ca"
                 ]
             }
         ]
-        assert json.dumps(transform_data_by_ns(data)) == '{"ns1": [{"name": "wild-ns-ns1-host-1", "selectTag": "ns.ns1", "host": "host-1", "sessionCookieEnabled": true, "dataClass": null, "dataPlane": "test-dp"}]}'
+        certs = []
+        assert json.dumps(transform_data_by_ns(routes, certs)) == '{"ns1": [{"name": "wild-ns-ns1-test.api.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.api.gov.bc.ca", "sessionCookieEnabled": true, "dataClass": null, "dataPlane": "test-dp", "customCertificateId": null}]}'
 
 def test_happy_transform_data_by_ns_with_override_data_plane():
     with mock.patch('clients.namespace.admin_api') as mock_admin_api:
         set_mock_admin_api_response(mock_admin_api)
 
-        data = [
+        routes = [
             {
                 "name": "route-1",
                 "tags": [ "ns.ns1", "aps.route.dataclass.high"],
                 "hosts": [
-                    "host-1"
+                    "test.api.gov.bc.ca"
                 ]
             }
         ]
-        assert json.dumps(transform_data_by_ns(data)) == '{"ns1": [{"name": "wild-ns-ns1-host-1", "selectTag": "ns.ns1", "host": "host-1", "sessionCookieEnabled": false, "dataClass": "high", "dataPlane": "test-dp"}]}'
+        certs = []
+        assert json.dumps(transform_data_by_ns(routes, certs)) == '{"ns1": [{"name": "wild-ns-ns1-test.api.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.api.gov.bc.ca", "sessionCookieEnabled": false, "dataClass": "high", "dataPlane": "test-dp", "customCertificateId": null}]}'
+
+def test_happy_transform_data_by_ns_with_custom_domain():
+    with mock.patch('clients.namespace.admin_api') as mock_admin_api:
+        set_mock_admin_api_response(mock_admin_api)
+
+        routes = [
+            {
+                "name": "route-1",
+                "tags": [ "ns.ns1"],
+                "hosts": [
+                    "test.custom.gov.bc.ca"
+                ]
+            }
+        ]
+        certs = [
+            {
+                "id": "41d14845-669f-4dcd-aff2-926fb32a4b25",
+                "snis": [
+                    "test.custom.gov.bc.ca"
+                ],
+                "tags": [
+                    "ns.ns1",
+                ],
+                "cert": "CERT",
+                "key": "KEY"
+            }
+        ]
+        assert json.dumps(transform_data_by_ns(routes, certs)) == '{"ns1": [{"name": "wild-ns-ns1-test.custom.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.custom.gov.bc.ca", "sessionCookieEnabled": false, "dataClass": null, "dataPlane": "test-dp", "customCertificateId": "41d14845-669f-4dcd-aff2-926fb32a4b25"}]}'
+
 
 def set_mock_admin_api_response(dt):
     class mock_admin_api:
