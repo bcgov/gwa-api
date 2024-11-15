@@ -6,25 +6,19 @@ import traceback
 from urllib.parse import urlparse
 from subprocess import Popen, PIPE, STDOUT
 import uuid
-import logging
 import json
 import requests
 import yaml
-from werkzeug.exceptions import HTTPException, NotFound
-from flask import Blueprint, config, jsonify, request, Response, make_response, abort, g, current_app as app
-from io import TextIOWrapper
+from werkzeug.exceptions import HTTPException
+from flask import Blueprint, jsonify, request, make_response, abort, current_app as app
 from clients.ocp_routes import get_host_list, get_route_overrides
 
 from v2.auth.auth import admin_jwt, uma_enforce
-
 from v2.services.namespaces import NamespaceService
 
 from clients.portal import record_gateway_event
 from clients.kong import get_routes, register_kong_certs
-from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
-from clients.ocp_routes import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
-from clients.ocp_gateway_secret import prep_submitted_config, prep_and_apply_secret, write_submitted_config
-
+from clients.ocp_gateway_secret import prep_submitted_config
 from utils.validators import host_valid
 from utils.transforms import plugins_transformations
 from utils.masking import mask
