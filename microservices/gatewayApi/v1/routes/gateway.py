@@ -272,9 +272,8 @@ def write_config(namespace: str) -> object:
             protected_kube_namespaces = json.loads(app.config['protectedKubeNamespaces'])
 
             dp = get_data_plane(ns_attributes)
-            do_validate_upstreams = app.config['data_planes'][dp]["validate-upstreams"]
-            if do_validate_upstreams is None:
-                do_validate_upstreams = False
+
+            do_validate_upstreams = app.config['data_planes'][dp].get("validate-upstreams", False)
 
             log.debug("Validate upstreams %s %s" % (dp, do_validate_upstreams))
 
