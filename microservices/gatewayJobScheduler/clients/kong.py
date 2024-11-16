@@ -11,7 +11,7 @@ def get_records(record_type):
     Get all records of a specified type from Kong Admin API.
     
     Args:
-        record_type (str): Type of records to fetch ('routes' or 'certificates')
+        record_type (str): Type of records to fetch ('routes' or 'snis')
     
     Returns:
         list: List of records
@@ -20,8 +20,8 @@ def get_records(record_type):
         OSError: If the shell command fails
         ValueError: If invalid record_type is provided
     """
-    if record_type not in ['routes', 'certificates']:
-        raise ValueError("record_type must be either 'routes' or 'certificates'")
+    if record_type not in ['routes', 'snis']:
+        raise ValueError("record_type must be either 'routes' or 'snis'")
 
     endpoint = "/%s" % record_type
     records_list = []

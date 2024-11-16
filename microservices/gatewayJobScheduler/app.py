@@ -6,7 +6,7 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-def transform_data_by_ns(routes, certs):
+def transform_data_by_ns(routes, cert_snis):
     ns_svc = NamespaceService()
     try:
         ns_dict = {}
@@ -39,10 +39,10 @@ def transform_data_by_ns(routes, certs):
                     custom_cert_found = False
                     if is_host_custom_domain(host):
                         logger.debug("%s - Searching for custom cert for %s" % (namespace, host))
-                        if certs:
-                            for cert in certs:
-                                if host in cert['snis']:
-                                    cert_id = cert['id']
+                        if cert_snis:
+                            for sni in cert_snis:
+                                if host in sni['name']:
+                                    cert_id = sni['certificate']
                                     logger.debug("%s - Found custom cert with SNI match for %s - %s" % (namespace, host, cert_id))
                                     custom_cert_found = True
                                     break

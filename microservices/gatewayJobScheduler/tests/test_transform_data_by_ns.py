@@ -15,8 +15,8 @@ def test_happy_transform_data_by_ns():
                 ]
             }
         ]
-        certs = []
-        assert json.dumps(transform_data_by_ns(routes, certs)) == '{"ns1": [{"name": "wild-ns-ns1-test.api.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.api.gov.bc.ca", "sessionCookieEnabled": false, "dataClass": null, "dataPlane": "test-dp", "sslCertificateId": "default"}]}'
+        snis = []
+        assert json.dumps(transform_data_by_ns(routes, snis)) == '{"ns1": [{"name": "wild-ns-ns1-test.api.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.api.gov.bc.ca", "sessionCookieEnabled": false, "dataClass": null, "dataPlane": "test-dp", "sslCertificateId": "default"}]}'
 
 def test_happy_transform_data_by_ns_with_override_session_cookie():
     with mock.patch('clients.namespace.admin_api') as mock_admin_api:
@@ -31,8 +31,8 @@ def test_happy_transform_data_by_ns_with_override_session_cookie():
                 ]
             }
         ]
-        certs = []
-        assert json.dumps(transform_data_by_ns(routes, certs)) == '{"ns1": [{"name": "wild-ns-ns1-test.api.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.api.gov.bc.ca", "sessionCookieEnabled": true, "dataClass": null, "dataPlane": "test-dp", "sslCertificateId": "default"}]}'
+        snis = []
+        assert json.dumps(transform_data_by_ns(routes, snis)) == '{"ns1": [{"name": "wild-ns-ns1-test.api.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.api.gov.bc.ca", "sessionCookieEnabled": true, "dataClass": null, "dataPlane": "test-dp", "sslCertificateId": "default"}]}'
 
 def test_happy_transform_data_by_ns_with_override_data_plane():
     with mock.patch('clients.namespace.admin_api') as mock_admin_api:
@@ -47,8 +47,8 @@ def test_happy_transform_data_by_ns_with_override_data_plane():
                 ]
             }
         ]
-        certs = []
-        assert json.dumps(transform_data_by_ns(routes, certs)) == '{"ns1": [{"name": "wild-ns-ns1-test.api.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.api.gov.bc.ca", "sessionCookieEnabled": false, "dataClass": "high", "dataPlane": "test-dp", "sslCertificateId": "default"}]}'
+        snis = []
+        assert json.dumps(transform_data_by_ns(routes, snis)) == '{"ns1": [{"name": "wild-ns-ns1-test.api.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.api.gov.bc.ca", "sessionCookieEnabled": false, "dataClass": "high", "dataPlane": "test-dp", "sslCertificateId": "default"}]}'
 
 def test_happy_transform_data_by_ns_with_custom_domain():
     with mock.patch('clients.namespace.admin_api') as mock_admin_api:
@@ -63,20 +63,18 @@ def test_happy_transform_data_by_ns_with_custom_domain():
                 ]
             }
         ]
-        certs = [
+        snis = [
             {
-                "id": "41d14845-669f-4dcd-aff2-926fb32a4b25",
-                "snis": [
-                    "test.custom.gov.bc.ca"
-                ],
+                "name": "test.custom.gov.bc.ca",
+                "id": "79009c9e-0f4d-40b5-9707-bf2fe9f50502",
+                "created_at": 1731713874,
+                "certificate": "41d14845-669f-4dcd-aff2-926fb32a4b25",
                 "tags": [
-                    "ns.ns1",
-                ],
-                "cert": "CERT",
-                "key": "KEY"
+                    "ns.ns1"
+                ]
             }
         ]
-        assert json.dumps(transform_data_by_ns(routes, certs)) == '{"ns1": [{"name": "wild-ns-ns1-test.custom.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.custom.gov.bc.ca", "sessionCookieEnabled": false, "dataClass": null, "dataPlane": "test-dp", "sslCertificateId": "41d14845-669f-4dcd-aff2-926fb32a4b25"}]}'
+        assert json.dumps(transform_data_by_ns(routes, snis)) == '{"ns1": [{"name": "wild-ns-ns1-test.custom.gov.bc.ca", "selectTag": "ns.ns1", "host": "test.custom.gov.bc.ca", "sessionCookieEnabled": false, "dataClass": null, "dataPlane": "test-dp", "sslCertificateId": "41d14845-669f-4dcd-aff2-926fb32a4b25"}]}'
 
 
 def set_mock_admin_api_response(dt):
