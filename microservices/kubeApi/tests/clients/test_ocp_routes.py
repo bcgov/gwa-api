@@ -112,7 +112,7 @@ def test_prepare_apply_routes():
 
             ns = "NS1"
             select_tag = "ns.NS1"
-            hosts = [ "host1", "host2" ]
+            hosts = [ "host1.test", "host2.test" ]
             root_path = "/tmp"
             data_plane = "test-dp"
             ns_template_version = "v2"

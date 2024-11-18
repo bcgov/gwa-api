@@ -502,7 +502,8 @@ def is_host_custom_domain(host):
         '.maps.gov.bc.ca', 
         '.openmaps.gov.bc.ca',
         '.apps.gov.bc.ca',
-        '.apis.gov.bc.ca'
+        '.apis.gov.bc.ca',
+        '.test'
     ]
     
     # Check if the host is one of the standard cert domains or a subdomain of them

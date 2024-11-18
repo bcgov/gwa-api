@@ -25,6 +25,7 @@ def sync_routes():
     }
     try:
         routes = get_records('routes')
+        certs = get_records('certificates')
         cert_snis = get_records('snis')
     except:
         traceback.print_exc()
@@ -32,7 +33,7 @@ def sync_routes():
         clear('sync-routes')
         exit(1)
 
-    data = transform_data_by_ns(routes, cert_snis)
+    data = transform_data_by_ns(routes, certs, cert_snis)
     for ns in data:
         url = os.getenv('KUBE_API_URL') + '/namespaces/%s/routes/sync' % ns
         response = requests.post(url, headers=headers, json=data[ns], auth=(

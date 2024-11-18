@@ -212,7 +212,8 @@ async def verify_and_create_routes(namespace: str, request: Request):
                     overrides[f'aps.route.dataclass.{route["dataClass"]}'] = [route['host']]
                 
                 route_count = prepare_apply_routes(namespace, route['selectTag'], [
-                                                   route['host']], source_folder, route["dataPlane"], ns_template_version, overrides)
+                                                   route['host']], source_folder, route['dataPlane'], ns_template_version, overrides,
+                                                   route['certificates'])
                 
                 logger.debug("[%s] - Prepared %d routes" % (namespace, route_count))
                 apply_routes(source_folder)

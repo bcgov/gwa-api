@@ -198,8 +198,8 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
                             logger.debug("[%s] Route A %03d Found custom cert with SNI match for %s" % (select_tag, index, host))
                             custom_cert_found = True
                             break
-                    if not custom_cert_found:
-                        raise Exception("Custom certificate not found for host %s" % host)
+                if not custom_cert_found:
+                    raise Exception("Custom certificate not found for host %s" % host)
                 
             if not custom_cert_found and not settings.host_transformation['enabled']:
                 # Fall back to existing cert mapping logic
@@ -256,7 +256,8 @@ def is_host_custom_domain(host):
         '.maps.gov.bc.ca', 
         '.openmaps.gov.bc.ca',
         '.apps.gov.bc.ca',
-        '.apis.gov.bc.ca'
+        '.apis.gov.bc.ca',
+        '.test'
     ]
     
     # Check if the host is one of the standard cert domains or a subdomain of them

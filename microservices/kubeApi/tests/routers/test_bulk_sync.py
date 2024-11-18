@@ -82,7 +82,8 @@ def test_bulk_sync_change_host(client):
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
                             "dataClass": None,
-                            "sslCertificateId": "default"
+                            "sslCertificateId": "default",
+                            "certificates": []
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
                         assert response.status_code == 200

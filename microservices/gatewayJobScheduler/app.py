@@ -6,7 +6,7 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-def transform_data_by_ns(routes, cert_snis):
+def transform_data_by_ns(routes, certs, cert_snis):
     ns_svc = NamespaceService()
     try:
         ns_dict = {}
@@ -35,6 +35,7 @@ def transform_data_by_ns(routes, cert_snis):
 
                 for host in route_obj['hosts']:
                     # Look for a matching certificate by SNI for custom domains
+                    cert = None
                     cert_id = 'default'
                     custom_cert_found = False
                     if is_host_custom_domain(host):
@@ -45,6 +46,10 @@ def transform_data_by_ns(routes, cert_snis):
                                     cert_id = sni['certificate']
                                     logger.debug("%s - Found custom cert with SNI match for %s - %s" % (namespace, host, cert_id))
                                     custom_cert_found = True
+                                    cert = next((cert for cert in certs if cert['id'] == cert_id), None)
+                                    if cert is None:
+                                        raise Exception("Certificate not found for id %s" % cert_id)
+                                    cert['snis'] = [host]
                                     break
                             if not custom_cert_found:
                                 raise Exception("Custom certificate not found for host %s" % host)
@@ -54,7 +59,8 @@ def transform_data_by_ns(routes, cert_snis):
                                                "sessionCookieEnabled": session_cookie_enabled,
                                                "dataClass": data_class,
                                                "dataPlane": os.getenv('DATA_PLANE'),
-                                               "sslCertificateId": cert_id})
+                                               "sslCertificateId": cert_id,
+                                               "certificates": [cert] if cert is not None else None})
         return ns_dict
     except Exception as err:
         traceback.print_exc()
@@ -78,7 +84,8 @@ def is_host_custom_domain(host):
         '.maps.gov.bc.ca', 
         '.openmaps.gov.bc.ca',
         '.apps.gov.bc.ca',
-        '.apis.gov.bc.ca'
+        '.apis.gov.bc.ca',
+        '.test'
     ]
     
     # Check if the host is one of the standard cert domains or a subdomain of them
