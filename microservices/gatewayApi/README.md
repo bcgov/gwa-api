@@ -53,7 +53,8 @@ The `data_planes_config.json` example:
   "data_planes": {
     "dp-silver-kong-proxy": {
       "kube-api": "https://api.cloud",
-      "kube-ns": "xxxxxx-dev"
+      "kube-ns": "xxxxxx-dev",
+      "validate-upstreams": false
     }
   }
 }

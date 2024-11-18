@@ -60,25 +60,46 @@ def mock_auth(mocker):
 def mock_keycloak(mocker):
     class mock_kc_admin:
         def get_group_by_path(path, search_in_subgroups):
-            if path.endswith("customcert"):
-                return {
-                    "id": "g002"
-                }
-            return {
-                "id": "g001"
-            }
+            if path == "/ns/mytest":
+                return {"id": "g001"}
+            elif path == "/ns/mytest2":
+                return {"id": "g002"}
+            elif path == "/ns/mytest3":
+                return {"id": "g003"}
+            elif path == "/ns/customcert":
+                return {"id": "g004"}
+            else:
+                return {"id": "g001"}
         def get_group(id):
-            if id == "g002":
+            if id == "g001":
+                return {
+                    "attributes": {
+                        "perm-domains": [ ".api.gov.bc.ca", ".cluster.local" ]
+                    }
+                }
+            elif id == "g002":
+                return {
+                    "attributes": {
+                        "perm-data-plane": ["strict-dp"],
+                        "perm-upstreams": [],
+                        "perm-domains": [ ".api.gov.bc.ca", ".cluster.local" ]
+                    }
+                }
+            elif id == "g003":
+                return {
+                    "attributes": {
+                        "perm-data-plane": ["strict-dp"],
+                        "perm-upstreams": ['ns1'],
+                        "perm-domains": [ ".api.gov.bc.ca", ".cluster.local" ]
+                    }
+                }
+            elif id == "g004":
                 return {
                     "attributes": {
                         "perm-domains": [ ".api.gov.bc.ca", ".custom.gov.bc.ca" ]
                     }
                 }
-            return {
-                "attributes": {
-                    "perm-domains": [ ".api.gov.bc.ca", ".cluster.local" ]
-                }
-            }
+
     mocker.patch("v2.services.namespaces.admin_api", return_value=mock_kc_admin)
 
 def mock_kong(mocker):

@@ -6,7 +6,7 @@
 
 import yaml
 import pytest
-from v1.routes.gateway import validate_upstream
+from utils.validators import validate_upstream
 
 def test_upstream_good(app):
     payload = '''
@@ -126,3 +126,31 @@ services:
     y = yaml.load(payload, Loader=yaml.FullLoader)
     validate_upstream (y, { "perm-protected-ns": ["deny"]}, ['my-namespace']) 
 
+def test_upstream_pass_validation(app):
+    payload = '''
+services:
+  - name: my-service
+    tags: ["ns.mytest", "another"]
+    host: myapi.my-namespace.svc
+'''
+    y = yaml.load(payload, Loader=yaml.FullLoader)
+
+    validate_upstream (y, { "perm-upstreams": ["my-namespace"]}, [], True) 
+
+def test_upstream_fail_validation(app):
+    payload = '''
+services:
+  - name: my-service
+    tags: ["ns.mytest", "another"]
+    host: myapi.my-namespace.svc
+'''
+    y = yaml.load(payload, Loader=yaml.FullLoader)
+
+    with pytest.raises(Exception, match=r"service upstream is invalid \(e6\)"):
+        validate_upstream (y, {}, [], True)
+
+    with pytest.raises(Exception, match=r"service upstream is invalid \(e6\)"):
+        validate_upstream (y, { "perm-upstreams": ["other-namespace"]}, [], True)
+
+    with pytest.raises(Exception, match=r"service upstream is invalid \(e6\)"):
+        validate_upstream (y, { "perm-upstreams": [""]}, [], True)
