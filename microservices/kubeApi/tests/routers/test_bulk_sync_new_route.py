@@ -53,7 +53,7 @@ def mock_apply_routes (rootPath):
         assert route_new_yaml == f.read()
 
 
-def test_bulk_sync_new_route_custom(client):
+def test_bulk_sync_new_route(client):
 
     with mock.patch('clients.ocp_routes.time_secs') as dt:
         dt.return_value = 1715153983
@@ -137,7 +137,7 @@ def mock_apply_routes_custom (rootPath):
         assert route_new_custom_yaml == f.read()
 
 
-def test_bulk_sync_new_route(client):
+def test_bulk_sync_new_route_custom(client):
 
     with mock.patch('clients.ocp_routes.time_secs') as dt:
         dt.return_value = 1715153983

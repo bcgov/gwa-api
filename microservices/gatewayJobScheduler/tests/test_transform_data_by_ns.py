@@ -1,4 +1,5 @@
 import json
+import pytest
 from unittest import mock
 from app import transform_data_by_ns
 
@@ -152,6 +153,46 @@ def test_happy_transform_data_by_ns_with_custom_domain():
             }]
         }
         assert json.dumps(transform_data_by_ns(routes, certs, cert_snis)) == json.dumps(expected_value)
+
+def test_missing_cert_transform_data_by_ns_with_custom_domain(caplog):
+    with mock.patch('clients.namespace.admin_api') as mock_admin_api:
+        set_mock_admin_api_response(mock_admin_api)
+
+        routes = [
+            {
+                "name": "route-1",
+                "tags": [ "ns.ns1"],
+                "hosts": [
+                    "test.custom.gov.bc.ca"
+                ]
+            }
+        ]
+        certs = [
+                {
+                    "id": "41d14845-669f-4dcd-aff2-926fb32a4b25",
+                    "cert": "CERT",
+                    "created_at": 1731713874,
+                    "tags": [
+                        "ns.ns1"
+                    ],
+                    "key": "KEY",
+                }
+        ]
+        cert_snis = [
+            {
+                "name": "other.custom.gov.bc.ca",
+                "id": "79009c9e-0f4d-40b5-9707-bf2fe9f50502",
+                "created_at": 1731713874,
+                "certificate": "41d14845-669f-4dcd-aff2-926fb32a4b25",
+                "tags": [
+                    "ns.ns1"
+                ]
+            }
+        ]
+        
+        expected_error = "Error transforming data. Custom certificate not found for host test.custom.gov.bc.ca"
+        transform_data_by_ns(routes, certs, cert_snis)
+        assert expected_error in caplog.text
 
 
 def set_mock_admin_api_response(dt):

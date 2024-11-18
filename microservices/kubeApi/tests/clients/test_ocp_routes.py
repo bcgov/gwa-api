@@ -119,6 +119,72 @@ def test_prepare_apply_routes():
             overrides = None
             host_count = prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_template_version, overrides)
             assert host_count == 2
+
+def test_prepare_apply_routes_certificates():
+    existing_routes = {
+        "items": [
+            {
+                "metadata": {
+                    "name": "wild-asp-route-1",
+                    "resourceVersion": "1"
+                }
+            }
+        ]
+    }
+    with mock.patch('clients.ocp_routes.read_and_indent') as read:
+        read.return_value = "SSLCERT"
+        with mock.patch("clients.ocp_routes.Popen") as popen:
+            popen.return_value = mock_popen_instance(json.dumps(existing_routes), 0)
+
+            ns = "NS1"
+            select_tag = "ns.NS1"
+            hosts = [ "host1.custom", "host2.custom" ]
+            root_path = "/tmp"
+            data_plane = "test-dp"
+            ns_template_version = "v2"
+            overrides = None
+            certificates = [
+                {
+                    "id": "41d14845-669f-4dcd-aff2-926fb32a4b25",
+                    "cert": "CERT",
+                    "created_at": 1731713874,
+                    "tags": [
+                        "ns.ns1"
+                    ],
+                    "key": "KEY",
+                    "snis": [ "host1.custom", "host2.custom" ]
+                }
+            ]
+            host_count = prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_template_version, overrides, certificates)
+            assert host_count == 2
+
+def test_prepare_apply_routes_missing_cert(caplog):
+    existing_routes = {
+        "items": [
+            {
+                "metadata": {
+                    "name": "wild-asp-route-1",
+                    "resourceVersion": "1"
+                }
+            }
+        ]
+    }
+    with mock.patch('clients.ocp_routes.read_and_indent') as read:
+        read.return_value = "SSLCERT"
+        with mock.patch("clients.ocp_routes.Popen") as popen:
+            popen.return_value = mock_popen_instance(json.dumps(existing_routes), 0)
+
+            ns = "NS1"
+            select_tag = "ns.NS1"
+            hosts = [ "host1.custom", "host2.custom" ]
+            root_path = "/tmp"
+            data_plane = "test-dp"
+            ns_template_version = "v2"
+            overrides = None
+            certificates = []
+
+            with pytest.raises(Exception, match="Custom certificate not found for host host1.custom"):
+                prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_template_version, overrides, certificates)
                      
 def test_get_gwa_ocp_routes():
     existing_routes = {
