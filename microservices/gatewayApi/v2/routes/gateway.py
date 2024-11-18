@@ -6,26 +6,20 @@ import traceback
 from urllib.parse import urlparse
 from subprocess import Popen, PIPE, STDOUT
 import uuid
-import logging
 import json
 import requests
 import yaml
-from werkzeug.exceptions import HTTPException, NotFound
-from flask import Blueprint, config, jsonify, request, Response, make_response, abort, g, current_app as app
-from io import TextIOWrapper
+from werkzeug.exceptions import HTTPException
+from flask import Blueprint, jsonify, request, make_response, abort, current_app as app
 from clients.ocp_routes import get_host_list, get_route_overrides
 
 from v2.auth.auth import admin_jwt, uma_enforce
-
 from v2.services.namespaces import NamespaceService
 
 from clients.portal import record_gateway_event
 from clients.kong import get_routes, register_kong_certs
-from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
-from clients.ocp_routes import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
-from clients.ocp_gateway_secret import prep_submitted_config, prep_and_apply_secret, write_submitted_config
-
-from utils.validators import host_valid
+from clients.ocp_gateway_secret import prep_submitted_config
+from utils.validators import host_valid, validate_upstream
 from utils.transforms import plugins_transformations
 from utils.masking import mask
 
@@ -273,7 +267,11 @@ def write_config(namespace: str) -> object:
         # Validate upstream URLs are valid
         try:
             protected_kube_namespaces = json.loads(app.config['protectedKubeNamespaces'])
-            validate_upstream(gw_config, ns_attributes, protected_kube_namespaces)
+
+            do_validate_upstreams = app.config['data_planes'][dp].get("validate-upstreams", False)
+
+            log.debug("Validate upstreams %s %s" % (dp, do_validate_upstreams))
+            validate_upstream(gw_config, ns_attributes, protected_kube_namespaces, do_validate_upstreams)
         except Exception as ex:
             traceback.print_exc()
             log.error("%s - %s" % (namespace, " Upstream Validation Errors: %s" % ex))
@@ -508,54 +506,6 @@ def transform_host(host):
         return "%s%s" % (host.replace('.', '-'), conf['baseUrl'])
     else:
         return host
-
-def validate_upstream(yaml, ns_attributes, protected_kube_namespaces):
-    errors = []
-
-    allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
-
-    # A host must not contain a list of protected
-    if 'services' in yaml:
-        for service in yaml['services']:
-            if 'url' in service:
-                try:
-                    u = urlparse(service["url"])
-                    if u.hostname is None:
-                        errors.append("service upstream has invalid url specified (e1)")
-                    else:
-                        validate_upstream_host(u.hostname, errors, allow_protected_ns, protected_kube_namespaces)
-                except Exception as e:
-                    errors.append("service upstream has invalid url specified (e2)")
-
-            if 'host' in service:
-                host = service["host"]
-                validate_upstream_host(host, errors, allow_protected_ns, protected_kube_namespaces)
-
-    if len(errors) != 0:
-        raise Exception('\n'.join(errors))
-
-
-def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_namespaces):
-    host = _host.lower()
-
-    restricted = ['localhost', '127.0.0.1', '0.0.0.0']
-
-    if host in restricted:
-        errors.append("service upstream is invalid (e1)")
-    if host.endswith('svc'):
-        partials = host.split('.')
-        # get the namespace, and make sure it is not in the protected_kube_namespaces list
-        if len(partials) != 3:
-            errors.append("service upstream is invalid (e2)")
-        elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
-            errors.append("service upstream is invalid (e3)")
-    if host.endswith('svc.cluster.local'):
-        partials = host.split('.')
-        # get the namespace, and make sure it is not in the protected_kube_namespaces list
-        if len(partials) != 5:
-            errors.append("service upstream is invalid (e4)")
-        elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
-            errors.append("service upstream is invalid (e5)")
 
 def update_routes_check(yaml):
     if 'services' in yaml or 'upstreams' not in yaml:
