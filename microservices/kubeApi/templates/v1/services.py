@@ -23,9 +23,7 @@ spec:
       targetPort: 8443
   type: ClusterIP
   selector:
-    app.kubernetes.io/component: app
-    app.kubernetes.io/instance: dp-silver
-    app.kubernetes.io/name: kong
+    data-plane: ${data_plane}
 """)
 
 SERVICE_HEAD = Template("""
