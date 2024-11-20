@@ -2,6 +2,7 @@ import json
 import pytest
 from unittest import mock
 from app import transform_data_by_ns
+from conftest import SAMPLE_CERT, SAMPLE_KEY
 
 def test_happy_transform_data_by_ns():
     with mock.patch('clients.namespace.admin_api') as mock_admin_api:
@@ -27,7 +28,7 @@ def test_happy_transform_data_by_ns():
                     "sessionCookieEnabled": False,
                     "dataClass": None,
                     "dataPlane": "test-dp",
-                    "sslCertificateId": "default",
+                    "sslCertificateSerialNumber": None,
                     "certificates": None
                 }
             ]
@@ -57,7 +58,7 @@ def test_happy_transform_data_by_ns_with_override_session_cookie():
                 "sessionCookieEnabled": True,
                 "dataClass": None,
                 "dataPlane": "test-dp",
-                "sslCertificateId": "default",
+                "sslCertificateSerialNumber": None,
                 "certificates": None
             }]
         }
@@ -86,7 +87,7 @@ def test_happy_transform_data_by_ns_with_override_data_plane():
                 "sessionCookieEnabled": False,
                 "dataClass": "high",
                 "dataPlane": "test-dp",
-                "sslCertificateId": "default",
+                "sslCertificateSerialNumber": None,
                 "certificates": None
             }]
         }
@@ -108,12 +109,12 @@ def test_happy_transform_data_by_ns_with_custom_domain():
         certs = [
                 {
                     "id": "41d14845-669f-4dcd-aff2-926fb32a4b25",
-                    "cert": "CERT",
+                    "cert": SAMPLE_CERT,
                     "created_at": 1731713874,
                     "tags": [
                         "ns.ns1"
                     ],
-                    "key": "KEY",
+                    "key": SAMPLE_KEY,
                 }
         ]
         cert_snis = [
@@ -135,16 +136,16 @@ def test_happy_transform_data_by_ns_with_custom_domain():
                 "sessionCookieEnabled": False,
                 "dataClass": None,
                 "dataPlane": "test-dp",
-                "sslCertificateId": "41d14845-669f-4dcd-aff2-926fb32a4b25",
+                "sslCertificateSerialNumber": "1",
                 "certificates": [
                     {
                         "id": "41d14845-669f-4dcd-aff2-926fb32a4b25",
-                        "cert": "CERT",
+                        "cert": SAMPLE_CERT,
                         "created_at": 1731713874,
                         "tags": [
                             "ns.ns1"
                         ],
-                        "key": "KEY",
+                        "key": SAMPLE_KEY,
                         "snis": [
                             "test.custom.gov.bc.ca"
                         ]

@@ -1,5 +1,6 @@
 import pytest
-from app import get_certificate_for_host
+from app import _get_certificate_for_host
+from conftest import SAMPLE_CERT, SAMPLE_KEY
 
 def test_get_certificate_standard_domain():
     """Test that standard domains return default cert configuration"""
@@ -8,22 +9,23 @@ def test_get_certificate_standard_domain():
     cert_snis = []
     certs = []
 
-    cert, cert_id = get_certificate_for_host(host, namespace, cert_snis, certs)
+    cert, serial_number = _get_certificate_for_host(host, namespace, cert_snis, certs)
     assert cert is None
-    assert cert_id == "default"
+    assert serial_number is None
 
 def test_get_certificate_custom_domain_found():
     """Test successful custom domain certificate lookup"""
     host = "test.custom.gov.bc.ca"
     namespace = "test-ns"
     cert_id = "41d14845-669f-4dcd-aff2-926fb32a4b25"
+    cert_serial_number = "1"
     
     certs = [{
         "id": cert_id,
-        "cert": "CERT",
+        "cert": SAMPLE_CERT,
         "created_at": 1731713874,
         "tags": ["ns.test-ns"],
-        "key": "KEY",
+        "key": SAMPLE_KEY
     }]
     
     cert_snis = [{
@@ -34,12 +36,12 @@ def test_get_certificate_custom_domain_found():
         "tags": ["ns.test-ns"]
     }]
 
-    cert, returned_cert_id = get_certificate_for_host(host, namespace, cert_snis, certs)
+    cert, returned_serial_number = _get_certificate_for_host(host, namespace, cert_snis, certs)
     assert cert is not None
-    assert returned_cert_id == cert_id
+    assert returned_serial_number == cert_serial_number
     assert cert["snis"] == [host]
 
-def test_get_certificate_custom_domain_not_found():
+def test_get_certificate_custom_domain_sni_not_found():
     """Test custom domain with no matching certificate"""
     host = "missing.custom.gov.bc.ca"
     namespace = "test-ns"
@@ -50,7 +52,7 @@ def test_get_certificate_custom_domain_not_found():
     certs = []
 
     with pytest.raises(Exception) as exc_info:
-        get_certificate_for_host(host, namespace, cert_snis, certs)
+        _get_certificate_for_host(host, namespace, cert_snis, certs)
     assert str(exc_info.value) == f"Certificate not found for host {host}"
 
 def test_get_certificate_missing_cert():
@@ -66,7 +68,7 @@ def test_get_certificate_missing_cert():
     certs = []  # Empty certs list, so cert won't be found
 
     with pytest.raises(Exception) as exc_info:
-        get_certificate_for_host(host, namespace, cert_snis, certs)
+        _get_certificate_for_host(host, namespace, cert_snis, certs)
     assert str(exc_info.value) == f"Certificate not found for id {cert_id}"
 
 def test_get_certificate_empty_cert_snis():
@@ -77,5 +79,5 @@ def test_get_certificate_empty_cert_snis():
     certs = []
 
     with pytest.raises(Exception) as exc_info:
-        get_certificate_for_host(host, namespace, cert_snis, certs)
-    assert str(exc_info.value) == f"Certificate not found for host {host}"
+        _get_certificate_for_host(host, namespace, cert_snis, certs)
+    assert str(exc_info.value) == f"Certificate SNI not found for host {host}"
