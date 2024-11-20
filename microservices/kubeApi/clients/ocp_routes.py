@@ -181,34 +181,36 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
             route_template = ROUTES[templ_version]["ROUTE"]
 
             # Modified certificate selection logic
-            ssl_ref = "tls"
+            ssl_ref = None
             custom_cert_label= ''
-            custom_cert_found = False
             
-            if is_host_custom_domain(host):
+            ssl_crt = None
+            ssl_key = None
+            if certificates:
                 logger.debug("[%s] Route A %03d Searching for custom cert for %s" % (select_tag, index, host))
-                if certificates:
-                    # Look for a matching certificate by SNI
-                    for cert in certificates:
-                        if host in cert['snis']:
-                            ssl_key = format_pem_data(cert['key'])
-                            ssl_crt = format_pem_data(cert['cert'])
-                            cert_id = cert['id']
-                            custom_cert_label = f'    aps-certificate-id: "{cert_id}"'
-                            logger.debug("[%s] Route A %03d Found custom cert with SNI match for %s" % (select_tag, index, host))
-                            custom_cert_found = True
-                            break
-                if not custom_cert_found:
-                    raise Exception("Custom certificate not found for host %s" % host)
+                # Look for a matching certificate by SNI
+                for cert in certificates:
+                    if host in cert['snis']:
+                        ssl_ref = 'custom'
+                        ssl_key = format_pem_data(cert['key'])
+                        ssl_crt = format_pem_data(cert['cert'])
+                        cert_id = cert['id']
+                        custom_cert_label = f'    aps-certificate-id: "{cert_id}"'
+                        logger.debug("[%s] Route A %03d Found custom cert with SNI match for %s" % (select_tag, index, host))
+                        break
                 
-            if not custom_cert_found and not settings.host_transformation['enabled']:
+            if not ssl_crt:
                 # Fall back to existing cert mapping logic
                 for host_match, ssl_file_prefix in host_cert_mapping.items():
                     if host.endswith(host_match):
                         ssl_ref = ssl_file_prefix
                         logger.debug("[%s] Route A %03d matched ssl cert %s" % (select_tag, index, ssl_ref))
-                ssl_key = read_and_indent("/ssl/%s.key" % ssl_ref, 8)
-                ssl_crt = read_and_indent("/ssl/%s.crt" % ssl_ref, 8)
+                if ssl_ref:
+                    ssl_key = read_and_indent("/ssl/%s.key" % ssl_ref, 8)
+                    ssl_crt = read_and_indent("/ssl/%s.crt" % ssl_ref, 8)
+
+            if not ssl_ref:
+                raise Exception("No cert found for host %s" % host)
 
             name = "wild-%s-%s" % (select_tag.replace('.', '-'), host)
 

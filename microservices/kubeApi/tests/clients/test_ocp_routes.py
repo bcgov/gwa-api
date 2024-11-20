@@ -112,7 +112,7 @@ def test_prepare_apply_routes():
 
             ns = "NS1"
             select_tag = "ns.NS1"
-            hosts = [ "host1.test", "host2.test" ]
+            hosts = [ "host1.test.api.gov.bc.ca", "host2.test.api.gov.bc.ca" ]
             root_path = "/tmp"
             data_plane = "test-dp"
             ns_template_version = "v2"
@@ -183,7 +183,7 @@ def test_prepare_apply_routes_missing_cert(caplog):
             overrides = None
             certificates = []
 
-            with pytest.raises(Exception, match="Custom certificate not found for host host1.custom"):
+            with pytest.raises(Exception, match="No cert found for host host1.custom"):
                 prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_template_version, overrides, certificates)
                      
 def test_get_gwa_ocp_routes():

@@ -102,7 +102,7 @@ metadata:
     aps-namespace: "examplens"
     aps-select-tag: "ns.EXAMPLE-NS"
     aps-published-ts: "1715153983"
-    aps-ssl: "tls"
+    aps-ssl: "custom"
     aps-data-plane: "data-plane-1"
     aps-template-version: "v2"
     aps-certificate-id: "41d14845-669f-4dcd-aff2-926fb32a4b25"
