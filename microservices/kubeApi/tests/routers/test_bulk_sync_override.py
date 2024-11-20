@@ -33,7 +33,8 @@ def test_bulk_sync_no_change(client):
                     "host": "abc.api.gov.bc.ca",
                     "sessionCookieEnabled": True,
                     "dataClass": None,
-                    "sslCertificateId": "default"
+                    "sslCertificateSerialNumber": None,
+                    "certificates": []
                 }]
                 response = client.post('/namespaces/examplens/routes/sync', json=data)
                 assert response.status_code == 200
@@ -112,7 +113,7 @@ def test_bulk_sync_new_route_session_cookie(client):
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": True,
                             "dataClass": None,
-                            "sslCertificateId": "default",
+                            "sslCertificateSerialNumber": None,
                             "certificates": []
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
@@ -159,7 +160,7 @@ def test_bulk_sync_change_session_cookie(client):
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": True,
                             "dataClass": None,
-                            "sslCertificateId": "default",
+                            "sslCertificateSerialNumber": None,
                             "certificates": []
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
@@ -244,7 +245,7 @@ def test_bulk_sync_new_route_data_class(client):
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
                             "dataClass": "high",
-                            "sslCertificateId": "default",
+                            "sslCertificateSerialNumber": None,
                             "certificates": []
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
@@ -291,7 +292,7 @@ def test_bulk_sync_add_data_class(client):
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
                             "dataClass": "high",
-                            "sslCertificateId": "default",
+                            "sslCertificateSerialNumber": None,
                             "certificates": []
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
@@ -340,7 +341,7 @@ def test_bulk_sync_remove_data_class(client):
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": True,
                             "dataClass": None,
-                            "sslCertificateId": "default",
+                            "sslCertificateSerialNumber": None,
                             "certificates": []
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
@@ -389,7 +390,7 @@ def test_bulk_sync_change_data_class(client):
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
                             "dataClass": "high",
-                            "sslCertificateId": "default",
+                            "sslCertificateSerialNumber": None,
                             "certificates": []
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)

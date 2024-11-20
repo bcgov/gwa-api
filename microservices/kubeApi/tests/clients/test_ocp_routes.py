@@ -3,6 +3,7 @@ import pytest
 import json
 import traceback
 from fastapi import HTTPException
+from conftest import SAMPLE_CERT, SAMPLE_KEY
 
 from clients.ocp_routes import apply_routes, delete_routes, \
     kubectl_apply, kubectl_delete, \
@@ -146,12 +147,12 @@ def test_prepare_apply_routes_certificates():
             certificates = [
                 {
                     "id": "41d14845-669f-4dcd-aff2-926fb32a4b25",
-                    "cert": "CERT",
+                    "cert": SAMPLE_CERT,
                     "created_at": 1731713874,
                     "tags": [
                         "ns.ns1"
                     ],
-                    "key": "KEY",
+                    "key": SAMPLE_KEY,
                     "snis": [ "host1.custom", "host2.custom" ]
                 }
             ]

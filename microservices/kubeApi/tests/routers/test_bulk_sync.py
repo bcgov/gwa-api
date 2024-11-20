@@ -34,7 +34,7 @@ def test_bulk_sync(client):
                     "host": "abc.api.gov.bc.ca",
                     "sessionCookieEnabled": False,
                     "dataClass": None,
-                    "sslCertificateId": "default",
+                    "sslCertificateSerialNumber": None,
                     "certificates": None
                 }]
                 response = client.post('/namespaces/examplens/routes/sync', json=data)
@@ -83,7 +83,7 @@ def test_bulk_sync_change_host(client):
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
                             "dataClass": None,
-                            "sslCertificateId": "default",
+                            "sslCertificateSerialNumber": None,
                             "certificates": []
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
@@ -100,7 +100,7 @@ def test_bulk_sync_change_cert(client):
                 "labels": {
                     "aps-select-tag": "ns.EXAMPLE-NS",
                     "aps-template-version": "v2",
-                    "aps-certificate-id": "41d14845-669f-4dcd-aff2-926fb32a4b25"
+                    "aps-certificate-serial": "1"
                 },
                 "annotations": {
                 }
@@ -133,7 +133,7 @@ def test_bulk_sync_change_cert(client):
                             "host": "abc.custom.gov.bc.ca",
                             "sessionCookieEnabled": False,
                             "dataClass": None,
-                            "sslCertificateId": "default",
+                            "sslCertificateSerialNumber": "2",
                             "certificates": [                
                                 {
                                     "id": "afedc6ed-e653-4261-8ec8-17ebaac1fecf",

@@ -8,6 +8,8 @@ from subprocess import Popen, PIPE, STDOUT
 from templates.v1.routes import ROUTE, ROUTE_HEAD
 from templates.v2.routes import V2_ROUTE
 from config import settings
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
 from fastapi.logger import logger
 
 files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml",
@@ -194,8 +196,13 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
                         ssl_ref = 'custom'
                         ssl_key = format_pem_data(cert['key'])
                         ssl_crt = format_pem_data(cert['cert'])
-                        cert_id = cert['id']
-                        custom_cert_label = f'    aps-certificate-id: "{cert_id}"'
+                        x509_cert = x509.load_pem_x509_certificate(
+                            ssl_crt.encode(),
+                            default_backend()
+                        )
+                        # Get serial number as integer and convert to hex string
+                        serial_number = format(x509_cert.serial_number, 'x')
+                        custom_cert_label = f'    aps-certificate-serial: "{serial_number}"'
                         logger.debug("[%s] Route A %03d Found custom cert with SNI match for %s" % (select_tag, index, host))
                         break
                 

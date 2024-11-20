@@ -1,5 +1,6 @@
 from unittest import mock
 import datetime
+from conftest import SAMPLE_CERT, SAMPLE_KEY, SAMPLE_CERT_FORMATTED, SAMPLE_KEY_FORMATTED
 
 route_new_yaml = """
 apiVersion: route.openshift.io/v1
@@ -77,7 +78,7 @@ def test_bulk_sync_new_route(client):
                             "host": "abc.api.gov.bc.ca",
                             "sessionCookieEnabled": False,
                             "dataClass": None,
-                            "sslCertificateId": "default",
+                            "sslCertificateSerialNumber": None,
                             "certificates": []
                         }]
                         response = client.post('/namespaces/examplens/routes/sync', json=data)
@@ -85,7 +86,7 @@ def test_bulk_sync_new_route(client):
                         assert response.json()['message'] == 'synced'
                         assert response.json()['inserted_count'] == 1
                         
-route_new_custom_yaml = """
+route_new_custom_yaml = f"""
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
@@ -105,7 +106,7 @@ metadata:
     aps-ssl: "custom"
     aps-data-plane: "data-plane-1"
     aps-template-version: "v2"
-    aps-certificate-id: "41d14845-669f-4dcd-aff2-926fb32a4b25"
+    aps-certificate-serial: "1"
 spec:
   host: abc.custom.gov.bc.ca
   port:
@@ -114,9 +115,9 @@ spec:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
     certificate: |-
-        CERT
+        {SAMPLE_CERT_FORMATTED}
     key: |-
-        KEY
+        {SAMPLE_KEY_FORMATTED}
   to:
     kind: Service
     name: data-plane-1
@@ -158,17 +159,17 @@ def test_bulk_sync_new_route_custom(client):
                         "host": "abc.custom.gov.bc.ca",
                         "sessionCookieEnabled": False,
                         "dataClass": None,
-                        "sslCertificateId": "default",
+                        "sslCertificateSerialNumber": "1",
                         "certificates": [                
                             {
                                 "id": "41d14845-669f-4dcd-aff2-926fb32a4b25",
                                 "snis": [ "abc.custom.gov.bc.ca" ],
-                                "cert": "CERT",
+                                "cert": SAMPLE_CERT,
                                 "created_at": 1731713874,
                                 "tags": [
                                     "ns.ns1"
                                 ],
-                                "key": "KEY",
+                                "key": SAMPLE_KEY,
                             }              
                         ]
                     }]

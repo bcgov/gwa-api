@@ -12,6 +12,7 @@ uvicorn = "^0.15.0"
 PyYAML = "^6.0"
 python-keycloak = "^0.26.1"
 Authlib = "^0.15.4"
+cryptography = "^43.0.3"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.7"
