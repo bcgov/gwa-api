@@ -35,25 +35,8 @@ def transform_data_by_ns(routes, certs, cert_snis):
 
                 for host in route_obj['hosts']:
                     # Look for a matching certificate by SNI for custom domains
-                    cert = None
-                    cert_id = 'default'
-                    custom_cert_found = False
-                    if is_host_custom_domain(host):
-                        logger.debug("%s - Searching for custom cert for %s" % (namespace, host))
-                        if cert_snis:
-                            for sni in cert_snis:
-                                if host in sni['name']:
-                                    cert_id = sni['certificate']
-                                    logger.debug("%s - Found custom cert with SNI match for %s - %s" % (namespace, host, cert_id))
-                                    custom_cert_found = True
-                                    cert = next((cert for cert in certs if cert['id'] == cert_id), None)
-                                    if cert is None:
-                                        raise Exception("Certificate not found for id %s" % cert_id)
-                                    cert['snis'] = [host]
-                                    break
-                            if not custom_cert_found:
-                                raise Exception("Custom certificate not found for host %s" % host)
-                            
+                    cert, cert_id = get_certificate_for_host(host, namespace, cert_snis, certs)
+                    
                     name = 'wild-%s-%s' % (select_tag.replace(".", "-"), host)
                     ns_dict[namespace].append({"name": name, "selectTag": select_tag, "host": host,
                                                "sessionCookieEnabled": session_cookie_enabled,
@@ -75,6 +58,31 @@ def get_select_tag(tags):
                 required_tag = tag
                 break
     return required_tag
+
+def get_certificate_for_host(host, namespace, cert_snis, certs):
+    """
+    Find and return certificate details for a given host
+    Returns: tuple (cert, cert_id)
+    """
+    cert = None
+    cert_id = 'default'
+    
+    if not is_host_custom_domain(host):
+        return cert, cert_id
+        
+    logger.debug("%s - Searching for custom cert for %s" % (namespace, host))
+        
+    for sni in cert_snis:
+        if host in sni['name']:
+            cert_id = sni['certificate']
+            logger.debug("%s - Found custom cert with SNI match for %s - %s" % (namespace, host, cert_id))
+            cert = next((cert for cert in certs if cert['id'] == cert_id), None)
+            if cert is None:
+                raise Exception("Certificate not found for id %s" % cert_id)
+            cert['snis'] = [host]
+            return cert, cert_id
+            
+    raise Exception("Certificate not found for host %s" % host)
 
 def is_host_custom_domain(host):
     non_custom_suffixes = [

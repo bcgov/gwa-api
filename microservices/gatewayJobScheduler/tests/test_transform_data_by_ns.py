@@ -190,7 +190,7 @@ def test_missing_cert_transform_data_by_ns_with_custom_domain(caplog):
             }
         ]
         
-        expected_error = "Error transforming data. Custom certificate not found for host test.custom.gov.bc.ca"
+        expected_error = "Error transforming data. Certificate not found for host test.custom.gov.bc.ca"
         transform_data_by_ns(routes, certs, cert_snis)
         assert expected_error in caplog.text
 
