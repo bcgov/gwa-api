@@ -10,6 +10,7 @@ python = "^3.8"
 requests = "^2.26.0"
 schedule = "^1.2.1"
 python-keycloak = "^0.26.1"
+cryptography = "^43.0.3"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.7"

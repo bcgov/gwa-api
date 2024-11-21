@@ -18,6 +18,7 @@ ${data_class_annotation}
     aps-ssl: "${ssl_ref}"
     aps-data-plane: "${data_plane}"
     aps-template-version: "${template_version}"
+${custom_cert_label}
 spec:
   host: ${host}
   port:

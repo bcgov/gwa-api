@@ -28,6 +28,7 @@ class OCPRoute(BaseModel):
     select_tag: str
     ns_attributes: dict
     overrides: dict | None = None
+    certificates: list | None = None
 
 
 class BulkSyncRequest(BaseModel):
@@ -43,6 +44,8 @@ class BulkSyncRequest(BaseModel):
     sessionCookieEnabled: bool
     # Data class for Emerald Cluster routes
     dataClass: str
+    # SSL Certificate serial number for custom domains
+    sslCertificateSerialNumber: str
 
     
 @router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(verify_credentials)])
@@ -85,7 +88,8 @@ def add_routes(namespace: str, route: OCPRoute):
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
         route_count = prepare_apply_routes(namespace, route.select_tag, hosts,
-                                           source_folder, get_data_plane(route.ns_attributes), ns_template_version, route.overrides)
+                                           source_folder, get_data_plane(route.ns_attributes), ns_template_version, route.overrides,
+                                           route.certificates)
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)
@@ -173,7 +177,8 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 "host": route["spec"]["host"],
                 "dataPlane": route["spec"]["to"]["name"],
                 "sessionCookieEnabled": True if route["metadata"]["labels"].get("aps-template-version") == "v1" else False,
-                "dataClass": route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name").split("-")[-1] if route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name") else None
+                "dataClass": route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name").split("-")[-1] if route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name") else None,
+                "sslCertificateSerialNumber": route["metadata"]["labels"].get("aps-certificate-serial", "default")
             }
         )
 
@@ -207,7 +212,8 @@ async def verify_and_create_routes(namespace: str, request: Request):
                     overrides[f'aps.route.dataclass.{route["dataClass"]}'] = [route['host']]
                 
                 route_count = prepare_apply_routes(namespace, route['selectTag'], [
-                                                   route['host']], source_folder, route["dataPlane"], ns_template_version, overrides)
+                                                   route['host']], source_folder, route['dataPlane'], ns_template_version, overrides,
+                                                   route['certificates'])
                 
                 logger.debug("[%s] - Prepared %d routes" % (namespace, route_count))
                 apply_routes(source_folder)
@@ -264,7 +270,7 @@ def in_list(match, list):
     return False
 
 def build_ref(v):
-    return "%s%s%s%s%s%s" % (v['name'], v['selectTag'], v['host'], v['dataPlane'], v['sessionCookieEnabled'], v['dataClass'])
+    return f"{v['name']}{v['selectTag']}{v['host']}{v['dataPlane']}{v['sessionCookieEnabled']}{v['dataClass']}{v['sslCertificateSerialNumber']}"
 
 def in_list_by_name(match, list):
     for item in list:

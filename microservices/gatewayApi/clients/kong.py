@@ -29,6 +29,9 @@ def get_service_routes (service_id):
 def get_local_certs_by_ns (ns):
     return recurse_get_records ([], "/certificates?tags=gwa.ns.%s" % ns)
 
+def get_public_certs_by_ns (ns):
+    return recurse_get_records ([], "/certificates?tags=ns.%s" % ns)
+
 def get_acls ():
     return recurse_get_records ([], "/acls")
 

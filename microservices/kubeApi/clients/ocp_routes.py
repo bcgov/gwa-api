@@ -8,6 +8,8 @@ from subprocess import Popen, PIPE, STDOUT
 from templates.v1.routes import ROUTE, ROUTE_HEAD
 from templates.v2.routes import V2_ROUTE
 from config import settings
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
 from fastapi.logger import logger
 
 files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml",
@@ -43,6 +45,12 @@ def read_and_indent(full_path, indent):
     for line in lines:
         result = "%s%s%s" % (result, pad[:indent], line)
     return result
+
+def format_pem_data(pem_string, indent=8):
+    """Format PEM data with proper line breaks and indentation"""
+    lines = pem_string.split('\n')
+    formatted_lines = [' ' * indent + line for line in lines if line]
+    return '\n'.join(formatted_lines)
 
 
 def apply_routes(root_path):
@@ -147,7 +155,7 @@ def prepare_route_last_version(ns, select_tag):
     return resource_versions
 
 
-def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_template_version, overrides):
+def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_template_version, overrides, certificates=None):
     out_filename = "%s/routes-current.yaml" % root_path
     ts = time_secs()
     fmt_time = datetime.fromtimestamp(ts).strftime("%Y.%m-%b.%d")
@@ -174,16 +182,42 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
 
             route_template = ROUTES[templ_version]["ROUTE"]
 
-            # If host transformation is disabled, then select the appropriate
-            # SSL cert based on the suffix mapping
-            ssl_ref = "tls"
-            if not settings.host_transformation['enabled']:
+            # Modified certificate selection logic
+            ssl_ref = None
+            custom_cert_label= ''
+            
+            ssl_crt = None
+            ssl_key = None
+            if certificates:
+                logger.debug("[%s] Route A %03d Searching for custom cert for %s" % (select_tag, index, host))
+                # Look for a matching certificate by SNI
+                for cert in certificates:
+                    if host in cert['snis']:
+                        ssl_ref = 'custom'
+                        ssl_key = format_pem_data(cert['key'])
+                        ssl_crt = format_pem_data(cert['cert'])
+                        x509_cert = x509.load_pem_x509_certificate(
+                            ssl_crt.encode(),
+                            default_backend()
+                        )
+                        # Get serial number as integer and convert to hex string
+                        serial_number = format(x509_cert.serial_number, 'x')
+                        custom_cert_label = f'    aps-certificate-serial: "{serial_number}"'
+                        logger.debug("[%s] Route A %03d Found custom cert with SNI match for %s" % (select_tag, index, host))
+                        break
+                
+            if not ssl_crt:
+                # Fall back to existing cert mapping logic
                 for host_match, ssl_file_prefix in host_cert_mapping.items():
                     if host.endswith(host_match):
                         ssl_ref = ssl_file_prefix
                         logger.debug("[%s] Route A %03d matched ssl cert %s" % (select_tag, index, ssl_ref))
-            ssl_key = read_and_indent("/ssl/%s.key" % ssl_ref, 8)
-            ssl_crt = read_and_indent("/ssl/%s.crt" % ssl_ref, 8)
+                if ssl_ref:
+                    ssl_key = read_and_indent("/ssl/%s.key" % ssl_ref, 8)
+                    ssl_crt = read_and_indent("/ssl/%s.crt" % ssl_ref, 8)
+
+            if not ssl_ref:
+                raise Exception("No cert found for host %s" % host)
 
             name = "wild-%s-%s" % (select_tag.replace('.', '-'), host)
 
@@ -195,7 +229,7 @@ def prepare_apply_routes(ns, select_tag, hosts, root_path, data_plane, ns_templa
                          (select_tag, index, select_tag.replace('.', '-'), host, resource_version))
             out_file.write(route_template.substitute(name=name, ns=ns, select_tag=select_tag, resource_version=resource_version, host=host, path='/',
                                             ssl_ref=ssl_ref, ssl_key=ssl_key, ssl_crt=ssl_crt, service_name=data_plane, timestamp=ts, fmt_time=fmt_time, data_plane=data_plane,
-                                            data_class_annotation=data_class_annotation, template_version=templ_version))
+                                            data_class_annotation=data_class_annotation, template_version=templ_version, custom_cert_label=custom_cert_label))
             out_file.write('\n---\n')
             index = index + 1
         out_file.close()
@@ -222,3 +256,22 @@ def get_gwa_ocp_routes(extralabels=""):
 
 def time_secs():
     return int(time.time())
+
+def is_host_custom_domain(host):
+    non_custom_suffixes = [
+        '.cluster.local', 
+        '.api.gov.bc.ca', 
+        '.data.gov.bc.ca', 
+        '.maps.gov.bc.ca', 
+        '.openmaps.gov.bc.ca',
+        '.apps.gov.bc.ca',
+        '.apis.gov.bc.ca',
+        '.test'
+    ]
+    
+    # Check if the host is one of the standard cert domains or a subdomain of them
+    for suffix in non_custom_suffixes:
+        if host == suffix[1:] or host.endswith(suffix):
+            return False
+
+    return True
