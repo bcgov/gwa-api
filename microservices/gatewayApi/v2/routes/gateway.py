@@ -6,26 +6,20 @@ import traceback
 from urllib.parse import urlparse
 from subprocess import Popen, PIPE, STDOUT
 import uuid
-import logging
 import json
 import requests
 import yaml
-from werkzeug.exceptions import HTTPException, NotFound
-from flask import Blueprint, config, jsonify, request, Response, make_response, abort, g, current_app as app
-from io import TextIOWrapper
+from werkzeug.exceptions import HTTPException
+from flask import Blueprint, jsonify, request, make_response, abort, current_app as app
 from clients.ocp_routes import get_host_list, get_route_overrides
 
 from v2.auth.auth import admin_jwt, uma_enforce
-
 from v2.services.namespaces import NamespaceService
 
 from clients.portal import record_gateway_event
-from clients.kong import get_routes, register_kong_certs
-from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
-from clients.ocp_routes import prepare_apply_routes, prepare_delete_routes, apply_routes, delete_routes
-from clients.ocp_gateway_secret import prep_submitted_config, prep_and_apply_secret, write_submitted_config
-
-from utils.validators import host_valid
+from clients.kong import get_routes, register_kong_certs, get_public_certs_by_ns
+from clients.ocp_gateway_secret import prep_submitted_config
+from utils.validators import host_valid, validate_upstream
 from utils.transforms import plugins_transformations
 from utils.masking import mask
 
@@ -273,7 +267,11 @@ def write_config(namespace: str) -> object:
         # Validate upstream URLs are valid
         try:
             protected_kube_namespaces = json.loads(app.config['protectedKubeNamespaces'])
-            validate_upstream(gw_config, ns_attributes, protected_kube_namespaces)
+
+            do_validate_upstreams = app.config['data_planes'][dp].get("validate-upstreams", False)
+
+            log.debug("Validate upstreams %s %s" % (dp, do_validate_upstreams))
+            validate_upstream(gw_config, ns_attributes, protected_kube_namespaces, do_validate_upstreams)
         except Exception as ex:
             traceback.print_exc()
             log.error("%s - %s" % (namespace, " Upstream Validation Errors: %s" % ex))
@@ -332,6 +330,15 @@ def write_config(namespace: str) -> object:
         try:
             if update_routes_flag:
                 host_list = get_host_list(tempFolder)
+                certs = []
+                custom_domain_in_host_list = False
+                for host in host_list:
+                    if is_host_custom_domain(host):
+                        custom_domain_in_host_list = True
+                        break
+                if custom_domain_in_host_list:
+                    certs = get_public_certs_by_ns(namespace)
+                    log.debug("[%s] Found %d certs in namespace" % (namespace, len(certs)))
                 session = requests.Session()
                 session.headers.update({"Content-Type": "application/json"})
                 route_payload = {
@@ -344,9 +351,17 @@ def write_config(namespace: str) -> object:
                         "aps.route.dataclass.medium": get_route_overrides(tempFolder, "aps.route.dataclass.medium"),
                         "aps.route.dataclass.high": get_route_overrides(tempFolder, "aps.route.dataclass.high"),
                         "aps.route.dataclass.public": get_route_overrides(tempFolder, "aps.route.dataclass.public"),
-                    }
+                    },
+                    "certificates": certs
                 }
-                log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload))
+                # Create a copy without certificates for logging
+                route_payload_log = {
+                    "hosts": host_list,
+                    "select_tag": selectTag,
+                    "ns_attributes": ns_attributes.getAttrs(),
+                    "overrides": route_payload["overrides"]
+                }
+                log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload_log))
                 rqst_url = app.config['data_planes'][dp]["kube-api"]
                 res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                     app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
@@ -471,6 +486,8 @@ def host_transformation(namespace, data_plane, yaml):
                         for host in route['hosts']:
                             if is_host_local(host):
                                 new_hosts.append(transform_local_host(data_plane, host))
+                            elif is_host_custom_domain(host):
+                                new_hosts.append(host)
                             elif is_host_transform_enabled():
                                 new_hosts.append(transform_host(host))
                                 transforms = transforms + 1
@@ -479,10 +496,32 @@ def host_transformation(namespace, data_plane, yaml):
                         route['hosts'] = new_hosts
     log.debug("[%s] Host transformations %d" % (namespace, transforms))
 
-def is_host_local (host):
+def is_host_local(host):
     return host.endswith(".cluster.local")
 
-def has_namespace_local_host_permission (ns_attributes):
+def is_host_custom_domain(host):
+    log = app.logger
+
+    non_custom_suffixes = [
+        '.cluster.local', 
+        '.api.gov.bc.ca', 
+        '.data.gov.bc.ca', 
+        '.maps.gov.bc.ca', 
+        '.openmaps.gov.bc.ca',
+        '.apps.gov.bc.ca',
+        '.apis.gov.bc.ca',
+        '.test'
+    ]
+    
+    # Check if the host is one of the standard cert domains or a subdomain of them
+    for suffix in non_custom_suffixes:
+        if host == suffix[1:] or host.endswith(suffix):
+            return False
+    
+    log.debug("Host %s is custom" % (host))
+    return True
+
+def has_namespace_local_host_permission(ns_attributes):
     for domain in ns_attributes.get('perm-domains', ['.api.gov.bc.ca']):
         if is_host_local(domain):
             return True
@@ -501,61 +540,13 @@ def transform_local_host(data_plane, host):
     return "gw-%s.%s.svc.cluster.local" % (name_part, kube_ns)
 
 def transform_host(host):
-    if is_host_local(host):
+    if is_host_local(host) or is_host_custom_domain(host):
         return host
     elif is_host_transform_enabled():
         conf = app.config['hostTransformation']
         return "%s%s" % (host.replace('.', '-'), conf['baseUrl'])
     else:
         return host
-
-def validate_upstream(yaml, ns_attributes, protected_kube_namespaces):
-    errors = []
-
-    allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
-
-    # A host must not contain a list of protected
-    if 'services' in yaml:
-        for service in yaml['services']:
-            if 'url' in service:
-                try:
-                    u = urlparse(service["url"])
-                    if u.hostname is None:
-                        errors.append("service upstream has invalid url specified (e1)")
-                    else:
-                        validate_upstream_host(u.hostname, errors, allow_protected_ns, protected_kube_namespaces)
-                except Exception as e:
-                    errors.append("service upstream has invalid url specified (e2)")
-
-            if 'host' in service:
-                host = service["host"]
-                validate_upstream_host(host, errors, allow_protected_ns, protected_kube_namespaces)
-
-    if len(errors) != 0:
-        raise Exception('\n'.join(errors))
-
-
-def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_namespaces):
-    host = _host.lower()
-
-    restricted = ['localhost', '127.0.0.1', '0.0.0.0']
-
-    if host in restricted:
-        errors.append("service upstream is invalid (e1)")
-    if host.endswith('svc'):
-        partials = host.split('.')
-        # get the namespace, and make sure it is not in the protected_kube_namespaces list
-        if len(partials) != 3:
-            errors.append("service upstream is invalid (e2)")
-        elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
-            errors.append("service upstream is invalid (e3)")
-    if host.endswith('svc.cluster.local'):
-        partials = host.split('.')
-        # get the namespace, and make sure it is not in the protected_kube_namespaces list
-        if len(partials) != 5:
-            errors.append("service upstream is invalid (e4)")
-        elif partials[1] in protected_kube_namespaces and allow_protected_ns is False:
-            errors.append("service upstream is invalid (e5)")
 
 def update_routes_check(yaml):
     if 'services' in yaml or 'upstreams' not in yaml:

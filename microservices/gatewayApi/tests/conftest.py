@@ -60,15 +60,46 @@ def mock_auth(mocker):
 def mock_keycloak(mocker):
     class mock_kc_admin:
         def get_group_by_path(path, search_in_subgroups):
-            return {
-                "id": "g001"
-            }
+            if path == "/ns/mytest":
+                return {"id": "g001"}
+            elif path == "/ns/mytest2":
+                return {"id": "g002"}
+            elif path == "/ns/mytest3":
+                return {"id": "g003"}
+            elif path == "/ns/customcert":
+                return {"id": "g004"}
+            else:
+                return {"id": "g001"}
         def get_group(id):
-            return {
-                "attributes": {
-                    "perm-domains": [ ".api.gov.bc.ca", ".cluster.local" ]
+            if id == "g001":
+                return {
+                    "attributes": {
+                        "perm-domains": [ ".api.gov.bc.ca", ".cluster.local" ]
+                    }
                 }
-            }
+            elif id == "g002":
+                return {
+                    "attributes": {
+                        "perm-data-plane": ["strict-dp"],
+                        "perm-upstreams": [],
+                        "perm-domains": [ ".api.gov.bc.ca", ".cluster.local" ]
+                    }
+                }
+            elif id == "g003":
+                return {
+                    "attributes": {
+                        "perm-data-plane": ["strict-dp"],
+                        "perm-upstreams": ['ns1'],
+                        "perm-domains": [ ".api.gov.bc.ca", ".cluster.local" ]
+                    }
+                }
+            elif id == "g004":
+                return {
+                    "attributes": {
+                        "perm-domains": [ ".api.gov.bc.ca", ".custom.gov.bc.ca" ]
+                    }
+                }
+
     mocker.patch("v2.services.namespaces.admin_api", return_value=mock_kc_admin)
 
 def mock_kong(mocker):
@@ -92,12 +123,33 @@ def mock_kong(mocker):
             return Response
         elif (path == 'http://kong/certificates?tags=gwa.ns.mytest' or
               path == 'http://kong/certificates?tags=gwa.ns.sescookie' or
-              path == 'http://kong/certificates?tags=gwa.ns.dclass'):
+              path == 'http://kong/certificates?tags=gwa.ns.dclass' or
+              path == 'http://kong/certificates?tags=gwa.ns.customcert'):
             class Response:
                 def json():
                     return {
                         "data": [],
                         "next": None
+                    }
+            return Response
+        elif (path == 'http://kong/certificates?tags=ns.customcert'):
+            class Response:
+                def json():
+                    return {
+                        "next": None,
+                        "data": [
+                            {
+                                "id": "41d14845-669f-4dcd-aff2-926fb32a4b25",
+                                "snis": [
+                                    "test.custom.gov.bc.ca"
+                                ],
+                                "tags": [
+                                    "ns.customcert",
+                                ],
+                                "cert": "CERT",
+                                "key": "KEY"
+                            }
+                        ]
                     }
             return Response
 
@@ -157,7 +209,8 @@ def mock_kubeapi(mocker):
                     "aps.route.dataclass.high": [],
                     "aps.route.dataclass.public": []
                 }, 
-                'select_tag': 'ns.sescookie.dev'
+                'select_tag': 'ns.sescookie.dev',
+                'certificates': []
             }
 
             assert json.dumps(kwargs['json'], sort_keys=True) == json.dumps(matched, sort_keys=True)
@@ -175,7 +228,39 @@ def mock_kubeapi(mocker):
                     "aps.route.dataclass.high": ['myapi.api.gov.bc.ca'],
                     "aps.route.dataclass.public": []
                 }, 
-                'select_tag': 'ns.dclass.dev'
+                'select_tag': 'ns.dclass.dev',
+                'certificates': []
+            }
+
+            assert json.dumps(kwargs['json'], sort_keys=True) == json.dumps(matched, sort_keys=True)
+            return Response
+        elif (url == 'http://kube-api/namespaces/customcert/routes'):
+            class Response:
+                status_code = 201
+            matched = {
+                'hosts': ['test.custom.gov.bc.ca'], 
+                'ns_attributes': {'perm-domains': ['.api.gov.bc.ca', '.custom.gov.bc.ca']}, 
+                'overrides': {
+                    'aps.route.session.cookie.enabled': [],
+                    "aps.route.dataclass.low": [],
+                    "aps.route.dataclass.medium": [],
+                    "aps.route.dataclass.high": [],
+                    "aps.route.dataclass.public": []
+                }, 
+                'select_tag': 'ns.customcert',
+                'certificates': [
+                    {
+                        "id": "41d14845-669f-4dcd-aff2-926fb32a4b25",
+                        "snis": [
+                            "test.custom.gov.bc.ca"
+                        ],
+                        "tags": [
+                            "ns.customcert",
+                        ],
+                        "cert": "CERT",
+                        "key": "KEY"
+                    }
+                ]
             }
 
             assert json.dumps(kwargs['json'], sort_keys=True) == json.dumps(matched, sort_keys=True)
@@ -190,24 +275,16 @@ def mock_kubeapi(mocker):
             raise Exception(url)
     
     def mock_requests_get(self, url, **kwards):
-        if (url == 'http://kube-api/namespaces/mytest/local_tls'):
+        if (url == 'http://kube-api/namespaces/mytest/local_tls' or
+            url == 'http://kube-api/namespaces/sescookie/local_tls' or
+            url == 'http://kube-api/namespaces/dclass/local_tls' or
+            url == 'http://kube-api/namespaces/customcert/local_tls'):
             class Response:
                 status_code = 200
                 def json():
                     return {}
             return Response
-        elif (url == 'http://kube-api/namespaces/sescookie/local_tls'):
-            class Response:
-                status_code = 200
-                def json():
-                    return {}
-            return Response
-        elif (url == 'http://kube-api/namespaces/dclass/local_tls'):
-            class Response:
-                status_code = 200
-                def json():
-                    return {}
-            return Response
+
         else:
             raise Exception(url)
 

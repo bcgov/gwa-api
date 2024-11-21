@@ -4,7 +4,7 @@ from sys import exc_info
 import logging
 import traceback
 from app import transform_data_by_ns
-from clients.kong import get_routes
+from clients.kong import get_records
 import traceback
 import schedule
 from schedule import every, repeat, run_pending, clear
@@ -24,14 +24,16 @@ def sync_routes():
         'content-type': 'application/json'
     }
     try:
-        routes = get_routes()
+        routes = get_records('routes')
+        certs = get_records('certificates')
+        cert_snis = get_records('snis')
     except:
         traceback.print_exc()
         logger.error('Failed to get existing routes - %s' % (exc_info()[0]))
         clear('sync-routes')
         exit(1)
 
-    data = transform_data_by_ns(routes)
+    data = transform_data_by_ns(routes, certs, cert_snis)
     for ns in data:
         url = os.getenv('KUBE_API_URL') + '/namespaces/%s/routes/sync' % ns
         response = requests.post(url, headers=headers, json=data[ns], auth=(

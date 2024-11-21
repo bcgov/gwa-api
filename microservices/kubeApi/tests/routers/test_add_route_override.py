@@ -19,6 +19,7 @@ metadata:
     aps-ssl: "data-api.tls"
     aps-data-plane: "data-plane-1"
     aps-template-version: "v1"
+
 spec:
   host: abc.api.gov.bc.ca
   port:
@@ -105,6 +106,7 @@ metadata:
     aps-ssl: "data-api.tls"
     aps-data-plane: "data-plane-1"
     aps-template-version: "v2"
+
 spec:
   host: abc.api.gov.bc.ca
   port:
