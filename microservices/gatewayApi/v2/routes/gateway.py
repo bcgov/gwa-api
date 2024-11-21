@@ -354,7 +354,8 @@ def write_config(namespace: str) -> object:
                     },
                     "certificates": certs
                 }
-                log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload))
+                route_payload_log = route_payload['hosts'] + route_payload['select_tag'] + route_payload['ns_attributes'] + route_payload['overrides']
+                log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload_log))
                 rqst_url = app.config['data_planes'][dp]["kube-api"]
                 res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                     app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
