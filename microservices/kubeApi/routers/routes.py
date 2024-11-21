@@ -178,13 +178,13 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 "dataPlane": route["spec"]["to"]["name"],
                 "sessionCookieEnabled": True if route["metadata"]["labels"].get("aps-template-version") == "v1" else False,
                 "dataClass": route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name").split("-")[-1] if route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name") else None,
-                "sslCertificateSerialNumber": route["metadata"]["labels"].get("aps-certificate-serial", "default")
+                "sslCertificateSerialNumber": route["metadata"]["labels"].get("aps-certificate-serial")
             }
         )
 
     logger.debug("source routes: " + str(source_routes))
     logger.debug("existing routes: " + str(existing_routes))
-    
+
     insert_batch = [x for x in source_routes if not in_list(x, existing_routes)]
     delete_batch = [y for y in existing_routes if not in_list_by_name(y, source_routes)]
         
