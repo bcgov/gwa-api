@@ -178,7 +178,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
                 "dataPlane": route["spec"]["to"]["name"],
                 "sessionCookieEnabled": True if route["metadata"]["labels"].get("aps-template-version") == "v1" else False,
                 "dataClass": route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name").split("-")[-1] if route["metadata"]["annotations"].get("aviinfrasetting.ako.vmware.com/name") else None,
-                "sslCertificateSerialNumber": route["metadata"]["labels"].get("aps-certificate-serial", "default")
+                "sslCertificateSerialNumber": route["metadata"]["labels"].get("aps-certificate-serial")
             }
         )
 
