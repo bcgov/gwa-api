@@ -44,10 +44,8 @@ class NamespaceService:
                 self.keycloak_admin.create_group({"name": get_base_group_name(role_name)})
                 parent_group = self.keycloak_admin.get_group_by_path(group_base_path)
 
-            response = self.keycloak_admin.create_group(payload, parent=parent_group['id'])
+            new_users_group_id = self.keycloak_admin.create_group(payload, parent=parent_group['id'])
             log.debug("[%s] Group %s/%s created!" % (namespace, group_base_path, namespace))
-
-            new_users_group_id = response['id']
 
             if initial_username is not None:
                 user_id = self.keycloak_admin.get_user_id(initial_username)
