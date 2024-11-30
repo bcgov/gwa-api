@@ -11,7 +11,7 @@ class NamespaceService:
     def __init__(self, in_admin_api = None):
         self.keycloak_admin = in_admin_api
         if in_admin_api is None:
-            self.keycloak_admin = admin_api()
+            self.keycloak_admin = admin_api(app.config['keycloak'])
 
     def get_namespace(self, namespace):
         group_base_path = get_base_group_path('viewer')
@@ -75,7 +75,6 @@ class NamespaceService:
 
         for attr in attrs:
             if attr in params:
-                print("[%s] Updating attribute  %s -> %s" % (ns_group['name'], attr, params[attr]))
                 log.debug("[%s] Updating attribute  %s -> %s" % (ns_group['name'], attr, params[attr]))
                 if type(params[attr]) == list:
                     ns_attributes[attr] = params[attr]
