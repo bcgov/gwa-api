@@ -8,7 +8,7 @@ class NamespaceService:
     std_attrs = []
     priv_attrs = ['perm-domains', 'perm-protected-ns', 'perm-data-plane', 'perm-upstreams']
 
-    def __init__(self, in_admin_api):
+    def __init__(self, in_admin_api = None):
         self.keycloak_admin = in_admin_api
         if in_admin_api is None:
             self.keycloak_admin = admin_api()
