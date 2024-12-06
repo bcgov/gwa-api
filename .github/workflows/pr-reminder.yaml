@@ -1,0 +1,12 @@
+name: 'Send review reminders'
+on:
+  schedule:
+    - cron: '30 1 * * *' # Scheduled to run at 1:30 AM daily
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: bcgov/aps-devops/pr-reminder@dev
+
