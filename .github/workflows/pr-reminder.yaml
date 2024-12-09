@@ -11,4 +11,4 @@ jobs:
       - name: Run PR reviewer reminder
         uses: bcgov/aps-devops/pr-reminder@dev
         with:
-          dry_run: "true" # Set to "false" to enable comments
+          dry_run: "false"
