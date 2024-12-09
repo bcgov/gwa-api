@@ -1,8 +1,7 @@
 name: 'Send review reminders'
 on:
   schedule:
-    - cron: '30 1 * * 1,3,5' # Scheduled to run at 1:30 AM, Monday, Wednesday, Friday
-  workflow_dispatch: # Allows manual triggering of the workflow
+    - cron: '30 8 * * 1,3,5' # Scheduled to run at 1:30 AM, Monday, Wednesday, Friday
 
 jobs:
   remind:
