@@ -8,5 +8,7 @@ jobs:
   remind:
     runs-on: ubuntu-latest
     steps:
-      - uses: bcgov/aps-devops/pr-reminder@dev
-
+      - name: Run PR reviewer reminder
+        uses: bcgov/aps-devops/pr-reminder@dev
+        with:
+          dry_run: "true" # Set to "false" to enable comments
