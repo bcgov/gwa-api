@@ -2,7 +2,6 @@ name: 'Send review reminders'
 on:
   schedule:
     - cron: '30 8 * * 1,2,3,4,5' # Scheduled to run at 1:30 AM, weekdays
-  workflow_dispatch:
 
 jobs:
   remind:
@@ -12,4 +11,4 @@ jobs:
         uses: bcgov/aps-devops/pr-reminder@dev
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          dry_run: "true"
+          dry_run: "false"
