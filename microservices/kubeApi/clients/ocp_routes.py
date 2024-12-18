@@ -18,6 +18,8 @@ files_to_ignore = ["deck.yaml", "routes-current.yaml", "routes-deletions.yaml",
 host_cert_mapping = {
     "data.gov.bc.ca": "data-api.tls",
     "api.gov.bc.ca": "data-api.tls",
+    "maps.gov.bc.ca": "data-api.tls",
+    "openmaps.gov.bc.ca": "data-api.tls",
     "apps.gov.bc.ca": "apps.tls"
 }
 
