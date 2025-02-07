@@ -70,7 +70,5 @@ def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_nam
             errors.append("service upstream is invalid (e5)")
         elif do_validate_upstreams and (partials[1] in perm_upstreams) is False:
             errors.append("service upstream is invalid (e6)")
-    elif do_validate_upstreams:
-        # allow exact matches for upstreams that are outside of cluster
-        if host not in perm_upstreams:
-            errors.append("service upstream is invalid (e6)")
+    elif do_validate_upstreams and (host in perm_upstreams) is False:
+        errors.append("service upstream is invalid (e6)")
