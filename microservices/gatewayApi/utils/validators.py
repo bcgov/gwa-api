@@ -52,7 +52,7 @@ def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_nam
 
     if host in restricted:
         errors.append("service upstream is invalid (e1)")
-    elif host.endswith('svc'):
+    elif host.endswith('.svc'):
         partials = host.split('.')
         # get the namespace, and make sure it is not in the protected_kube_namespaces list
         if len(partials) != 3:
@@ -61,7 +61,7 @@ def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_nam
             errors.append("service upstream is invalid (e3)")
         elif do_validate_upstreams and (partials[1] in perm_upstreams) is False:
             errors.append("service upstream is invalid (e6)")
-    elif host.endswith('svc.cluster.local'):
+    elif host.endswith('.svc.cluster.local'):
         partials = host.split('.')
         # get the namespace, and make sure it is not in the protected_kube_namespaces list
         if len(partials) != 5:
@@ -70,5 +70,5 @@ def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_nam
             errors.append("service upstream is invalid (e5)")
         elif do_validate_upstreams and (partials[1] in perm_upstreams) is False:
             errors.append("service upstream is invalid (e6)")
-    elif do_validate_upstreams:
+    elif do_validate_upstreams and (host in perm_upstreams) is False:
         errors.append("service upstream is invalid (e6)")
