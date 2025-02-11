@@ -137,6 +137,17 @@ services:
 
     validate_upstream (y, { "perm-upstreams": ["my-namespace"]}, [], True) 
 
+def test_upstream_pass_validation_exact_match(app):
+    payload = '''
+services:
+  - name: my-service
+    tags: ["ns.mytest", "another"]
+    host: 192.168.1.1
+'''
+    y = yaml.load(payload, Loader=yaml.FullLoader)
+
+    validate_upstream (y, { "perm-upstreams": ["192.168.1.1"]}, [], True) 
+
 def test_upstream_fail_validation(app):
     payload = '''
 services:
