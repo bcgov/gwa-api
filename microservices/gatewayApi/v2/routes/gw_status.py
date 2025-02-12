@@ -64,5 +64,4 @@ def get_statuses(namespace: str) -> object:
     finally:
         session.close()
 
-    # If the request was successful and a valid response was received, return the data.
-    return make_response(jsonify(res))
+    return make_response(jsonify(res.json()))
