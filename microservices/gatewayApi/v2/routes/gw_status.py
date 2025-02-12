@@ -64,4 +64,4 @@ def get_statuses(namespace: str) -> object:
     finally:
         session.close()
 
-    return make_response(jsonify(res.json()))
+    return make_response(jsonify(res.json().get("services_status", {})))
