@@ -3,6 +3,7 @@ import os
 from subprocess import Popen, PIPE, STDOUT
 import yaml
 from fastapi.logger import logger
+from typing import Callable
 
 def validate_config(config: dict) -> tuple[bool, str]:
     """
@@ -31,10 +32,19 @@ def validate_config(config: dict) -> tuple[bool, str]:
         
         return is_valid, output 
 
-def convert_to_kong3(config: dict) -> tuple[bool, str, dict | None]:
+# Default deck command runner
+def run_deck_command(args: list[str]) -> tuple[int, str]:
+    """Actually runs deck command and returns (return_code, output)"""
+    process = Popen(args, stdout=PIPE, stderr=STDOUT)
+    out, _ = process.communicate()
+    return process.returncode, out.decode('utf-8') if out else ""
+
+def convert_to_kong3(config: dict, deck_runner: Callable = run_deck_command) -> tuple[bool, str, dict | None]:
     """
     Converts Kong configuration from Kong 2.x to Kong 3.x format
     Returns (success, message, converted_config)
+    
+    deck_runner parameter allows injection of mock command runner for testing
     """
     with tempfile.TemporaryDirectory() as temp_dir:
         input_file = os.path.join(temp_dir, "input.yaml")
@@ -54,17 +64,13 @@ def convert_to_kong3(config: dict) -> tuple[bool, str, dict | None]:
         ]
         logger.debug("Running %s", args)
         
-        process = Popen(args, stdout=PIPE, stderr=STDOUT)
-        out, _ = process.communicate()
-        
-        output_message = out.decode('utf-8') if out else ""
-        success = process.returncode == 0
+        return_code, output_message = deck_runner(args)
         
         # Check if there are unsupported routes paths
         has_unsupported_paths = "unsupported routes' paths format with Kong version 3.0" in output_message
         
         converted_config = None
-        if success and os.path.exists(output_file):
+        if return_code == 0 and os.path.exists(output_file):
             with open(output_file, 'r') as f:
                 converted_config = yaml.safe_load(f)
                 
