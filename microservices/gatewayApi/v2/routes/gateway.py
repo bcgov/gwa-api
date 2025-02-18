@@ -236,10 +236,17 @@ def write_config(namespace: str) -> object:
         # then add to tags automatically the tag: ns.<namespace>
         object_count = tags_transformation(namespace, gw_config)
 
-        #
         # Enrich the rate-limiting plugin with the appropriate Redis details
         plugins_transformations(namespace, gw_config)
 
+        # Ensure Kong 3 compatibility
+        kong3_compatibility(namespace, gw_config)
+
+    
+
+
+
+        # After enrichments, dump config to file
         with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
             yaml.dump(gw_config, file)
 
@@ -696,3 +703,18 @@ def clone_yaml_files (yaml_documents):
     for doc in yaml_documents:
         cloned_yaml.append(yaml.load(yaml.dump(doc), Loader=yaml.FullLoader))
     return cloned_yaml
+
+def kong3_compatibility(namespace, yaml):
+    log = app.logger
+    
+    log.debug("[%s] - Initiating request to compatibility API" % (namespace))
+    rqst_url = app.config['compatibilityApiUrl'] + "/config"
+    res = requests.post(rqst_url, json=yaml)
+    log.debug("[%s] - The compatibility API responded with %s" % (namespace, res.status_code))
+    
+    # debug
+    log.debug("[%s] - The compatibility API response is %s" % (namespace, res))
+
+    if res.status_code != 200:
+        log.error("[%s] - The compatibility API could not process the request" % (namespace))
+    
