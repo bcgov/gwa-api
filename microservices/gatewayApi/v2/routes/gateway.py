@@ -22,6 +22,7 @@ from clients.ocp_gateway_secret import prep_submitted_config
 from utils.validators import host_valid, validate_upstream
 from utils.transforms import plugins_transformations
 from utils.masking import mask
+from clients.compatibility import check_kong3_compatibility
 
 gw = Blueprint('gwa_v2', 'gateway')
 local_environment = os.environ.get("LOCAL_ENVIRONMENT", default=False)
@@ -239,12 +240,14 @@ def write_config(namespace: str) -> object:
         # Enrich the rate-limiting plugin with the appropriate Redis details
         plugins_transformations(namespace, gw_config)
 
-        # Ensure Kong 3 compatibility
-        kong3_compatibility(namespace, gw_config)
-
-    
-
-
+        # Check Kong 3.x compatibility
+        is_compatible, warning, kong2_config = check_kong3_compatibility(namespace, gw_config)
+        if not is_compatible:
+            log.warning("[%s] Kong 3 compatibility warning: %s" % (namespace, warning))
+            # Add warning to the final results
+            if 'warnings' not in locals():
+                warnings = []
+            warnings.append("Kong 3 Compatibility Warning: %s" % warning)
 
         # After enrichments, dump config to file
         with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
@@ -413,7 +416,12 @@ def write_config(namespace: str) -> object:
 
     if cmd == 'sync':
         record_gateway_event(event_id, 'published', 'completed', namespace, blob=orig_config)
-    return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
+
+    results = mask(out.decode('utf-8'))
+    if 'warnings' in locals() and warnings:
+        results = results + "\n\n" + "\n".join(warnings)
+
+    return make_response(jsonify(message=message, results=results))
 
 
 def cleanup(dir_path):

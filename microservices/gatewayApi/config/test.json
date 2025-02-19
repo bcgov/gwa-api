@@ -29,5 +29,6 @@
   "kubeApiCreds": {
     "kubeApiPass": "password",
     "kubeApiUser": "username"
-  }
+  },
+  "compatibilityApiUrl": "http://compatibility-api"
 }

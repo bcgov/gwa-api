@@ -36,6 +36,7 @@ def app(mocker):
     mock_portal_feeder(mocker)
     mock_deck(mocker)
     mock_kubeapi(mocker)
+    mock_compatibility_api(mocker)
 
     from app import create_app
     app = create_app()
@@ -290,3 +291,40 @@ def mock_kubeapi(mocker):
 
     mocker.patch("clients.portal.requests.Session.put", mock_requests_put)
     mocker.patch("clients.portal.requests.Session.get", mock_requests_get)
+
+def mock_compatibility_api(mocker):
+    def mock_requests_post(url, json=None, **kwargs):
+        if url == 'http://compatibility-api/config':
+            log.debug(f"Mocking compatibility API: {url}")
+            class Response:
+                status_code = 200
+                def json(self):
+                    # Default to compatible if no paths
+                    is_compatible = True
+                    has_paths = False
+                    
+                    if json and 'services' in json:
+                        for service in json['services']:
+                            if 'routes' in service:
+                                for route in service['routes']:
+                                    if 'paths' in route:
+                                        has_paths = True
+                                        # If any path doesn't start with ~, mark as incompatible
+                                        for path in route['paths']:
+                                            if not path.startswith('~'):
+                                                is_compatible = False
+                                                break
+
+                    return {
+                        "kong3_compatible": is_compatible,
+                        "conversion_output": "Warning: unsupported routes' paths format with Kong version 3.0" if not is_compatible else "",
+                        "kong2_output": json
+                    }
+                    
+                def raise_for_status(self):
+                    if self.status_code >= 400:
+                        raise Exception(f"HTTP {self.status_code}")
+            return Response()
+        raise Exception(f"Unexpected URL: {url}")
+
+    mocker.patch("clients.compatibility.requests.post", mock_requests_post)

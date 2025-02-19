@@ -167,3 +167,27 @@ def test_success_mtls_reference(client):
     response = client.put('/v2/namespaces/mytest/gateway', json=data)
     assert response.status_code == 200
     assert json.dumps(response.json) == '{"message": "Sync successful.", "results": "Deck reported no changes"}'
+
+def test_kong3_compatibility_warning(client):
+    """Test that Kong 3 incompatible config generates warning but still succeeds"""
+    configFile = '''
+        services:
+        - name: my-service
+          host: myupstream.local
+          tags: ["ns.mytest", "another"]
+          routes:
+          - name: route-1
+            hosts: [ myapi.api.gov.bc.ca ]
+            paths: [ "/example*" ]
+            tags: ["ns.mytest", "another2"]
+        '''
+
+    data = {
+        "configFile": configFile,
+        "dryRun": False
+    }
+    response = client.put('/v2/namespaces/mytest/gateway', json=data)
+    assert response.status_code == 200
+    response_data = response.json
+    assert response_data["message"] == "Sync successful."
+    assert "Kong 3 Compatibility Warning" in response_data["results"]
