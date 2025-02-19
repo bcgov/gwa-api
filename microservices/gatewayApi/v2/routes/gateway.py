@@ -244,6 +244,8 @@ def write_config(namespace: str) -> object:
         is_compatible, warning, kong2_config = check_kong3_compatibility(namespace, gw_config)
         if is_compatible:
             log.info("[%s] Kong 3 compatibility check passed" % (namespace))
+            # If Kong 3 compatibility check passed, use the downgraded Kong 2 config
+            # This is a temporary measure and can be removed once Kong 3 is deployed
             gw_config = kong2_config
         else:
             log.info("[%s] Kong 3 compatibility warning: %s" % (namespace, warning))
@@ -251,7 +253,6 @@ def write_config(namespace: str) -> object:
             if 'warnings' not in locals():
                 warnings = []
             warnings.append("Kong 3 Compatibility Warning: %s" % warning)
-        
 
         # After enrichments, dump config to file
         with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
