@@ -242,12 +242,16 @@ def write_config(namespace: str) -> object:
 
         # Check Kong 3.x compatibility
         is_compatible, warning, kong2_config = check_kong3_compatibility(namespace, gw_config)
-        if not is_compatible:
-            log.warning("[%s] Kong 3 compatibility warning: %s" % (namespace, warning))
+        if is_compatible:
+            log.info("[%s] Kong 3 compatibility check passed" % (namespace))
+            gw_config = kong2_config
+        else:
+            log.info("[%s] Kong 3 compatibility warning: %s" % (namespace, warning))
             # Add warning to the final results
             if 'warnings' not in locals():
                 warnings = []
             warnings.append("Kong 3 Compatibility Warning: %s" % warning)
+        
 
         # After enrichments, dump config to file
         with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
@@ -711,18 +715,4 @@ def clone_yaml_files (yaml_documents):
     for doc in yaml_documents:
         cloned_yaml.append(yaml.load(yaml.dump(doc), Loader=yaml.FullLoader))
     return cloned_yaml
-
-def kong3_compatibility(namespace, yaml):
-    log = app.logger
-    
-    log.debug("[%s] - Initiating request to compatibility API" % (namespace))
-    rqst_url = app.config['compatibilityApiUrl'] + "/config"
-    res = requests.post(rqst_url, json=yaml)
-    log.debug("[%s] - The compatibility API responded with %s" % (namespace, res.status_code))
-    
-    # debug
-    log.debug("[%s] - The compatibility API response is %s" % (namespace, res))
-
-    if res.status_code != 200:
-        log.error("[%s] - The compatibility API could not process the request" % (namespace))
     
