@@ -35,6 +35,7 @@ def get_statuses(namespace: str) -> object:
         service_payload = {
             "services": services,
             "routes": routes,
+            "conf": app.config['hostTransformation'],
         }
 
         dp = get_data_plane(ns_attributes)

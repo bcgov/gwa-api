@@ -19,6 +19,7 @@ import socket
 import requests
 from urllib.parse import urlparse
 import urllib3
+import certifi
 
 router = APIRouter(
     prefix="",
@@ -55,6 +56,7 @@ class BulkSyncRequest(BaseModel):
 class ServiceStatusRequest(BaseModel):
     services: list
     routes: list
+    conf: dict
 
     
 @router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(verify_credentials)])
@@ -172,6 +174,7 @@ def get_service_status(namespace: str, service_payload: ServiceStatusRequest):
 
     services = service_payload.services
     routes = service_payload.routes
+    conf = service_payload.conf
 
     response = []
 
@@ -186,7 +189,7 @@ def get_service_status(namespace: str, service_payload: ServiceStatusRequest):
             if route['service']['id'] == service['id'] and 'hosts' in route:
                 actual_host = route['hosts'][0]
                 if route['preserve_host']:
-                    host = clean_host(actual_host)
+                    host = clean_host(actual_host, conf)
 
         try:
             addr = socket.gethostbyname(service['host'])
@@ -417,10 +420,8 @@ def default (s, key, val):
     else:
         return val
 
-def clean_host (host):
-    conf = app.config['hostTransformation']
+def clean_host (host, conf):
     if conf['enabled'] is True:
-        conf = app.config['hostTransformation']
         return host.replace(conf['baseUrl'], 'gov.bc.ca').replace('-data-gov-bc-ca', '.data').replace('-api-gov-bc-ca', '.api').replace('-apps-gov-bc-ca', '.apps')
     else:
         return host
