@@ -219,6 +219,10 @@ def write_config(namespace: str) -> object:
     orig_config = prep_submitted_config(clone_yaml_files(yaml_documents))
 
     update_routes_flag = False
+    
+    warning_message = ""
+    all_failed_routes = []
+    has_incompatible_routes = False
 
     for index, gw_config in enumerate(yaml_documents):
         log.info("[%s] Parsing file %s" % (namespace, index))
@@ -240,19 +244,17 @@ def write_config(namespace: str) -> object:
         # Enrich the rate-limiting plugin with the appropriate Redis details
         plugins_transformations(namespace, gw_config)
 
-        # Check Kong 3.x compatibility
-        is_compatible, warning, kong2_config = check_kong3_compatibility(namespace, gw_config)
-        if is_compatible:
-            log.info("[%s] Kong 3 compatibility check passed" % (namespace))
-            # If Kong 3 compatibility check passed, use the downgraded Kong 2 config
-            # This is a temporary measure and can be removed once Kong 3 is deployed
+        # Check Kong 3 compatibility
+        is_compatible, warning_message, failed_routes, kong2_config = check_kong3_compatibility(namespace, gw_config)
+        
+        # Track incompatible routes
+        if not is_compatible:
+            has_incompatible_routes = True
+            all_failed_routes.extend(failed_routes)
+        
+        # Use kong2_config (which has compatibility tags) regardless of compatibility status
+        if kong2_config:
             gw_config = kong2_config
-        else:
-            log.info("[%s] Kong 3 compatibility warning: %s" % (namespace, warning))
-            # Add warning to the final results
-            if 'warnings' not in locals():
-                warnings = []
-            warnings.append("Kong 3 Compatibility Warning: %s" % warning)
 
         # After enrichments, dump config to file
         with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
@@ -423,8 +425,18 @@ def write_config(namespace: str) -> object:
         record_gateway_event(event_id, 'published', 'completed', namespace, blob=orig_config)
 
     results = mask(out.decode('utf-8'))
-    if 'warnings' in locals() and warnings:
-        results = results + "\n\n" + "\n".join(warnings)
+    
+    # Add Kong 3 compatibility warning if needed
+    if has_incompatible_routes:
+        # Add unique failed routes
+        unique_failed_routes = sorted(set(all_failed_routes))
+        route_list = "\n".join(f"  - {route}" for route in unique_failed_routes)
+        warning_message = warning_message + "\n" + route_list
+        
+        # Note: When all routes are compatible, no special response is given.
+        # To add the success message (contained in warning_message), move this
+        # line out of the if block above.
+        results = results + warning_message
 
     return make_response(jsonify(message=message, results=results))
 

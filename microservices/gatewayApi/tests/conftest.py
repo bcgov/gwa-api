@@ -297,33 +297,45 @@ def mock_compatibility_api(mocker):
         if url == 'http://compatibility-api/configs':
             log.debug(f"Mocking compatibility API: {url}")
             class Response:
-                status_code = 200
                 def json(self):
-                    # Default to compatible if no paths
-                    is_compatible = True
-                    has_paths = False
+                    # Check if any routes have regex without tilde
+                    has_incompatible = False
+                    failed_routes = []
                     
-                    if json and 'services' in json:
-                        for service in json['services']:
-                            if 'routes' in service:
-                                for route in service['routes']:
-                                    if 'paths' in route:
-                                        has_paths = True
-                                        # If any path doesn't start with ~, mark as incompatible
-                                        for path in route['paths']:
-                                            if not path.startswith('~'):
-                                                is_compatible = False
-                                                break
-
+                    if json and "services" in json:
+                        for service in json["services"]:
+                            if "routes" in service:
+                                for route in service["routes"]:
+                                    if "paths" in route and "name" in route:
+                                        for path in route["paths"]:
+                                            if "*" in path and not path.startswith("~"):
+                                                has_incompatible = True
+                                                failed_routes.append(route["name"])
+                    
+                    message = (
+                        "Gateway configuration is compatible with Kong 3." 
+                        if not has_incompatible else
+                        "WARNING: Kong 3 incompatible routes found.\n\n"
+                        "APS will soon be updated to use Kong gateway version 3.\n"
+                        "Kong 3 requires that regular expressions in route paths start with a '~' character.\n\n"
+                        "For related information, please visit:\n"
+                        "https://docs.konghq.com/deck/latest/3.0-upgrade\n\n"
+                        "Please update the following routes:"
+                    )
+                    
                     return {
-                        "kong3_compatible": is_compatible,
-                        "conversion_output": "Warning: unsupported routes' paths format with Kong version 3.0" if not is_compatible else "",
+                        "kong3_compatible": not has_incompatible,
+                        "message": message,
+                        "failed_routes": failed_routes,
                         "kong2_output": json
                     }
-                    
+                
                 def raise_for_status(self):
-                    if self.status_code >= 400:
+                    if self.status_code != 200:
                         raise Exception(f"HTTP {self.status_code}")
+                
+                status_code = 200
+                
             return Response()
         raise Exception(f"Unexpected URL: {url}")
 

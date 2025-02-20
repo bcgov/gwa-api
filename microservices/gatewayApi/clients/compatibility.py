@@ -1,10 +1,10 @@
 import requests
 from flask import current_app as app
 
-def check_kong3_compatibility(namespace: str, config: dict) -> tuple[bool, str, dict | None]:
+def check_kong3_compatibility(namespace: str, config: dict) -> tuple[bool, str, list[str], dict | None]:
     """
     Check Kong 3.x compatibility of configuration using compatibility API
-    Returns (is_compatible, warning_message, kong2_config)
+    Returns (is_compatible, warning_message, failed_routes, kong2_config)
     """
     log = app.logger
     
@@ -16,11 +16,13 @@ def check_kong3_compatibility(namespace: str, config: dict) -> tuple[bool, str, 
         res.raise_for_status()
         
         data = res.json()
+        log.debug("[%s] - Compatibility API result for Kong 3 compatibility check: %s" % (namespace, data["kong3_compatible"]))
         return (
             data["kong3_compatible"],
-            data["conversion_output"] if not data["kong3_compatible"] else "",
+            data["message"],
+            data["failed_routes"],
             data["kong2_output"]
         )
     except Exception as e:
         log.error("[%s] - Compatibility API error: %s" % (namespace, str(e)))
-        return (True, "", {}) # Fail open - assume compatible if service unavailable 
+        return (True, "", [], {}) # Fail open - assume compatible if service unavailable 
