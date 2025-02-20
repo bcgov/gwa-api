@@ -436,7 +436,7 @@ def write_config(namespace: str) -> object:
         # Note: When all routes are compatible, no special response is given.
         # To add the success message (contained in warning_message), move this
         # line out of the if block above.
-        results = results + warning_message
+        results = results + "\n" + warning_message
 
     return make_response(jsonify(message=message, results=results))
 

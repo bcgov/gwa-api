@@ -59,7 +59,22 @@ poetry run coverage xml
 Test with a local file:
 
 ```sh
-curl -X POST http://localhost:8080/config \
+curl -X POST http://localhost:8080/configs \
   -H "Content-Type: application/json" \
   -d "$(cat test.yaml | python3 -c 'import sys, yaml, json; print(json.dumps(yaml.safe_load(sys.stdin)))')"
+```
+
+Test with json content:
+
+```sh
+curl -X POST http://localhost:8080/configs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "services": [
+      {
+        "name": "example-service",
+        "url": "http://example.com"
+      }
+    ]
+  }'
 ```
