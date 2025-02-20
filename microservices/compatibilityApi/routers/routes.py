@@ -2,7 +2,9 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from clients.deck import convert_to_kong3
 from fastapi.logger import logger
+from utils.transforms import convert_to_kong2, tag_routes
 import copy
+from typing import List
 
 router = APIRouter(
     prefix="",
@@ -12,48 +14,44 @@ router = APIRouter(
 
 class ValidationResponse(BaseModel):
     kong3_compatible: bool
-    conversion_output: str
+    message: str
+    failed_routes: List[str]
     kong3_output: dict | None
     kong2_output: dict | None
 
-def convert_to_kong2(kong3_config: dict) -> dict | None:
-    """Convert Kong 3.x config back to Kong 2.x format"""
-    if not kong3_config:
-        return None
-        
-    # Deep copy to avoid modifying original
-    kong2_config = copy.deepcopy(kong3_config)
-    
-    # Set format version to 2.1
-    kong2_config["_format_version"] = "2.1"
-    
-    # Remove tildes from paths
-    if "services" in kong2_config:
-        for service in kong2_config["services"]:
-            if "routes" in service:
-                for route in service["routes"]:
-                    if "paths" in route:
-                        route["paths"] = [
-                            path[1:] if path.startswith("~") else path 
-                            for path in route["paths"]
-                        ]
-    
-    return kong2_config
-
-@router.post("/config", response_model=ValidationResponse)
+@router.post("/configs", response_model=ValidationResponse)
 async def validate_kong_config(config: dict) -> ValidationResponse:
     """
-    Validates Kong Gateway configuration compatibility with Kong 3.x
+    Validates Kong Gateway configuration compatibility with Kong 3.x 
+    and downgrades config to be Kong 2.x compatible
     """
     try:
-        is_compatible, message, kong3_config = convert_to_kong3(config)
+        # Tag routes based on Kong 3 compatibility
+        tagged_config, failed_routes = tag_routes(config)
+        
+        # Convert to Kong 3.x format
+        is_compatible, _, kong3_config = convert_to_kong3(tagged_config)
+        
+        # Prepare response message
+        if is_compatible:
+            message = "Gateway configuration is compatible with Kong 3."
+        else:
+            message = (
+                "WARNING: Kong 3 incompatible routes found.\n\n"
+                "APS will soon be updated to use Kong gateway version 3.\n"
+                "Kong 3 requires that regular expressions in route paths start with a '~' character.\n\n"
+                "For related information, please visit:\n"
+                "https://docs.konghq.com/deck/latest/3.0-upgrade\n\n"
+                "Please update the following routes:"
+            )
         
         # Convert Kong 3.x config back to Kong 2.x format if we have a valid conversion
         kong2_config = convert_to_kong2(kong3_config) if kong3_config else None
         
         return ValidationResponse(
             kong3_compatible=is_compatible,
-            conversion_output=message,
+            message=message,
+            failed_routes=failed_routes,
             kong3_output=kong3_config,
             kong2_output=kong2_config
         )

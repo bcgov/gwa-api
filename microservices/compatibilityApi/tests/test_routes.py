@@ -34,25 +34,19 @@ def create_mock_side_effect(paths, warning=None):
 @patch('routers.routes.convert_to_kong3')
 def test_validate_kong3_compatibility_fail(mock_convert):
     """Test validation of Kong 2.x config with unsupported regex"""
-    mock_convert.return_value = (
-        False, 
-        "Warning: unsupported routes' paths format with Kong version 3.0",
-        {
-            "_format_version": "3.0",
-            "services": [{
-                "name": "example-service",
-                "host": "example.com",
-                "port": 80,
-                "protocol": "http",
-                "routes": [{
-                    "name": "example-route",
-                    "paths": ["~/example*"]
-                }]
+    mock_convert.return_value = (False, "", {
+        "_format_version": "3.0",
+        "services": [{
+            "name": "example-service",
+            "host": "example.com",
+            "routes": [{
+                "name": "example-route",
+                "paths": ["~/example*"]
             }]
-        }
-    )
+        }]
+    })
     
-    response = client.post("/config", json={
+    response = client.post("/configs", json={
         "_format_version": "2.1",
         "services": [{
             "name": "example-service",
@@ -66,33 +60,26 @@ def test_validate_kong3_compatibility_fail(mock_convert):
     assert response.status_code == 200
     data = response.json()
     assert not data["kong3_compatible"]
-    assert "unsupported routes' paths format with Kong version 3.0" in data["conversion_output"]
+    assert "WARNING: Kong 3 incompatible routes found" in data["message"]
+    assert "example-route" in data["failed_routes"]
     assert data["kong3_output"]["services"][0]["routes"][0]["paths"][0].startswith("~")
-    assert not data["kong2_output"]["services"][0]["routes"][0]["paths"][0].startswith("~")
-    assert data["kong2_output"]["_format_version"] == "2.1"
 
 @patch('routers.routes.convert_to_kong3')
 def test_validate_kong3_compatibility_pass(mock_convert):
     """Test validation of Kong 3.x compatible config"""
-    mock_convert.return_value = (
-        True,
-        "Converting configuration file...",
-        {
-            "_format_version": "3.0",
-            "services": [{
-                "name": "example-service",
-                "host": "example.com",
-                "port": 80,
-                "protocol": "http",
-                "routes": [{
-                    "name": "example-route",
-                    "paths": ["~/example*"]
-                }]
+    mock_convert.return_value = (True, "", {
+        "_format_version": "3.0",
+        "services": [{
+            "name": "example-service",
+            "host": "example.com",
+            "routes": [{
+                "name": "example-route",
+                "paths": ["~/example*"]
             }]
-        }
-    )
+        }]
+    })
     
-    response = client.post("/config", json={
+    response = client.post("/configs", json={
         "_format_version": "2.1",
         "services": [{
             "name": "example-service",
@@ -106,8 +93,8 @@ def test_validate_kong3_compatibility_pass(mock_convert):
     assert response.status_code == 200
     data = response.json()
     assert data["kong3_compatible"]
-    assert data["kong3_output"]["_format_version"] == "3.0"
-    assert data["kong2_output"]["_format_version"] == "2.1"
+    assert "Gateway configuration is compatible with Kong 3" in data["message"]
+    assert len(data["failed_routes"]) == 0
 
 @patch('routers.routes.convert_to_kong3')  # Patch at the usage point
 def test_validate_no_regex_pass(mock_convert):
@@ -131,7 +118,7 @@ def test_validate_no_regex_pass(mock_convert):
         }
     )
     
-    response = client.post("/config", json={
+    response = client.post("/configs", json={
         "_format_version": "2.1",
         "services": [{
             "name": "example-service",

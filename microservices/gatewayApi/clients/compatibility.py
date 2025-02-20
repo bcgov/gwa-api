@@ -9,7 +9,7 @@ def check_kong3_compatibility(namespace: str, config: dict) -> tuple[bool, str, 
     log = app.logger
     
     log.debug("[%s] - Initiating request to compatibility API" % namespace)
-    rqst_url = app.config['compatibilityApiUrl'] + "/config"
+    rqst_url = app.config['compatibilityApiUrl'] + "/configs"
     
     try:
         res = requests.post(rqst_url, json=config)

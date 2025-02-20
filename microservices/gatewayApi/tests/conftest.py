@@ -294,7 +294,7 @@ def mock_kubeapi(mocker):
 
 def mock_compatibility_api(mocker):
     def mock_requests_post(url, json=None, **kwargs):
-        if url == 'http://compatibility-api/config':
+        if url == 'http://compatibility-api/configs':
             log.debug(f"Mocking compatibility API: {url}")
             class Response:
                 status_code = 200
