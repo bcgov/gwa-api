@@ -18,15 +18,15 @@ This API manages resources in Kubernetes environment.
 ```bash
 brew update
 brew install pyenv
-pyenv install 3.9
-pyenv global 3.9
+pyenv install 3.11
+pyenv global 3.11
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
 #### Requirements
 
 ```bash
-poetry env use 3.9 # (optional)
+poetry env use 3.11 # (optional)
 poetry install
 ```
 

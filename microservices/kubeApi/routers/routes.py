@@ -15,6 +15,11 @@ from datetime import datetime
 from fastapi.logger import logger
 from config import settings
 from typing import Optional
+import socket
+import requests
+from urllib.parse import urlparse
+import urllib3
+import certifi
 
 router = APIRouter(
     prefix="",
@@ -46,6 +51,12 @@ class BulkSyncRequest(BaseModel):
     dataClass: str
     # SSL Certificate serial number for custom domains
     sslCertificateSerialNumber: str
+
+
+class ServiceStatusRequest(BaseModel):
+    services: list
+    routes: list
+    conf: dict
 
     
 @router.put("/namespaces/{namespace}/routes", status_code=201, dependencies=[Depends(verify_credentials)])
@@ -156,6 +167,118 @@ def get_tls(namespace: str):
         kong_certs.append(cert)
     logger.debug("[%s] returning %d certs" % (namespace, len(kong_certs)))
     return kong_certs
+
+@router.get("/namespaces/{namespace}/service-status", status_code=200, dependencies=[Depends(verify_credentials)])
+def get_service_status(namespace: str, service_payload: ServiceStatusRequest):
+    logger.debug("[%s] get_service_status" % namespace)
+
+    services = service_payload.services
+    routes = service_payload.routes
+    conf = service_payload.conf
+
+    response = []
+
+    for service in services:
+        url = build_url (service)
+        status = "UP"
+        reason = ""
+
+        actual_host = None
+        host = None
+        for route in routes:
+            if route['service']['id'] == service['id'] and 'hosts' in route:
+                actual_host = route['hosts'][0]
+                if route['preserve_host']:
+                    host = clean_host(actual_host, conf)
+
+        try:
+            addr = socket.gethostbyname(service['host'])
+            logger.info("Address = %s" % addr)
+        except:
+            status = "DOWN"
+            reason = "DNS"
+
+        if status == "UP":
+            try:
+                headers = {}
+                if host is None or service['host'].endswith('.svc'):
+                    r = requests.get(url, headers=headers, timeout=3.0)
+                    status_code = r.status_code
+                else:
+                    u = urlparse(url)
+
+                    if host is None:
+                        headers['Host'] = u.hostname
+                    else:
+                        headers['Host'] = host
+
+                    logger.info("GET %-30s %s" % ("%s://%s" % (u.scheme, u.netloc), headers))
+
+                    urllib3.disable_warnings()
+                    if u.scheme == "https":
+                        pool = urllib3.HTTPSConnectionPool(
+                            "%s" % (u.netloc),
+                            assert_hostname=host,
+                            server_hostname=host,
+                            cert_reqs='CERT_NONE',
+                            ca_certs=certifi.where()
+                        )
+                    else:
+                        pool = urllib3.HTTPConnectionPool(
+                            "%s" % (u.netloc)
+                        )
+                    req = pool.urlopen(
+                        "GET",
+                        u.path,
+                        headers={"Host": host},
+                        assert_same_host=False,
+                        timeout=1.0,
+                        retries=False
+                    )
+
+                    status_code = req.status
+
+                logger.info("Result received!! %d" % status_code)
+                if status_code < 400:
+                    status =  "UP"
+                    reason = "%d Response" % status_code
+                elif status_code == 401 or status_code == 403:
+                    status = "UP"
+                    reason = "AUTH %d" % status_code
+                else:
+                    status =  "DOWN"
+                    reason = "%d Response" % status_code
+            except requests.exceptions.Timeout as ex:
+                status = "DOWN"
+                reason = "TIMEOUT"
+            except urllib3.exceptions.ConnectTimeoutError as ex:
+                status = "DOWN"
+                reason = "TIMEOUT"
+            except requests.exceptions.ConnectionError as ex:
+                logger.error("ConnError %s" % ex)
+                status = "DOWN"
+                reason = "CONNECTION"
+            except requests.exceptions.SSLError as ex:
+                status = "DOWN"
+                reason = "SSL"
+            except urllib3.exceptions.NewConnectionError as ex:
+                logger.error("NewConnError %s" % ex)
+                status = "DOWN"
+                reason = "CON_ERR"
+            except urllib3.exceptions.SSLError as ex:
+                logger.error(ex)
+                status = "DOWN"
+                reason = "SSL_URLLIB3"
+            except Exception as ex:
+                logger.error(ex)
+                traceback.print_exc(file=sys.stdout)
+                status = "DOWN"
+                reason = "UNKNOWN"
+
+        logger.info("GET %-30s %s" % (url,reason))
+        response.append({"name": service['name'], "upstream": url, "status": status, "reason": reason, "host": host, "env_host": actual_host})
+    
+    return JSONResponse(content={"services_status": response}, status_code=200)
 
 @router.post("/namespaces/{namespace}/routes/sync", status_code=200, dependencies=[Depends(verify_credentials)])
 async def verify_and_create_routes(namespace: str, request: Request):
@@ -277,3 +400,28 @@ def in_list_by_name(match, list):
         if item['name'] == match['name']:
             return True
     return False
+
+def build_url (s):
+    schema = default(s, "protocol", "http")
+    defaultPort = 80
+    if schema == "https":
+        defaultPort = 443
+    host = s['host']
+    port = default(s, "port", defaultPort)
+    path = default(s, "path", "/")
+    if 'url' in s:
+        return s['url']
+    else:
+        return "%s://%s:%d%s" % (schema, host, port, path)
+
+def default (s, key, val):
+    if key in s and s[key] is not None:
+        return s[key]
+    else:
+        return val
+
+def clean_host (host, conf):
+    if conf['enabled'] is True:
+        return host.replace(conf['baseUrl'], 'gov.bc.ca').replace('-data-gov-bc-ca', '.data').replace('-api-gov-bc-ca', '.api').replace('-apps-gov-bc-ca', '.apps')
+    else:
+        return host
