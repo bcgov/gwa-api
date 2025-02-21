@@ -197,7 +197,7 @@ def test_kong3_compatibility_warning(client):
     
     # Verify warning message and failed routes are in results
     results = response_data["results"]
-    assert "WARNING: Kong 3 incompatible routes found" in results
+    assert "Kong 3 incompatible routes found" in results
     assert "route-1" in results
     assert "route-2" in results
     # Routes should only be listed once even if multiple incompatible paths

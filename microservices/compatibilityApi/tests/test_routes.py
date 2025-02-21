@@ -60,7 +60,7 @@ def test_validate_kong3_compatibility_fail(mock_convert):
     assert response.status_code == 200
     data = response.json()
     assert not data["kong3_compatible"]
-    assert "WARNING: Kong 3 incompatible routes found" in data["message"]
+    assert "Kong 3 incompatible routes found" in data["message"]
     assert "example-route" in data["failed_routes"]
     assert data["kong3_output"]["services"][0]["routes"][0]["paths"][0].startswith("~")
 

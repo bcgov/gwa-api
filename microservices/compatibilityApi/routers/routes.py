@@ -37,7 +37,7 @@ async def validate_kong_config(config: dict) -> ValidationResponse:
             message = "Gateway configuration is compatible with Kong 3."
         else:
             message = (
-                "\033[1;33m⚠️  WARNING: Kong 3 incompatible routes found.\033[0m\n\n"  # Yellow bold text
+                "\033[1;33m[ Warning ]\033[0m \033[34mKong 3 incompatible routes found.\033[0m\n"
                 "APS will soon be updated to use Kong Gateway version 3.\n"
                 "Kong 3 requires that regular expressions in route paths start with a '~' character.\n\n"
                 "For more information, please visit:\n"

@@ -315,7 +315,7 @@ def mock_compatibility_api(mocker):
                     message = (
                         "Gateway configuration is compatible with Kong 3." 
                         if not has_incompatible else
-                        "\033[1;33m⚠️  WARNING: Kong 3 incompatible routes found.\033[0m\n\n"
+                        "\033[1;33m[ Warning ]\033[0m \033[34mKong 3 incompatible routes found.\033[0m\n"
                         "APS will soon be updated to use Kong Gateway version 3.\n"
                         "Kong 3 requires that regular expressions in route paths start with a '~' character.\n\n"
                         "For more information, please visit:\n"
