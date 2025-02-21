@@ -36,6 +36,7 @@ def app(mocker):
     mock_portal_feeder(mocker)
     mock_deck(mocker)
     mock_kubeapi(mocker)
+    mock_compatibility_api(mocker)
 
     from app import create_app
     app = create_app()
@@ -290,3 +291,52 @@ def mock_kubeapi(mocker):
 
     mocker.patch("clients.portal.requests.Session.put", mock_requests_put)
     mocker.patch("clients.portal.requests.Session.get", mock_requests_get)
+
+def mock_compatibility_api(mocker):
+    def mock_requests_post(url, json=None, **kwargs):
+        if url == 'http://compatibility-api/configs':
+            log.debug(f"Mocking compatibility API: {url}")
+            class Response:
+                def json(self):
+                    # Check if any routes have regex without tilde
+                    has_incompatible = False
+                    failed_routes = []
+                    
+                    if json and "services" in json:
+                        for service in json["services"]:
+                            if "routes" in service:
+                                for route in service["routes"]:
+                                    if "paths" in route and "name" in route:
+                                        for path in route["paths"]:
+                                            if "*" in path and not path.startswith("~"):
+                                                has_incompatible = True
+                                                failed_routes.append(route["name"])
+                    
+                    message = (
+                        "Gateway configuration is compatible with Kong 3." 
+                        if not has_incompatible else
+                        "\033[1;33m[ Warning ]\033[0m \033[34mKong 3 incompatible routes found.\033[0m\n"
+                        "APS will soon be updated to use Kong Gateway version 3.\n"
+                        "Kong 3 requires that regular expressions in route paths start with a '~' character.\n\n"
+                        "For more information, please visit:\n"
+                        "https://docs.konghq.com/deck/latest/3.0-upgrade\n\n"
+                        "Please update the following routes:"
+                    )
+                    
+                    return {
+                        "kong3_compatible": not has_incompatible,
+                        "message": message,
+                        "failed_routes": failed_routes,
+                        "kong2_output": json
+                    }
+                
+                def raise_for_status(self):
+                    if self.status_code != 200:
+                        raise Exception(f"HTTP {self.status_code}")
+                
+                status_code = 200
+                
+            return Response()
+        raise Exception(f"Unexpected URL: {url}")
+
+    mocker.patch("clients.compatibility.requests.post", mock_requests_post)

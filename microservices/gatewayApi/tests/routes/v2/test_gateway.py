@@ -167,3 +167,38 @@ def test_success_mtls_reference(client):
     response = client.put('/v2/namespaces/mytest/gateway', json=data)
     assert response.status_code == 200
     assert json.dumps(response.json) == '{"message": "Sync successful.", "results": "Deck reported no changes"}'
+
+def test_kong3_compatibility_warning(client):
+    """Test that Kong 3 incompatible config generates warning"""
+    configFile = '''
+        services:
+        - name: my-service
+          host: myupstream.local
+          tags: ["ns.mytest", "another"]
+          routes:
+          - name: route-1
+            hosts: [ myapi.api.gov.bc.ca ]
+            paths: [ "/path*" ]
+            tags: ["ns.mytest", "another2"]
+          - name: route-2
+            hosts: [ myapi2.api.gov.bc.ca ]
+            paths: [ "/other*" ]
+            tags: ["ns.mytest", "another2"]
+        '''
+
+    data = {
+        "configFile": configFile,
+        "dryRun": False
+    }
+    response = client.put('/v2/namespaces/mytest/gateway', json=data)
+    assert response.status_code == 200
+    response_data = response.json
+    assert response_data["message"] == "Sync successful."
+    
+    # Verify warning message and failed routes are in results
+    results = response_data["results"]
+    assert "Kong 3 incompatible routes found" in results
+    assert "route-1" in results
+    assert "route-2" in results
+    # Routes should only be listed once even if multiple incompatible paths
+    assert results.count("route-1") == 1

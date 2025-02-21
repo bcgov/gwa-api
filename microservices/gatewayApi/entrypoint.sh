@@ -60,7 +60,8 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
     "kubeApiCreds": {
         "kubeApiUser": "${KUBE_API_USER}",
         "kubeApiPass": "${KUBE_API_PASS}"
-    }
+    },
+    "compatibilityApiUrl": "${COMPATIBILITY_API_URL}"
 }
 EOF
 

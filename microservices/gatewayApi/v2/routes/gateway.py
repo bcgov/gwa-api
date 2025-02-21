@@ -22,6 +22,7 @@ from clients.ocp_gateway_secret import prep_submitted_config
 from utils.validators import host_valid, validate_upstream
 from utils.transforms import plugins_transformations
 from utils.masking import mask
+from clients.compatibility import check_kong3_compatibility
 
 gw = Blueprint('gwa_v2', 'gateway')
 local_environment = os.environ.get("LOCAL_ENVIRONMENT", default=False)
@@ -218,6 +219,9 @@ def write_config(namespace: str) -> object:
     orig_config = prep_submitted_config(clone_yaml_files(yaml_documents))
 
     update_routes_flag = False
+    
+    all_failed_routes = []
+    has_incompatible_routes = False
 
     for index, gw_config in enumerate(yaml_documents):
         log.info("[%s] Parsing file %s" % (namespace, index))
@@ -236,10 +240,24 @@ def write_config(namespace: str) -> object:
         # then add to tags automatically the tag: ns.<namespace>
         object_count = tags_transformation(namespace, gw_config)
 
-        #
         # Enrich the rate-limiting plugin with the appropriate Redis details
         plugins_transformations(namespace, gw_config)
 
+        # Check Kong 3 compatibility
+        is_compatible, compatibility_message, failed_routes, kong2_config = check_kong3_compatibility(namespace, gw_config)
+        if not is_compatible:
+            warning_message = compatibility_message
+
+        # Track incompatible routes
+        if not is_compatible:
+            has_incompatible_routes = True
+            all_failed_routes.extend(failed_routes)
+        
+        # Use kong2_config (which has compatibility tags) regardless of compatibility status
+        if kong2_config:
+            gw_config = kong2_config
+
+        # After enrichments, dump config to file
         with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
             yaml.dump(gw_config, file)
 
@@ -406,7 +424,19 @@ def write_config(namespace: str) -> object:
 
     if cmd == 'sync':
         record_gateway_event(event_id, 'published', 'completed', namespace, blob=orig_config)
-    return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
+
+    results = mask(out.decode('utf-8'))
+    
+    # Add Kong 3 compatibility warning if needed
+    if has_incompatible_routes:
+        # Add unique failed routes
+        unique_failed_routes = sorted(set(all_failed_routes))
+        route_list = "\n".join(f"  - {route}" for route in unique_failed_routes)
+        warning_message = warning_message + "\n" + route_list
+        
+        results = results + "\n" + warning_message
+
+    return make_response(jsonify(message=message, results=results))
 
 
 def cleanup(dir_path):
@@ -696,3 +726,4 @@ def clone_yaml_files (yaml_documents):
     for doc in yaml_documents:
         cloned_yaml.append(yaml.load(yaml.dump(doc), Loader=yaml.FullLoader))
     return cloned_yaml
+    
