@@ -220,7 +220,6 @@ def write_config(namespace: str) -> object:
 
     update_routes_flag = False
     
-    warning_message = ""
     all_failed_routes = []
     has_incompatible_routes = False
 
@@ -245,8 +244,10 @@ def write_config(namespace: str) -> object:
         plugins_transformations(namespace, gw_config)
 
         # Check Kong 3 compatibility
-        is_compatible, warning_message, failed_routes, kong2_config = check_kong3_compatibility(namespace, gw_config)
-        
+        is_compatible, compatibility_message, failed_routes, kong2_config = check_kong3_compatibility(namespace, gw_config)
+        if not is_compatible:
+            warning_message = compatibility_message
+
         # Track incompatible routes
         if not is_compatible:
             has_incompatible_routes = True
@@ -433,9 +434,6 @@ def write_config(namespace: str) -> object:
         route_list = "\n".join(f"  - {route}" for route in unique_failed_routes)
         warning_message = warning_message + "\n" + route_list
         
-        # Note: When all routes are compatible, no special response is given.
-        # To add the success message (contained in warning_message), move this
-        # line out of the if block above.
         results = results + "\n" + warning_message
 
     return make_response(jsonify(message=message, results=results))

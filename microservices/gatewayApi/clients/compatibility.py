@@ -4,7 +4,7 @@ from flask import current_app as app
 def check_kong3_compatibility(namespace: str, config: dict) -> tuple[bool, str, list[str], dict | None]:
     """
     Check Kong 3.x compatibility of configuration using compatibility API
-    Returns (is_compatible, warning_message, failed_routes, kong2_config)
+    Returns (is_compatible, message, failed_routes, kong2_config)
     """
     log = app.logger
     
