@@ -64,7 +64,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - id: release
-        uses: rymndhng/release-on-push-action@v0.24.0
+        uses: rymndhng/release-on-push-action@v0.28.0
         with:
           bump_version_scheme: patch
 
