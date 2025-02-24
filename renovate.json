@@ -5,7 +5,8 @@
   ],
   "branchPrefix": "feature/",
   "baseBranches": ["feature/renovate"],
-  "recreateWhen": "never",
+  "persistentBranches": ["feature/renovate"],
+  "rebaseWhen": "behind-base-branch",
   "includePaths": [
     "microservices/gatewayApi/**",
     ".github/**"
