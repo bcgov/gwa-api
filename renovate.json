@@ -4,6 +4,7 @@
     "local>bcgov/renovate-config"
   ],
   "includePaths": [
-    "gatewayApi/**"
+    "gatewayApi/**",
+    ".github/**"
   ]
 }
