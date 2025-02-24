@@ -6,6 +6,7 @@
   "branchPrefix": "feature/",
   "baseBranches": ["feature/renovate"],
   "rebaseWhen": "behind-base-branch",
+  "pruneStaleBranches": false,
   "includePaths": [
     "microservices/gatewayApi/**",
     ".github/**"
