@@ -3,7 +3,11 @@
   "extends": [
     "local>bcgov/renovate-config"
   ],
+  "branchPrefix": "feature/",
+  "baseBranches": ["feature/renovate"],
+  "recreateWhen": "never",
   "includePaths": [
-    "microservices/gatewayApi/**"
+    "microservices/gatewayApi/**",
+    ".github/**"
   ]
 }
