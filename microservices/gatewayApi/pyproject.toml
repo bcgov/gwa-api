@@ -29,7 +29,7 @@ flask-jwt-simple = "0.0.3"
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.7"
 pycodestyle = "2.10.0"
-pylint = "1.7.2"
+pylint = "3.3.4"
 python-dotenv = "^0.19.1"
 pytest = "^8.2.0"
 pytest-cov = "^5.0.0"
