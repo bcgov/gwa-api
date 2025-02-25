@@ -18,7 +18,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
@@ -72,7 +72,7 @@ jobs:
     name: Docker Image for gwa-api
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Check if build needed
         id: check
         run: |
@@ -103,7 +103,7 @@ jobs:
     name: Docker Image for gwa-scheduler
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Check if build needed
         id: check
         run: |
@@ -134,7 +134,7 @@ jobs:
     name: Docker Image for gwa-kube-api
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Check if build needed
         id: check
         run: |
