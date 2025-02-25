@@ -27,7 +27,7 @@ requests = "^2.32"
 flask-jwt-simple = "0.0.3"
 
 [tool.poetry.dev-dependencies]
-autopep8 = "^1.5.7"
+autopep8 = "^2.0.0"
 pycodestyle = "2.12.1"
 pylint = "3.3.4"
 python-dotenv = "^0.21.0"
