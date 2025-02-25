@@ -6,7 +6,7 @@ Install requires access to the Kong Admin API.
 
 ### Prerequisites
 
-- Python 3.6 or newer
+- Python 3.11 or newer
 - Docker 18.09.1 or newer
 
 ### Bare Metal Install
