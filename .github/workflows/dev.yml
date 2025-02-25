@@ -18,10 +18,9 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
-          # Disabling shallow clone is recommended for improving relevancy of reporting
-          fetch-depth: 0
+          fetch-depth: 2 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -72,11 +71,13 @@ jobs:
     name: Docker Image for gwa-api
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 
       - name: Check if build needed
         id: check
         run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -q "^microservices/gatewayApi/\|^.github/workflows/dev.yml"; then
+          if git diff --name-only HEAD^ HEAD | grep -q "^microservices/gatewayApi/\|^.github/workflows/dev.yml"; then
             echo "build_needed=true" >> $GITHUB_OUTPUT
           else
             echo "build_needed=false" >> $GITHUB_OUTPUT
@@ -103,11 +104,13 @@ jobs:
     name: Docker Image for gwa-scheduler
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 
       - name: Check if build needed
         id: check
         run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -q "^microservices/gatewayJobScheduler/\|^.github/workflows/dev.yml"; then
+          if git diff --name-only HEAD^ HEAD | grep -q "^microservices/gatewayJobScheduler/\|^.github/workflows/dev.yml"; then
             echo "build_needed=true" >> $GITHUB_OUTPUT
           else
             echo "build_needed=false" >> $GITHUB_OUTPUT
@@ -134,11 +137,13 @@ jobs:
     name: Docker Image for gwa-kube-api
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 
       - name: Check if build needed
         id: check
         run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -q "^microservices/kubeApi/\|^.github/workflows/dev.yml"; then
+          if git diff --name-only HEAD^ HEAD | grep -q "^microservices/kubeApi/\|^.github/workflows/dev.yml"; then
             echo "build_needed=true" >> $GITHUB_OUTPUT
           else
             echo "build_needed=false" >> $GITHUB_OUTPUT
