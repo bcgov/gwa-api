@@ -54,14 +54,14 @@ def get_statuses(namespace: str) -> object:
 
     except HTTPException as ex:
         log.error("Error getting status of services. %s" % str(ex))
-        return make_response(jsonify({"error": "HTTP exception occurred", "details": str(ex)}), 500)
+        return make_response(jsonify({"error": "HTTP exception occurred"}), 500)
     except requests.exceptions.RequestException as ex:
         log.error("Request error: %s" % str(ex))
-        return make_response(jsonify({"error": "Request exception occurred", "details": str(ex)}), 500)
+        return make_response(jsonify({"error": "Request exception occurred"}), 500)
     except Exception as ex:
         log.error("Unexpected error occurred: %s" % str(ex))
         traceback.print_exc()
-        return make_response(jsonify({"error": "Unexpected error occurred", "details": str(ex)}), 500)
+        return make_response(jsonify({"error": "Unexpected error occurred"}), 500)
     finally:
         session.close()
 
