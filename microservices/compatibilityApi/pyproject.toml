@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "gwa-compatibility-api"
+version = "1.0.0"
+description = "API to validate Kong Gateway configuration files"
+package-mode = false
+authors = ["Your Name <your.email@gov.bc.ca>"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.110.0"
+uvicorn = "^0.27.1"
+PyYAML = "^6.0.1"
+starlette = "^0.36.3"
+pydantic = "^2.6.3"
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^1.7.0"
+pytest = "^8.2.0"
+pytest-cov = "^5.0.0"
+pytest-mock = "^3.14.0"
+httpx = "^0.24.1"
+
+[tool.coverage.run]
+relative_files = true
+omit = [
+    "tests"
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api" 

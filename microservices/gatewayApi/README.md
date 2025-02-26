@@ -22,7 +22,7 @@ Run `pip install -r requirements.txt` to install dependencies and `python3 wsgi.
 Run `docker build . -t gwa_kong_api` to build the docker container and the following commands to run it
 
 ```sh
-hostip=$(ifconfig en0 | awk '$1 == "inet" {print $2}')
+hostip=$(hostname -I | awk '{print $1}')
 
 docker run -ti --rm \
  -e CONFIG_PATH=/tmp/production.json -e ENVIRONMENT=production \
@@ -40,6 +40,7 @@ docker run -ti --rm \
  -e HOST_TRANSFORM_BASE_URL=api.cloud \
  -e PLUGINS_RATELIMITING_REDIS_PASSWORD="" \
  -e DATA_PLANES_CONFIG_PATH=/dp/data_planes_config.json \
+ -e COMPATIBILITY_API_URL=https://compatibility-api.cloud \
  -v `pwd`/_tmp:/ssl \
  -v `pwd`/_tmp:/dp/ \
  -v ~/.kube/config:/root/.kube/config \

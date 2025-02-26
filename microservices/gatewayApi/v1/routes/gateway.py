@@ -18,6 +18,7 @@ from v1.auth.auth import admin_jwt, enforce_authorization
 
 from v1.services.namespaces import NamespaceService
 
+from clients.compatibility import check_kong3_compatibility
 from clients.portal import record_gateway_event
 from clients.kong import get_routes
 from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_nsp, apply_nsp, delete_nsp
@@ -221,6 +222,8 @@ def write_config(namespace: str) -> object:
 
     if len(yaml_documents) == 0:
         update_routes_flag = True
+    all_failed_routes = []
+    has_incompatible_routes = False
 
     for index, gw_config in enumerate(yaml_documents):
         log.info("[%s] Parsing file %s" % (namespace, index))
@@ -242,6 +245,20 @@ def write_config(namespace: str) -> object:
         #
         # Enrich the rate-limiting plugin with the appropriate Redis details
         plugins_transformations(namespace, gw_config)
+
+        # Check Kong 3 compatibility
+        is_compatible, compatibility_message, failed_routes, kong2_config = check_kong3_compatibility(namespace, gw_config)
+        if not is_compatible:
+            warning_message = compatibility_message
+        
+        # Track incompatible routes
+        if not is_compatible:
+            has_incompatible_routes = True
+            all_failed_routes.extend(failed_routes)
+        
+        # Use kong2_config (which has compatibility tags) regardless of compatibility status
+        if kong2_config:
+            gw_config = kong2_config
 
         with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
             yaml.dump(gw_config, file)
@@ -395,7 +412,19 @@ def write_config(namespace: str) -> object:
 
     if cmd == 'sync':
         record_gateway_event(event_id, 'published', 'completed', namespace, blob=orig_config)
-    return make_response(jsonify(message=message, results=mask(out.decode('utf-8'))))
+
+    results = mask(out.decode('utf-8'))
+    
+    # Add Kong 3 compatibility warning if needed
+    if has_incompatible_routes:
+        # Add unique failed routes
+        unique_failed_routes = sorted(set(all_failed_routes))
+        route_list = "\n".join(f"  - {route}" for route in unique_failed_routes)
+        warning_message = warning_message + "\n" + route_list
+        
+        results = results + "\n" + warning_message
+
+    return make_response(jsonify(message=message, results=results))
 
 
 def cleanup(dir_path):
