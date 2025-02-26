@@ -56,13 +56,13 @@ files = [
 
 [[package]]
 name = "authlib"
-version = "1.4.1"
+version = "1.5.0"
 description = "The ultimate Python library in building OAuth and OpenID Connect servers and clients."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "Authlib-1.4.1-py2.py3-none-any.whl", hash = "sha256:edc29c3f6a3e72cd9e9f45fff67fc663a2c364022eb0371c003f22d5405915c1"},
-    {file = "authlib-1.4.1.tar.gz", hash = "sha256:30ead9ea4993cdbab821dc6e01e818362f92da290c04c7f6a1940f86507a790d"},
+    {file = "Authlib-1.5.0-py2.py3-none-any.whl", hash = "sha256:b3cc5ccfc19cf87678046b6e7cb19d402d8a631a33c40e36385232203227953a"},
+    {file = "authlib-1.5.0.tar.gz", hash = "sha256:8fd8bd8f806485a532ac39a17b579982cf54688f956174f995cc938a91725423"},
 ]
 
 [package.dependencies]
@@ -726,17 +726,18 @@ zstandard = [
 
 [[package]]
 name = "flask-cors"
-version = "5.0.0"
-description = "A Flask extension adding a decorator for CORS support"
+version = "5.0.1"
+description = "A Flask extension simplifying CORS support"
 optional = false
-python-versions = "*"
+python-versions = "<4.0,>=3.9"
 files = [
-    {file = "Flask_Cors-5.0.0-py2.py3-none-any.whl", hash = "sha256:b9e307d082a9261c100d8fb0ba909eec6a228ed1b60a8315fd85f783d61910bc"},
-    {file = "flask_cors-5.0.0.tar.gz", hash = "sha256:5aadb4b950c4e93745034594d9f3ea6591f734bb3662e16e255ffbf5e89c88ef"},
+    {file = "flask_cors-5.0.1-py3-none-any.whl", hash = "sha256:fa5cb364ead54bbf401a26dbf03030c6b18fb2fcaf70408096a572b409586b0c"},
+    {file = "flask_cors-5.0.1.tar.gz", hash = "sha256:6ccb38d16d6b72bbc156c1c3f192bc435bfcc3c2bc864b2df1eb9b2d97b2403c"},
 ]
 
 [package.dependencies]
-Flask = ">=0.9"
+flask = ">=0.9"
+Werkzeug = ">=0.7"
 
 [[package]]
 name = "flask-swagger-ui"
@@ -1745,4 +1746,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "904572949998ac7e85f77678824e54e2691c41a304fe4208bf4bc5086865bfff"
+content-hash = "d6a23029d92a2a98dafc4cbb58deceb8cbf287ceb0c851e7ecaf1cd95662b4cb"
