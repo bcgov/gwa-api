@@ -18,7 +18,7 @@ flask-compress = "1.17"
 flask-cors = "5.0.0"
 gevent = "24.11.1"
 # greenlet = "2.0.2"
-gunicorn = "22.0.0"
+gunicorn = "23.0.0"
 python-keycloak = "0.29.1"
 requests = "^2.32"
 
