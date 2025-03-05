@@ -319,7 +319,7 @@ def mock_compatibility_api(mocker):
                         "APS will soon be updated to use Kong Gateway version 3.\n"
                         "Kong 3 requires that regular expressions in route paths start with a '~' character.\n\n"
                         "For more information, please visit:\n"
-                        "https://docs.konghq.com/deck/latest/3.0-upgrade\n\n"
+                        "https://developer.gov.bc.ca/docs/default/component/aps-infra-platform-docs/reference/kong3-upgrade/\n\n"
                         "Please update the following routes:"
                     )
                     
