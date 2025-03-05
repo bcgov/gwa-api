@@ -178,8 +178,22 @@ jobs:
     name: Docker Image for gwa-compatibility-api
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 
+      - name: Check if build needed
+        id: check
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -q "^microservices/compatibilityApi/\|^.github/workflows/dev.yml"; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Skip message
+        if: steps.check.outputs.build_needed == 'false'
+        run: echo "No changes in compatibilityApi, skipping build"
       - uses: docker/build-push-action@v1
+        if: steps.check.outputs.build_needed == 'true'
         with:
           registry: docker.pkg.github.com
           username: $GITHUB_ACTOR

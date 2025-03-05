@@ -57,6 +57,14 @@ jobs:
           poetry run coverage run --branch -m pytest -s -v
           poetry run coverage xml
 
+      - name: Test coverage for Compatibility API
+        run: |
+          export PATH=/root/.local/bin:$PATH
+          cd microservices/compatibilityApi
+          poetry install --no-root
+          poetry run coverage run --branch -m pytest -s -v
+          poetry run coverage xml
+
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
         env:
@@ -108,6 +116,19 @@ jobs:
           repository: bcgov/gwa-api/gwa-scheduler
           path: microservices/gatewayJobScheduler
           dockerfile: microservices/gatewayJobScheduler/Dockerfile
+          push: true
+          tags: ${{ steps.release.outputs.tag_name }}
+          tag_with_sha: false
+
+      - name: Create gwa-compatibility-api docker image related to the release
+        uses: docker/build-push-action@v1
+        with:
+          registry: docker.pkg.github.com
+          username: $GITHUB_ACTOR
+          password: ${{ secrets.GITHUB_TOKEN }}
+          repository: bcgov/gwa-api/gwa-compatibility-api
+          path: microservices/compatibilityApi
+          dockerfile: microservices/compatibilityApi/Dockerfile
           push: true
           tags: ${{ steps.release.outputs.tag_name }}
           tag_with_sha: false
