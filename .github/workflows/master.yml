@@ -14,7 +14,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
@@ -74,7 +74,7 @@ jobs:
           echo "Got release version ${{ steps.release.outputs.version }}"
 
       - name: Create gwa-api docker image related to the release
-        uses: docker/build-push-action@v1
+        uses: docker/build-push-action@v6
         with:
           registry: docker.pkg.github.com
           username: $GITHUB_ACTOR
@@ -87,7 +87,7 @@ jobs:
           tag_with_sha: false
 
       - name: Create gwa-kube-api docker image related to the release
-        uses: docker/build-push-action@v1
+        uses: docker/build-push-action@v6
         with:
           registry: docker.pkg.github.com
           username: $GITHUB_ACTOR
@@ -100,7 +100,7 @@ jobs:
           tag_with_sha: false
 
       - name: Create gwa-scheduler docker image related to the release
-        uses: docker/build-push-action@v1
+        uses: docker/build-push-action@v6
         with:
           registry: docker.pkg.github.com
           username: $GITHUB_ACTOR
