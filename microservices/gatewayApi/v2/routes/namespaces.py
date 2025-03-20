@@ -103,11 +103,12 @@ def delete_namespace(namespace: str) -> object:
     log.debug("ST = %s" % selectTag)
 
     # Call the 'deck' command
+    deck_cli = app.config['deckCLI']
     cmd = "sync"
 
-    log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
+    log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
     args = [
-        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        deck_cli, cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)

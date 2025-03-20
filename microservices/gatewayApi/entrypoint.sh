@@ -61,7 +61,8 @@ cat > "${CONFIG_PATH:-./config/default.json}" <<EOF
         "kubeApiUser": "${KUBE_API_USER}",
         "kubeApiPass": "${KUBE_API_PASS}"
     },
-    "compatibilityApiUrl": "${COMPATIBILITY_API_URL}"
+    "compatibilityApiUrl": "${COMPATIBILITY_API_URL}",
+    "deckCLI": "${DECK_CLI}"
 }
 EOF
 

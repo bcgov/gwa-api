@@ -64,10 +64,11 @@ def delete_config(namespace: str, qualifier="") -> object:
 
     # Call the 'deck' command
     cmd = "sync"
+    deck_cli = app.config['deckCLI']
 
-    log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
+    log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
     args = [
-        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        deck_cli, cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -318,11 +319,12 @@ def write_config(namespace: str) -> object:
         selectTag = ns_qualifier
 
     # Call the 'deck' command
+    deck_cli = app.config['deckCLI']
 
-    log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
+    log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
 
     args = [
-        "deck", "validate", "--config", "/tmp/deck.yaml", "--state", tempFolder
+        deck_cli, "validate", "--config", "/tmp/deck.yaml", "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_validate = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -334,7 +336,7 @@ def write_config(namespace: str) -> object:
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
     args = [
-        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
+        deck_cli, cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
     ]
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
