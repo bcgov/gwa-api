@@ -23,12 +23,12 @@ RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -
 # gwa api (kong 2)
 RUN curl -sL https://github.com/kong/deck/releases/download/v1.5.0/deck_1.5.0_linux_amd64.tar.gz -o deck.tar.gz && \
    tar -xf deck.tar.gz -C /tmp && \
-   cp /tmp/deck /usr/local/bin/deck150
+   cp /tmp/deck /usr/local/bin/deck_kong2_150
 
 # gwa api (kong 3)
 RUN curl -sL https://github.com/Kong/deck/releases/download/v1.45.0/deck_1.45.0_linux_amd64.tar.gz -o deck.tar.gz && \
    tar -xf deck.tar.gz -C /tmp && \
-   cp /tmp/deck /usr/local/bin/deck1450
+   cp /tmp/deck /usr/local/bin/deck_kong3_1450
 
 RUN python -m pip install --upgrade pip
 # FIX: No module named 'urllib3.packages.six'
@@ -50,6 +50,6 @@ RUN chmod +x entrypoint.sh
 EXPOSE 2000
 
 ENV DECK_ANALYTICS=off
-ENV DECK_CLI=deck1450
+ENV DECK_CLI=deck_kong3_1450
 
 ENTRYPOINT ["./entrypoint.sh"]
