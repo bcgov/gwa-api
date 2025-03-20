@@ -20,7 +20,7 @@ from clients.portal import record_gateway_event
 from clients.kong import get_routes, register_kong_certs, get_public_certs_by_ns
 from clients.ocp_gateway_secret import prep_submitted_config
 from utils.validators import host_valid, validate_upstream
-from utils.transforms import plugins_transformations
+from utils.transforms import plugins_transformations, add_version_if_missing
 from utils.masking import mask
 from utils.deck import deck_cmd_sync_diff, deck_cmd_validate
 from clients.compatibility import check_kong3_compatibility
@@ -234,6 +234,9 @@ def write_config(namespace: str) -> object:
         # Enrichments
         #######################
 
+        # Add format version if its missing - needed in Kong v3+
+        add_version_if_missing(gw_config)
+
         # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
         host_transformation(namespace, dp, gw_config)
 
@@ -324,7 +327,7 @@ def write_config(namespace: str) -> object:
     log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
 
     args = deck_cmd_validate(deck_cli, tempFolder)
-    
+
     log.debug("[%s] Running %s" % (namespace, args))
     deck_validate = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_validate.communicate()
