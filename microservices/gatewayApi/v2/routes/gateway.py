@@ -68,9 +68,8 @@ def delete_config(namespace: str, qualifier="") -> object:
     deck_cli = app.config['deckCLI']
 
     log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
-    args = deck_cmd_sync_diff(deck_cli, cmd) + [
-        "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
-    ]
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder)
+
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_run.communicate()
@@ -324,9 +323,8 @@ def write_config(namespace: str) -> object:
 
     log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
 
-    args = deck_cmd_validate(deck_cli) + [
-        "--config", "/tmp/deck.yaml", "--state", tempFolder
-    ]
+    args = deck_cmd_validate(deck_cli, tempFolder)
+    
     log.debug("[%s] Running %s" % (namespace, args))
     deck_validate = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_validate.communicate()
@@ -336,9 +334,8 @@ def write_config(namespace: str) -> object:
         abort_early(event_id, 'validate', namespace, jsonify(
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
-    args = deck_cmd_sync_diff(deck_cli, cmd) + [
-        "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
-    ]
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder)
+    
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_run.communicate()
