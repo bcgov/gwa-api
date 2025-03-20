@@ -30,5 +30,6 @@
     "kubeApiPass": "password",
     "kubeApiUser": "username"
   },
-  "compatibilityApiUrl": "http://compatibility-api"
+  "compatibilityApiUrl": "http://compatibility-api",
+   "deckCLI": "deck"
 }
