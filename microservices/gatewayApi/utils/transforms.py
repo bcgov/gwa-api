@@ -95,6 +95,5 @@ def traverse_plugins (yaml, plugin_configs = None):
                 traverse_plugins (item, plugin_configs)
     
 def add_version_if_missing(yaml):
-    for k in yaml:
-        if k not in ["_format_version"] or yaml["_format_version"] != 3.0:
-            yaml["_format_version"] = 3.0
+    if "_format_version" not in yaml or yaml["_format_version"] != 3.0:
+        yaml["_format_version"] = 3.0
