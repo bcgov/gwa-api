@@ -5,7 +5,7 @@ import yaml
 
 def test_add_version_with_format():
     payload = '''
-_format_version: 3.0
+_format_version: '3.0'
 services:
 - host: myservice
   name: my-service
@@ -32,7 +32,7 @@ services:
 '''
 
     expected = '''
-_format_version: 3.0
+_format_version: '3.0'
 services:
 - host: myservice
   name: my-service
@@ -61,7 +61,7 @@ services:
 '''
 
     expected = '''
-_format_version: 3.0
+_format_version: '3.0'
 services:
 - host: myservice
   name: my-service
