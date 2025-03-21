@@ -26,8 +26,9 @@ from clients.ocp_routes import get_host_list, get_route_overrides
 from clients.ocp_gateway_secret import prep_submitted_config, prep_and_apply_secret, write_submitted_config
 
 from utils.validators import host_valid, validate_upstream
-from utils.transforms import plugins_transformations
+from utils.transforms import plugins_transformations, add_version_if_missing
 from utils.masking import mask
+from utils.deck import deck_cmd_sync_diff, deck_cmd_validate
 
 gw = Blueprint('gwa', 'gateway')
 
@@ -71,9 +72,8 @@ def delete_config(namespace: str, qualifier="") -> object:
 
 
     log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
-    args = [
-        deck_cli, cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
-    ]
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder)
+
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_run.communicate()
@@ -237,6 +237,9 @@ def write_config(namespace: str) -> object:
         # Enrichments
         #######################
 
+        # Add format version if its missing - needed in Kong v3+
+        add_version_if_missing(gw_config)
+
         # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
         host_transformation(namespace, gw_config)
 
@@ -326,9 +329,8 @@ def write_config(namespace: str) -> object:
 
     log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
 
-    args = [
-        deck_cli, "validate", "--config", "/tmp/deck.yaml", "--state", tempFolder
-    ]
+    args = deck_cmd_validate(deck_cli, tempFolder)
+
     log.debug("[%s] Running %s" % (namespace, args))
     deck_validate = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_validate.communicate()
@@ -338,9 +340,8 @@ def write_config(namespace: str) -> object:
         abort_early(event_id, 'validate', namespace, jsonify(
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
-    args = [
-        deck_cli, cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
-    ]
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder)
+
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_run.communicate()
