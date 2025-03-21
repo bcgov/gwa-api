@@ -247,19 +247,21 @@ def write_config(namespace: str) -> object:
         # Enrich the rate-limiting plugin with the appropriate Redis details
         plugins_transformations(namespace, gw_config)
 
+        # Disabled:
+        #
         # Check Kong 3 compatibility
-        is_compatible, compatibility_message, failed_routes, kong2_config = check_kong3_compatibility(namespace, gw_config)
-        if not is_compatible:
-            warning_message = compatibility_message
+        #is_compatible, compatibility_message, failed_routes, kong2_config = check_kong3_compatibility(namespace, gw_config)
+        #if not is_compatible:
+        #    warning_message = compatibility_message
 
         # Track incompatible routes
-        if not is_compatible:
-            has_incompatible_routes = True
-            all_failed_routes.extend(failed_routes)
+        #if not is_compatible:
+        #    has_incompatible_routes = True
+        #    all_failed_routes.extend(failed_routes)
         
         # Use kong2_config (which has compatibility tags) regardless of compatibility status
-        if kong2_config:
-            gw_config = kong2_config
+        #if kong2_config:
+        #    gw_config = kong2_config
 
         # After enrichments, dump config to file
         with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
