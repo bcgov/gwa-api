@@ -28,6 +28,7 @@ RUN curl -sL https://github.com/kong/deck/releases/download/v1.5.0/deck_1.5.0_li
 # gwa api (kong 3)
 RUN curl -sL https://github.com/Kong/deck/releases/download/v1.45.0/deck_1.45.0_linux_amd64.tar.gz -o deck.tar.gz && \
    tar -xf deck.tar.gz -C /tmp && \
+   cp /tmp/deck /usr/local/bin/deck && \
    cp /tmp/deck /usr/local/bin/deck_kong3_1450
 
 RUN python -m pip install --upgrade pip
@@ -50,6 +51,6 @@ RUN chmod +x entrypoint.sh
 EXPOSE 2000
 
 ENV DECK_ANALYTICS=off
-ENV DECK_CLI=deck_kong3_1450
+ENV DECK_CLI=deck
 
 ENTRYPOINT ["./entrypoint.sh"]
