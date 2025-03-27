@@ -55,7 +55,7 @@ def delete_config(namespace: str, qualifier="") -> object:
     os.makedirs(tempFolder, exist_ok=False)
 
     with open("%s/%s" % (tempFolder, 'empty.yaml'), 'w') as file:
-        file.write("")
+        file.write("_format_version: '3.0'")
 
     selectTag = "ns.%s" % namespace
     log.debug("ST = %s" % selectTag)
