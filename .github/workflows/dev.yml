@@ -18,10 +18,10 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 2 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.11"
       - name: Install deps
@@ -71,7 +71,7 @@ jobs:
     name: Docker Image for gwa-api
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 2 
       - name: Check if build needed
@@ -85,7 +85,7 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in gatewayApi, skipping build"
-      - uses: docker/build-push-action@v1
+      - uses: docker/build-push-action@3e7a4f6646880c6f63758d73ac32392d323eaf8f # v1
         if: steps.check.outputs.build_needed == 'true'
         with:
           registry: docker.pkg.github.com
@@ -104,7 +104,7 @@ jobs:
     name: Docker Image for gwa-scheduler
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 2 
       - name: Check if build needed
@@ -118,7 +118,7 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in gatewayJobScheduler, skipping build"
-      - uses: docker/build-push-action@v1
+      - uses: docker/build-push-action@3e7a4f6646880c6f63758d73ac32392d323eaf8f # v1
         if: steps.check.outputs.build_needed == 'true'
         with:
           registry: docker.pkg.github.com
@@ -137,7 +137,7 @@ jobs:
     name: Docker Image for gwa-kube-api
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 2 
       - name: Check if build needed
@@ -151,7 +151,7 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in kubeApi, skipping build"
-      - uses: docker/build-push-action@v1
+      - uses: docker/build-push-action@3e7a4f6646880c6f63758d73ac32392d323eaf8f # v1
         if: steps.check.outputs.build_needed == 'true'
         with:
           registry: docker.pkg.github.com
