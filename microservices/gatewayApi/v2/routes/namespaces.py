@@ -39,6 +39,7 @@ from utils.masking import mask
 from v1.services.namespaces import NamespaceService, get_base_group_path
 from utils.cleanup import cleanup
 from utils.get_data_plane import get_data_plane
+from utils.deck import deck_cmd_sync_diff
 
 ns = Blueprint('namespaces_v2', 'namespaces')
 local_environment = os.environ.get("LOCAL_ENVIRONMENT", default=False)
@@ -97,18 +98,19 @@ def delete_namespace(namespace: str) -> object:
     os.makedirs(tempFolder, exist_ok=False)
 
     with open("%s/%s" % (tempFolder, 'empty.yaml'), 'w') as file:
-        file.write("")
+        file.write("_format_version: '3.0'")
 
     selectTag = "ns.%s" % namespace
     log.debug("ST = %s" % selectTag)
 
     # Call the 'deck' command
     cmd = "sync"
+    deck_cli = app.config['deckCLI']
 
-    log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
-    args = [
-        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
-    ]
+    log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
+
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder)
+
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_run.communicate()

@@ -20,8 +20,9 @@ from clients.portal import record_gateway_event
 from clients.kong import get_routes, register_kong_certs, get_public_certs_by_ns
 from clients.ocp_gateway_secret import prep_submitted_config
 from utils.validators import host_valid, validate_upstream
-from utils.transforms import plugins_transformations
+from utils.transforms import plugins_transformations, add_version_if_missing
 from utils.masking import mask
+from utils.deck import deck_cmd_sync_diff, deck_cmd_validate
 from clients.compatibility import check_kong3_compatibility
 
 gw = Blueprint('gwa_v2', 'gateway')
@@ -54,7 +55,7 @@ def delete_config(namespace: str, qualifier="") -> object:
     os.makedirs(tempFolder, exist_ok=False)
 
     with open("%s/%s" % (tempFolder, 'empty.yaml'), 'w') as file:
-        file.write("")
+        file.write("_format_version: '3.0'")
 
     selectTag = "ns.%s" % namespace
     log.debug("ST = %s" % selectTag)
@@ -64,11 +65,11 @@ def delete_config(namespace: str, qualifier="") -> object:
 
     # Call the 'deck' command
     cmd = "sync"
+    deck_cli = app.config['deckCLI']
 
-    log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
-    args = [
-        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
-    ]
+    log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder)
+
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_run.communicate()
@@ -233,6 +234,9 @@ def write_config(namespace: str) -> object:
         # Enrichments
         #######################
 
+        # Add format version if its missing - needed in Kong v3+
+        add_version_if_missing(gw_config)
+
         # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
         host_transformation(namespace, dp, gw_config)
 
@@ -243,19 +247,21 @@ def write_config(namespace: str) -> object:
         # Enrich the rate-limiting plugin with the appropriate Redis details
         plugins_transformations(namespace, gw_config)
 
+        # Disabled:
+        #
         # Check Kong 3 compatibility
-        is_compatible, compatibility_message, failed_routes, kong2_config = check_kong3_compatibility(namespace, gw_config)
-        if not is_compatible:
-            warning_message = compatibility_message
+        #is_compatible, compatibility_message, failed_routes, kong2_config = check_kong3_compatibility(namespace, gw_config)
+        #if not is_compatible:
+        #    warning_message = compatibility_message
 
         # Track incompatible routes
-        if not is_compatible:
-            has_incompatible_routes = True
-            all_failed_routes.extend(failed_routes)
+        #if not is_compatible:
+        #    has_incompatible_routes = True
+        #    all_failed_routes.extend(failed_routes)
         
         # Use kong2_config (which has compatibility tags) regardless of compatibility status
-        if kong2_config:
-            gw_config = kong2_config
+        #if kong2_config:
+        #    gw_config = kong2_config
 
         # After enrichments, dump config to file
         with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
@@ -318,12 +324,12 @@ def write_config(namespace: str) -> object:
         selectTag = ns_qualifier
 
     # Call the 'deck' command
+    deck_cli = app.config['deckCLI']
 
-    log.info("[%s] %s action using %s" % (namespace, cmd, selectTag))
+    log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
 
-    args = [
-        "deck", "validate", "--config", "/tmp/deck.yaml", "--state", tempFolder
-    ]
+    args = deck_cmd_validate(deck_cli, tempFolder)
+
     log.debug("[%s] Running %s" % (namespace, args))
     deck_validate = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_validate.communicate()
@@ -333,9 +339,8 @@ def write_config(namespace: str) -> object:
         abort_early(event_id, 'validate', namespace, jsonify(
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
-    args = [
-        "deck", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", selectTag, "--state", tempFolder
-    ]
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder)
+    
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_run.communicate()
