@@ -113,9 +113,12 @@ def transform_data_by_ns(routes, certs, cert_snis):
                         break
 
                 for host in route_obj['hosts']:
-                    # Look for a matching certificate by SNI for custom domains
-                    cert, serial_number = _get_certificate_for_host(host, namespace, cert_snis, certs)
-                    
+                    try:
+                        # Look for a matching certificate by SNI for custom domains
+                        cert, serial_number = _get_certificate_for_host(host, namespace, cert_snis, certs)
+                    except Exception as e:
+                        logger.error(f"Skipping host {host} in namespace {namespace}: {str(e)}")
+                        continue
                     name = 'wild-%s-%s' % (select_tag.replace(".", "-"), host)
                     ns_dict[namespace].append({
                         "name": name,
