@@ -122,7 +122,9 @@ def test_happy_transform_data_by_ns_with_custom_domain():
                 "name": "test.custom.gov.bc.ca",
                 "id": "79009c9e-0f4d-40b5-9707-bf2fe9f50502",
                 "created_at": 1731713874,
-                "certificate": "41d14845-669f-4dcd-aff2-926fb32a4b25",
+                "certificate": {
+                    "id": "41d14845-669f-4dcd-aff2-926fb32a4b25"
+                },
                 "tags": [
                     "ns.ns1"
                 ]
@@ -184,7 +186,9 @@ def test_missing_cert_transform_data_by_ns_with_custom_domain(caplog):
                 "name": "other.custom.gov.bc.ca",
                 "id": "79009c9e-0f4d-40b5-9707-bf2fe9f50502",
                 "created_at": 1731713874,
-                "certificate": "41d14845-669f-4dcd-aff2-926fb32a4b25",
+                "certificate": {
+                    "id": "41d14845-669f-4dcd-aff2-926fb32a4b25"
+                },
                 "tags": [
                     "ns.ns1"
                 ]
