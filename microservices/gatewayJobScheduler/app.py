@@ -113,9 +113,9 @@ def transform_data_by_ns(routes, certs, cert_snis):
                         break
 
                 for host in route_obj['hosts']:
-                    # Look for a matching certificate by SNI for custom domainsAdd commentMore actions
+                    # Look for a matching certificate by SNI for custom domains
                     cert, serial_number = _get_certificate_for_host(host, namespace, cert_snis, certs)
-
+                    
                     name = 'wild-%s-%s' % (select_tag.replace(".", "-"), host)
                     ns_dict[namespace].append({
                         "name": name,
