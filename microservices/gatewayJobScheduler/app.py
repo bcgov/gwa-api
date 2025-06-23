@@ -60,7 +60,7 @@ def _get_certificate_for_host(host, namespace, cert_snis, certs):
         
     for sni in cert_snis:
         if host in sni['name']:
-            cert_id = sni['certificate']
+            cert_id = sni['certificate']['id']
             logger.debug("%s - Found custom cert with SNI match for %s - %s" % (namespace, host, cert_id))
             cert = next((cert for cert in certs if cert['id'] == cert_id), None)
             if cert is None:
@@ -113,12 +113,9 @@ def transform_data_by_ns(routes, certs, cert_snis):
                         break
 
                 for host in route_obj['hosts']:
-                    try:
-                        # Look for a matching certificate by SNI for custom domains
-                        cert, serial_number = _get_certificate_for_host(host, namespace, cert_snis, certs)
-                    except Exception as e:
-                        logger.error(f"Skipping host {host} in namespace {namespace}: {str(e)}")
-                        continue
+                    # Look for a matching certificate by SNI for custom domainsAdd commentMore actions
+                    cert, serial_number = _get_certificate_for_host(host, namespace, cert_snis, certs)
+
                     name = 'wild-%s-%s' % (select_tag.replace(".", "-"), host)
                     ns_dict[namespace].append({
                         "name": name,
