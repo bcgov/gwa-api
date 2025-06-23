@@ -60,9 +60,7 @@ def _get_certificate_for_host(host, namespace, cert_snis, certs):
         
     for sni in cert_snis:
         if host in sni['name']:
-            cert_id = sni['certificate']
-            if isinstance(cert_id, dict):
-                cert_id = cert_id.get('id')
+            cert_id = sni['certificate']['id']
             logger.debug("%s - Found custom cert with SNI match for %s - %s" % (namespace, host, cert_id))
             cert = next((cert for cert in certs if cert['id'] == cert_id), None)
             if cert is None:
@@ -94,8 +92,6 @@ def transform_data_by_ns(routes, certs, cert_snis):
         ns_attr_dict = {}
         for route_obj in routes:
             select_tag = _get_select_tag(route_obj['tags'])
-            if select_tag is None:
-                continue  # Skip if no select_tag found
             namespace = select_tag.split(".")[1]
 
             if namespace not in ns_dict:
