@@ -32,7 +32,9 @@ def test_get_certificate_custom_domain_found():
         "name": "test.custom.gov.bc.ca",
         "id": "79009c9e-0f4d-40b5-9707-bf2fe9f50502",
         "created_at": 1731713874,
-        "certificate": cert_id,
+        "certificate": {
+            "id": cert_id
+        },
         "tags": ["ns.test-ns"]
     }]
 
@@ -47,7 +49,9 @@ def test_get_certificate_custom_domain_sni_not_found():
     namespace = "test-ns"
     cert_snis = [{
         "name": "other.custom.gov.bc.ca",
-        "certificate": "some-cert-id"
+        "certificate": {
+            "id": "some-cert-id"
+        }
     }]
     certs = []
 
@@ -63,7 +67,9 @@ def test_get_certificate_missing_cert():
     
     cert_snis = [{
         "name": host,
-        "certificate": cert_id
+        "certificate": {
+            "id": cert_id
+        }
     }]
     certs = []  # Empty certs list, so cert won't be found
 
