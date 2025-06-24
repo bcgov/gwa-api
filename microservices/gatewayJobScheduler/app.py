@@ -60,7 +60,7 @@ def _get_certificate_for_host(host, namespace, cert_snis, certs):
         
     for sni in cert_snis:
         if host in sni['name']:
-            cert_id = sni['certificate']
+            cert_id = sni['certificate']['id']
             logger.debug("%s - Found custom cert with SNI match for %s - %s" % (namespace, host, cert_id))
             cert = next((cert for cert in certs if cert['id'] == cert_id), None)
             if cert is None:
