@@ -4,10 +4,14 @@
     "local>bcgov/renovate-config"
   ],
   "branchPrefix": "feature/",
-  "baseBranches": ["feature/renovate"],
+  "baseBranchPatterns": [
+    "feature/renovate"
+  ],
   "rebaseWhen": "behind-base-branch",
   "pruneStaleBranches": false,
-  "labels": ["renovate"],
+  "labels": [
+    "renovate"
+  ],
   "includePaths": [
     "microservices/gatewayApi/**",
     ".github/**"
