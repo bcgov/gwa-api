@@ -85,7 +85,7 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in gatewayApi, skipping build"
-      - uses: docker/build-push-action@3e7a4f6646880c6f63758d73ac32392d323eaf8f # v1
+      - uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         if: steps.check.outputs.build_needed == 'true'
         with:
           registry: docker.pkg.github.com
@@ -118,7 +118,7 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in gatewayJobScheduler, skipping build"
-      - uses: docker/build-push-action@3e7a4f6646880c6f63758d73ac32392d323eaf8f # v1
+      - uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         if: steps.check.outputs.build_needed == 'true'
         with:
           registry: docker.pkg.github.com
@@ -151,7 +151,7 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in kubeApi, skipping build"
-      - uses: docker/build-push-action@3e7a4f6646880c6f63758d73ac32392d323eaf8f # v1
+      - uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         if: steps.check.outputs.build_needed == 'true'
         with:
           registry: docker.pkg.github.com
