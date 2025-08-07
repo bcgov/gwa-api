@@ -292,7 +292,10 @@ def write_config(namespace: str) -> object:
         try:
             protected_kube_namespaces = json.loads(app.config['protectedKubeNamespaces'])
 
-            do_validate_upstreams = app.config['data_planes'][dp].get("validate-upstreams", False)
+            if dp.startswith("sdx-"):
+                do_validate_upstreams = False
+            else:
+                do_validate_upstreams = app.config['data_planes'][dp].get("validate-upstreams", False)
 
             log.debug("Validate upstreams %s %s" % (dp, do_validate_upstreams))
             validate_upstream(gw_config, ns_attributes, protected_kube_namespaces, do_validate_upstreams)
