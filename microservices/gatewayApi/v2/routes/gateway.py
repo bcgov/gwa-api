@@ -163,7 +163,7 @@ def write_config(namespace: str) -> object:
     all_routes = get_routes()
     tag_match = "ns.%s" % namespace
     for route in all_routes:
-        if tag_match not in route['tags'] and 'hosts' in route:
+        if tag_match not in route['tags'] and 'hosts' in route and "sdx" not in route['tags']:
             for host in route['hosts']:
                 reserved_hosts.append(host)
     reserved_hosts = list(set(reserved_hosts))
@@ -351,7 +351,7 @@ def write_config(namespace: str) -> object:
     # skip creation of routes in local development environment
     elif cmd == "sync" and not local_environment:
         try:
-            if update_routes_flag:
+            if update_routes_flag and not dp.startswith("sdx-"):
                 host_list = get_host_list(tempFolder)
                 certs = []
                 custom_domain_in_host_list = False
