@@ -140,7 +140,7 @@ def get_namespaces_with_perm_data_plane(perm_data_plane_value):
     kc = admin_api()
     namespaces = []
     # Find the 'ns' group
-    ns_groups = kc.get_groups(search='ns')
+    ns_groups = kc.get_groups()
     ns_group = next((g for g in ns_groups if g['name'] == 'ns'), None)
     if not ns_group:
         return namespaces
