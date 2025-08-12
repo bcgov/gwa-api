@@ -4,6 +4,7 @@ import traceback
 from clients.namespace import NamespaceService
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
+from clients.keycloak import admin_api
 
 logger = logging.getLogger(__name__)
 
@@ -131,3 +132,24 @@ def transform_data_by_ns(routes, certs, cert_snis):
     except Exception as err:
         traceback.print_exc()
         logger.error("Error transforming data. %s" % str(err))
+
+def get_namespaces_with_perm_data_plane(perm_data_plane_value):
+    """
+    Fetch namespaces from Keycloak group 'ns' with attribute perm-data-plane matching the given value
+    """
+    kc = admin_api()
+    namespaces = []
+    # Find the 'ns' group
+    ns_groups = kc.get_groups(search='ns')
+    ns_group = next((g for g in ns_groups if g['name'] == 'ns'), None)
+    if not ns_group:
+        return namespaces
+
+    # Get subgroups (namespaces)
+    subgroups = kc.get_group(ns_group['id']).get('subGroups', [])
+    for subgroup in subgroups:
+        attrs = subgroup.get('attributes', {})
+        perm_data_plane = attrs.get('perm-data-plane', [])
+        if perm_data_plane_value in perm_data_plane:
+            namespaces.append(subgroup['name'])
+    return namespaces
