@@ -3,7 +3,7 @@ import requests
 from sys import exc_info
 import logging
 import traceback
-from app import transform_data_by_ns
+from app import transform_data_by_ns, get_namespaces_with_perm_data_plane
 from clients.kong import get_records
 import traceback
 import schedule
@@ -33,7 +33,17 @@ def sync_routes():
         clear('sync-routes')
         exit(1)
 
+    # Get Gold namespaces from Keycloak
+    perm_data_plane_value = os.getenv('DATA_PLANE')
+    namespaces = get_namespaces_with_perm_data_plane(perm_data_plane_value)
+
     data = transform_data_by_ns(routes, certs, cert_snis)
+
+    # Add missing namespaces with no routes
+    for ns in namespaces:
+        if ns not in data:
+            data[ns] = []
+
     for ns in data:
         url = os.getenv('KUBE_API_URL') + '/namespaces/%s/routes/sync' % ns
         response = requests.post(url, headers=headers, json=data[ns], auth=(
