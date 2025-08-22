@@ -42,6 +42,9 @@ services:
         - ${route_path}
       methods:
         - GET
+        - POST
+        - PUT
+        - DELETE
       strip_path: true
       https_redirect_status_code: 426
       path_handling: v0
