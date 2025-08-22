@@ -54,13 +54,13 @@ services:
           header_names: ["X-PERSON-PPID"]
           bearer_jwt_auth_allowed_auds: [ ${openid_audience} ]
           unauth_action: deny
-          bearer_only: yes
-          use_jwks: yes
-          bearer_jwt_auth_enable: yes
+          bearer_only: "yes"
+          use_jwks: "yes"
+          bearer_jwt_auth_enable: "yes"
           discovery: ${openid_issuer}/.well-known/openid-configuration
           header_claims: ["sub"]
-          scope: [ ${openid_scope} ]
-          validate_scope: yes
+          scope: ${openid_scope}
+          validate_scope: "yes"
 
       - name: openid-authzen
         tags: [ns.${gateway}.${ns_qualifier}]
