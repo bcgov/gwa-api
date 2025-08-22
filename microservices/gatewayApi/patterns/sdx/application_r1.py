@@ -45,14 +45,22 @@ services:
           origins: ["*"]
           methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
                     
-      - name: jwt-keycloak
+      - name: oidc
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
         config:
-          header_names: ["authorization"]
+          client_secret: NOT_APPLICABLE
+          client_id: NOT_APPLICABLE
+          header_names: ["X-PERSON-PPID"]
+          bearer_jwt_auth_allowed_auds: [ ${openid_audience} ]
+          unauth_action: deny
+          bearer_only: yes
+          use_jwks: yes
+          bearer_jwt_auth_enable: yes
+          discovery: ${openid_issuer}/.well-known/openid-configuration
+          header_claims: ["sub"]
           scope: [ ${openid_scope} ]
-          allowed_aud: ${openid_audience}
-          allowed_iss: [ ${openid_issuer} ]
+          validate_scope: yes
 
       - name: openid-authzen
         tags: [ns.${gateway}.${ns_qualifier}]
