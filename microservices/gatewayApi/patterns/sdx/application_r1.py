@@ -68,6 +68,7 @@ services:
           bearer_jwt_auth_enable: "yes"
           discovery: ${openid_issuer}/.well-known/openid-configuration
           header_claims: ["sub", "azp"]
+
           # scope and validate_scope do nothing when bearer_jwt_auth_enable is "yes"
           # scope: ${openid_scope}
           # validate_scope: "yes"
