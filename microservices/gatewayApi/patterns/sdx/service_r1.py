@@ -40,7 +40,7 @@ services:
         config:
           client_secret: NOT_APPLICABLE
           client_id: NOT_APPLICABLE
-          header_names: ["X-P-PERSON-PPID", "X-P-AZP-CLIENT-ID"]
+          header_names: ["X-IDP-P-PERSON-PPID", "X-IDP-P-AZP-CLIENT-ID"]
           bearer_jwt_auth_allowed_auds: [ ${openid_audience} ]
           unauth_action: deny
           bearer_only: "yes"
