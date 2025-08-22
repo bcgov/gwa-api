@@ -38,6 +38,13 @@ services:
         request_buffering: true
         response_buffering: true
     plugins:
+      - name: cors
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+                    
       - name: jwt-keycloak
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
