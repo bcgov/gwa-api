@@ -38,6 +38,15 @@ services:
         request_buffering: true
         response_buffering: true
     plugins:
+      - name: rate-limiting
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          policy: local
+          fault_tolerant: true
+          second: 50
+          limit_by: ip
+
       - name: cors
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
@@ -61,6 +70,8 @@ services:
           header_claims: ["sub"]
           scope: ${openid_scope}
           validate_scope: "yes"
+          disable_userinfo_header: "yes"
+          disable_id_token_header: "yes"
 
       - name: openid-authzen
         tags: [ns.${gateway}.${ns_qualifier}]
