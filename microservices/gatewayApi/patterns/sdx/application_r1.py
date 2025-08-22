@@ -45,8 +45,7 @@ services:
           header_names: ["authorization"]
           scope: [ ${openid_scope} ]
           allowed_aud: ${openid_audience}
-          allowed_iss:
-          - ${openid_issuer}
+          allowed_iss: [ ${openid_issuer} ]
 
       - name: openid-authzen
         tags: [ns.${gateway}.${ns_qualifier}]
