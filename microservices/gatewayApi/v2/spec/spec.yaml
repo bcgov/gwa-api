@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 2.0.0
+  version: 2.1.0
   title: Gateway Administration (GWA) API
   license:
     name: Apache 2.0
@@ -35,6 +35,54 @@ paths:
           $ref: "#/components/responses/401Unauthorized"
         "400":
           $ref: "#/components/responses/400BadRequest"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
+
+  /namespaces/{namespace}/gateway/patterns:
+    put:
+      summary: Updates the gateway config based on pre-defined patterns
+      description: Returns the changes that were performed
+      tags:
+        - Gateway
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pattern:
+                  type: string
+                  description: The pattern to apply
+                  enum:
+                    - sdx-application-r1
+                    - sdx-service-r1
+                service_name:
+                  type: string
+                  description: The name of the service
+                upstream_uri:
+                  type: string
+                  description: The upstream URI
+                route_host:
+                  type: string
+                  description: The API host
+                route_path:
+                  type: string
+                  description: The provider resource locator
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
         "500":
           $ref: "#/components/responses/500InternalServerError"
 

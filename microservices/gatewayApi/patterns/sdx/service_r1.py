@@ -1,0 +1,51 @@
+
+from string import Template
+
+
+
+###
+### Service API
+###
+### - all routes are protected by mTLS
+### - default 401 response for all requests
+###
+template = Template("""
+_format_version: "3.0"
+services:
+  - name: ${service_name}
+    url: ${upstream_uri}
+    tags: [ns.${gateway}]
+    plugins:
+    - name: mtls-auth
+      tags: [ns.${gateway}]
+      config:
+        error_response_code: 401
+        upstream_cert_cn_header: "X-CERT-CN"
+        upstream_cert_fingerprint_header: "X-CERT-FINGERPRINT"
+        upstream_cert_i_dn_header: "X-CERT-I-DN"
+        upstream_cert_s_dn_header: "X-CERT-S-DN"
+        upstream_cert_serial_header: "X-CERT-SERIAL"
+    - name: mtls-acl
+      tags: [ns.${gateway}]
+      enabled: true
+      config:
+        certificate_header_name: X-CERT-S-DN
+        allow: [ ${ap_allow_list} ]
+    routes:
+    - name: ${service_name}.DENY
+      tags: [ns.${gateway}]
+      hosts:
+        - ${route_host}
+      paths:
+        - ${route_path}
+      methods:
+        - GET
+      strip_path: true
+      https_redirect_status_code: 426
+      path_handling: v0
+      request_buffering: true
+      response_buffering: true
+""")
+
+def eval_service_pattern (context):
+  return template.substitute(context)

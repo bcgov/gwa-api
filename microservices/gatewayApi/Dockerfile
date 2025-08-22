@@ -5,7 +5,7 @@
 #  && go mod download \
 #  && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o deck \
 #       -ldflags "-s -w -X github.com/kong/deck/cmd.VERSION=$TAG -X github.com/kong/deck/cmd.COMMIT=$COMMIT"
-FROM python:3.11-alpine3.20
+FROM python:3.13-alpine3.22
 
 RUN mkdir /.kube
 
@@ -36,7 +36,7 @@ RUN python -m pip install --upgrade pip
 RUN pip uninstall urllib3 && pip install urllib3
 RUN cd /tmp && \
     curl -sSL https://install.python-poetry.org > get-poetry.py && \
-    POETRY_HOME=/opt/poetry python get-poetry.py --version 1.8.2 && \
+    POETRY_HOME=/opt/poetry python get-poetry.py --version 1.8.5 && \
     cd /usr/local/bin && \
     ln -s /opt/poetry/bin/poetry && \
     poetry config virtualenvs.create false
