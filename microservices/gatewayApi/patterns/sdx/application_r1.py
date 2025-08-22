@@ -60,16 +60,17 @@ services:
         config:
           client_secret: NOT_APPLICABLE
           client_id: NOT_APPLICABLE
-          header_names: ["X-PERSON-PPID"]
+          header_names: ["X-PERSON-PPID", "X-AZP-CLIENT-ID"]
           bearer_jwt_auth_allowed_auds: [ ${openid_audience} ]
           unauth_action: deny
           bearer_only: "yes"
           use_jwks: "yes"
           bearer_jwt_auth_enable: "yes"
           discovery: ${openid_issuer}/.well-known/openid-configuration
-          header_claims: ["sub"]
-          scope: ${openid_scope}
-          validate_scope: "yes"
+          header_claims: ["sub", "azp"]
+          # scope and validate_scope do nothing when bearer_jwt_auth_enable is "yes"
+          # scope: ${openid_scope}
+          # validate_scope: "yes"
           disable_userinfo_header: "yes"
           disable_id_token_header: "yes"
 
