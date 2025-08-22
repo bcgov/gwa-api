@@ -74,6 +74,11 @@ paths:
                 route_path:
                   type: string
                   description: The provider resource locator
+                mtls_allow_list:
+                  type: array
+                  items:
+                    type: string
+                  description: The allow list for the access point
       responses:
         "200":
           description: Success

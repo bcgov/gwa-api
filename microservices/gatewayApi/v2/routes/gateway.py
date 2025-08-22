@@ -517,8 +517,8 @@ def patterned_write_config(namespace: str) -> object:
 
     # dfile.save("%s/%s" % (tempFolder, 'config.yaml'))
 
-    gw_pattern_context : GatewayConfigPattern = request.get_json()
-    gw_pattern_context.gateway = namespace
+    gw_pattern_context = GatewayConfigPattern (**request.get_json())
+    gw_pattern_context.set_gateway(namespace)
 
     dfile = gw_pattern_context.get_config_file()
 

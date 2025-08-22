@@ -669,22 +669,23 @@ test = ["objgraph", "psutil", "setuptools"]
 
 [[package]]
 name = "gunicorn"
-version = "20.1.0"
+version = "23.0.0"
 description = "WSGI HTTP Server for UNIX"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.7"
 files = [
-    {file = "gunicorn-20.1.0-py3-none-any.whl", hash = "sha256:9dcc4547dbb1cb284accfb15ab5667a0e5d1881cc443e0677b4882a4067a807e"},
-    {file = "gunicorn-20.1.0.tar.gz", hash = "sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8"},
+    {file = "gunicorn-23.0.0-py3-none-any.whl", hash = "sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d"},
+    {file = "gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec"},
 ]
 
 [package.dependencies]
-setuptools = ">=3.0"
+packaging = "*"
 
 [package.extras]
-eventlet = ["eventlet (>=0.24.1)"]
+eventlet = ["eventlet (>=0.24.1,!=0.36.0)"]
 gevent = ["gevent (>=1.4.0)"]
 setproctitle = ["setproctitle"]
+testing = ["coverage", "eventlet", "gevent", "pytest", "pytest-cov"]
 tornado = ["tornado (>=0.2)"]
 
 [[package]]
@@ -757,13 +758,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jmespath"
-version = "0.10.0"
+version = "1.0.1"
 description = "JSON Matching Expressions"
 optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+python-versions = ">=3.7"
 files = [
-    {file = "jmespath-0.10.0-py2.py3-none-any.whl", hash = "sha256:cdf6525904cc597730141d61b36f2e4b8ecc257c420fa2f4549bac2c2d0cb72f"},
-    {file = "jmespath-0.10.0.tar.gz", hash = "sha256:b85d0567b8666149a93172712e68920734333c0ce7e89b78b3e987f71e5ed4f9"},
+    {file = "jmespath-1.0.1-py3-none-any.whl", hash = "sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980"},
+    {file = "jmespath-1.0.1.tar.gz", hash = "sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe"},
 ]
 
 [[package]]
@@ -1091,17 +1092,22 @@ test = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "python-keycloak"
-version = "0.22.0"
+version = "0.29.1"
 description = "python-keycloak is a Python package providing access to the Keycloak API."
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "python-keycloak-0.22.0.tar.gz", hash = "sha256:8f2ea277c94cee1de108fd6a018d52d23a603dea6bfb7cdd8eeeb09963bbdade"},
+    {file = "python-keycloak-0.29.1.tar.gz", hash = "sha256:92bfc40c648c72704f9733268c079c8d290f0a16b1007e49f9f1b1fdee585018"},
+    {file = "python_keycloak-0.29.1-py3-none-any.whl", hash = "sha256:9889543fc87ac8a0475a387ee6e2f1353ce59f4b2650ad0ae8526f8cdfe47756"},
 ]
 
 [package.dependencies]
 python-jose = ">=1.4.0"
 requests = ">=2.20.0"
+urllib3 = ">=1.26.0"
+
+[package.extras]
+docs = ["alabaster", "commonmark", "m2r2", "mock", "readthedocs-sphinx-ext", "recommonmark", "sphinx", "sphinx-autoapi", "sphinx-rtd-theme"]
 
 [[package]]
 name = "pyyaml"
@@ -1366,4 +1372,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "36c41b6fe629617dfbfc103a335671e3d5e340948f3fc046d33623fba700bc18"
+content-hash = "ce6beffb766cd79fd4eef48eb49687a8b1f2c8719c8208580f2b1e7f76302c14"
