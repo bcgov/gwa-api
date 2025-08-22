@@ -15,6 +15,8 @@ services:
   - name: ${service_name}
     url: ${upstream_uri}
     tags: [ns.${gateway}.${ns_qualifier}]
+    retries: 0
+    tls_verify: false
     plugins:
     - name: mtls-auth
       tags: [ns.${gateway}.${ns_qualifier}]
@@ -32,7 +34,7 @@ services:
         certificate_header_name: X-CERT-S-DN
         allow: [ ${mtls_allow_list} ]
     routes:
-    - name: ${service_name}.DENY
+    - name: ${service_name}
       tags: [ns.${gateway}.${ns_qualifier}]
       hosts:
         - ${route_host}
