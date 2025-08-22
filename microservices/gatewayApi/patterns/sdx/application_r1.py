@@ -37,6 +37,16 @@ services:
         request_buffering: true
         response_buffering: true
     plugins:
+      - name: jwt-keycloak
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          header_names: ["authorization"]
+          scope: [ ${openid_scope} ]
+          allowed_aud: ${openid_audience}
+          allowed_iss:
+          - ${openid_issuer}
+
       - name: openid-authzen
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true

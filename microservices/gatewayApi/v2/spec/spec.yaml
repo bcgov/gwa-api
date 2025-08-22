@@ -62,6 +62,9 @@ paths:
                   enum:
                     - sdx-application-r1
                     - sdx-service-r1
+                ns_qualifier:
+                  type: string
+                  description: The namespace qualifier
                 service_name:
                   type: string
                   description: The name of the service
@@ -79,6 +82,15 @@ paths:
                   items:
                     type: string
                   description: The allow list for the access point
+                openid_issuer:
+                  type: string
+                  description: The OpenID Connect issuer URL
+                openid_audience:
+                  type: string
+                  description: The OpenID Connect audience
+                openid_scope:
+                  type: string
+                  description: The OpenID Connect scope
       responses:
         "200":
           description: Success

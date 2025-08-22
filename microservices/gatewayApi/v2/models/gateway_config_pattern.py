@@ -16,7 +16,7 @@ from patterns.eval import evaluate_pattern
 # obj = GatewayConfigPattern(**data)
 class GatewayConfigPattern:
     def __init__(self, pattern: str, service_name: str, upstream_uri: str,
-           route_host: str, route_path: str, mtls_allow_list: str, ns_qualifer: str, gateway: str = None):
+           route_host: str, route_path: str, mtls_allow_list: str, ns_qualifer: str, openid_issuer, openid_audience, openid_scope, gateway: str = None):
       self.pattern = pattern
       self.gateway = gateway
       self.ns_qualifier = ns_qualifer
@@ -25,6 +25,9 @@ class GatewayConfigPattern:
       self.route_host = route_host
       self.route_path = route_path
       self.mtls_allow_list = mtls_allow_list
+      self.openid_audience = openid_audience
+      self.openid_issuer = openid_issuer
+      self.openid_scope = openid_scope
 
     def get_config_file(self):
         context = {
@@ -35,6 +38,9 @@ class GatewayConfigPattern:
             'route_host': self.route_host,
             'route_path': self.route_path,
             'mtls_allow_list': self.mtls_allow_list,
+            'openid_issuer': self.openid_issuer,
+            'openid_audience': self.openid_audience,
+            'openid_scope': self.openid_scope,
         }
         
         return evaluate_pattern(self.pattern, context)
