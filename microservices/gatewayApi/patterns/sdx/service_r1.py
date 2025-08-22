@@ -14,10 +14,10 @@ _format_version: "3.0"
 services:
   - name: ${service_name}
     url: ${upstream_uri}
-    tags: [ns.${gateway}]
+    tags: [ns.${gateway}.${ns_qualifier}]
     plugins:
     - name: mtls-auth
-      tags: [ns.${gateway}]
+      tags: [ns.${gateway}.${ns_qualifier}]
       config:
         error_response_code: 401
         upstream_cert_cn_header: "X-CERT-CN"
@@ -26,14 +26,14 @@ services:
         upstream_cert_s_dn_header: "X-CERT-S-DN"
         upstream_cert_serial_header: "X-CERT-SERIAL"
     - name: mtls-acl
-      tags: [ns.${gateway}]
+      tags: [ns.${gateway}.${ns_qualifier}]
       enabled: true
       config:
         certificate_header_name: X-CERT-S-DN
-        allow: [ ${ap_allow_list} ]
+        allow: [ ${mtls_allow_list} ]
     routes:
     - name: ${service_name}.DENY
-      tags: [ns.${gateway}]
+      tags: [ns.${gateway}.${ns_qualifier}]
       hosts:
         - ${route_host}
       paths:

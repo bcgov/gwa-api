@@ -16,12 +16,12 @@ _format_version: "3.0"
 services:
   - name: ${service_name}
     url: ${upstream_uri}
-    tags: [ns.${gateway}]
+    tags: [ns.${gateway}.${ns_qualifier}]
     retries: 0
     tls_verify: true
     routes:
       - name: ${service_name}
-        tags: [ns.${gateway}]
+        tags: [ns.${gateway}.${ns_qualifier}]
         hosts:
           - ${route_host}
         paths:
@@ -35,7 +35,7 @@ services:
         response_buffering: true
     plugins:
       - name: openid-authzen
-        tags: [ns.${gateway}]
+        tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
         config:
           # lua_ssl_trusted_certificate has to have the CA's - otherwise "unable to get local issuer certificate"
@@ -46,7 +46,7 @@ services:
           # action_name: "read"
 
       - name: kong-upstream-jwt
-        tags: [ns.${gateway}]
+        tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
         config:
           header: "SDX-AP-AUTH"
