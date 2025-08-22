@@ -33,7 +33,16 @@ services:
         config:
           certificate_header_name: X-CERT-S-DN
           allow: [ ${mtls_allow_list} ]
-                    
+
+      - name: jwt-keycloak_1010
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          allowed_iss:
+            - https://aps-jwks-upstream-jwt-api-gov-bc-ca-lab.dev.api.gov.bc.ca
+          allowed_aud: ${consumer_client_id}
+          header_names: [ SDX-AP-AUTH ]
+
       - name: oidc
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true

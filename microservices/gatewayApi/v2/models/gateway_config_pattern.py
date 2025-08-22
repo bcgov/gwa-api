@@ -15,11 +15,12 @@ from patterns.eval import evaluate_pattern
 # data = json.loads(json_data)
 # obj = GatewayConfigPattern(**data)
 class GatewayConfigPattern:
-    def __init__(self, pattern: str, service_name: str, upstream_uri: str,
+    def __init__(self, pattern: str, service_name: str, upstream_uri: str, consumer_client_id: str,
            route_host: str, route_path: str, mtls_allow_list: str, ns_qualifer: str, openid_issuer, openid_audience, openid_scope, gateway: str = None):
       self.pattern = pattern
       self.gateway = gateway
       self.ns_qualifier = ns_qualifer
+      self.consumer_client_id = consumer_client_id
       self.service_name = service_name
       self.upstream_uri = upstream_uri
       self.route_host = route_host
@@ -33,6 +34,7 @@ class GatewayConfigPattern:
         context = {
             'gateway': self.gateway,
             'ns_qualifier': self.ns_qualifier,
+            'consumer_client_id': self.consumer_client_id,
             'service_name': self.service_name,
             'upstream_uri': self.upstream_uri,
             'route_host': self.route_host,
