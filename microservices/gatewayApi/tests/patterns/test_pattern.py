@@ -11,6 +11,9 @@ def test_service_r1(client):
         'mtls_allow_list': 'ap-01.example.com',
         'route_host': 'ap-02.example.com',
         'route_path': '/LAB/MIN/CITZ/MY-SERVICE',
+        'openid_issuer': '',
+        'openid_audience': '',
+        'openid_scope': '',
     }
     
     response = evaluate_pattern('sdx-service-r1', context)
@@ -27,6 +30,9 @@ def test_application_r1(client):
         'upstream_uri': 'https://ap-02.example.com',
         'route_host': 'ap-01.example.com',
         'route_path': '/LAB/MIN/CITZ/OTHER-SERVICE',
+        'openid_issuer': '',
+        'openid_audience': '',
+        'openid_scope': '',
     }
 
     response = evaluate_pattern('sdx-application-r1', context)
