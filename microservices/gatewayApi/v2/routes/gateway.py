@@ -457,7 +457,10 @@ def patterned_write_config(namespace: str) -> object:
     :return: JSON of success message or error message
     """
 
-    dry_run = False
+    config = request.get_json()
+
+    dry_run = config.get("dryRun", True)
+    document = config.get("document", {})
 
     event_id = str(uuid.uuid4())
 
@@ -517,7 +520,7 @@ def patterned_write_config(namespace: str) -> object:
 
     # dfile.save("%s/%s" % (tempFolder, 'config.yaml'))
 
-    gw_pattern_context = GatewayConfigPattern (**request.get_json())
+    gw_pattern_context = GatewayConfigPattern (**document)
     gw_pattern_context.set_gateway(namespace)
 
     dfile = gw_pattern_context.get_config_file()
