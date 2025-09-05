@@ -14,7 +14,7 @@ _format_version: "3.0"
 services:
   - name: ${service_name}
     url: ${upstream_uri}
-    tags: [ns.${gateway}]
+    tags: [ns.${gateway}.${ns_qualifier}]
     plugins:
     - name: mtls-auth
       tags: [ns.${gateway}]
@@ -26,14 +26,14 @@ services:
         upstream_cert_s_dn_header: "X-CERT-S-DN"
         upstream_cert_serial_header: "X-CERT-SERIAL"
     - name: mtls-acl
-      tags: [ns.${gateway}]
+      tags: [ns.${gateway}.${ns_qualifier}]
       enabled: true
       config:
         certificate_header_name: X-CERT-S-DN
         allow: [ ${ap_allow_list} ]
     routes:
     - name: ${service_name}.DENY
-      tags: [ns.${gateway}]
+      tags: [ns.${gateway}.${ns_qualifier}]
       hosts:
         - ${ap_host}
       paths:
@@ -47,12 +47,12 @@ services:
       response_buffering: true
       plugins:
       - name: request-termination
-        tags: [ns.${gateway}]
+        tags: [ns.${gateway}.${ns_qualifier}]
         config:
           status_code: 401
-          message: "Access Denied. Please login to access this service."
+          message: "Access Denied. Route not found."
 
 """)
 
-def eval_pattern (context):
+def eval_access_point_pattern (context):
   return template.substitute(context)

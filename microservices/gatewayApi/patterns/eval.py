@@ -1,5 +1,6 @@
 from patterns.sdx.service_r1 import  eval_service_pattern;
 from patterns.sdx.application_r1 import eval_application_pattern
+from patterns.sdx.access_point_r1 import eval_access_point_pattern
 
 def evaluate_pattern(pattern, context):
     """
@@ -10,5 +11,7 @@ def evaluate_pattern(pattern, context):
         return eval_service_pattern(context)
     elif pattern == 'sdx-application-r1':
         return eval_application_pattern(context)
+    elif pattern == 'sdx-access-point-r1':
+        return eval_access_point_pattern(context)
     else:
         raise ValueError(f"Unknown pattern: {pattern}")
