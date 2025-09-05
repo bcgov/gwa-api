@@ -66,7 +66,7 @@ services:
 
     routes:
       - name: ${service_name}
-        tags: [ns.${gateway}.${ns_qualifier}]
+        tags: [ns.${gateway}.${ns_qualifier}, sdx]
         hosts:
           - ${route_host}
         paths:

@@ -20,12 +20,28 @@ services:
     retries: 0
     tls_verify: true
     routes:
-      - name: ${service_name}
-        tags: [ns.${gateway}.${ns_qualifier}]
+      - name: ${service_name}-OPTIONS
+        tags: [ns.${gateway}.${ns_qualifier}, sdx]
         hosts:
           - ${route_host}
         paths:
           - ${route_path}
+        methods:
+          - OPTIONS
+        strip_path: false
+        https_redirect_status_code: 426
+        path_handling: v0
+        request_buffering: true
+        response_buffering: true
+                    
+      - name: ${service_name}
+        tags: [ns.${gateway}.${ns_qualifier}, sdx]
+        hosts:
+          - ${route_host}
+        paths:
+          - ${route_path}
+        headers:
+          - X-Client-Id:${consumer_uri}
         methods:
           - GET
           - POST
