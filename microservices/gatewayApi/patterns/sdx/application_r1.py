@@ -69,6 +69,7 @@ services:
         config:
           origins: ["*"]
           methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+          headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id"]
                     
       - name: oidc
         tags: [ns.${gateway}.${ns_qualifier}]
