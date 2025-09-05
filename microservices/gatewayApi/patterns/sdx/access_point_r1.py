@@ -17,7 +17,8 @@ services:
     tags: [ns.${gateway}.${ns_qualifier}]
     plugins:
     - name: mtls-auth
-      tags: [ns.${gateway}]
+      tags: [ns.${gateway}.${ns_qualifier}]
+      enabled: false
       config:
         error_response_code: 401
         upstream_cert_cn_header: "X-CERT-CN"
@@ -27,7 +28,7 @@ services:
         upstream_cert_serial_header: "X-CERT-SERIAL"
     - name: mtls-acl
       tags: [ns.${gateway}.${ns_qualifier}]
-      enabled: true
+      enabled: false
       config:
         certificate_header_name: X-CERT-S-DN
         allow: [ ${ap_allow_list} ]
