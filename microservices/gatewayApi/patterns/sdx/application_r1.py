@@ -41,7 +41,7 @@ services:
         paths:
           - ${route_path}
         headers:
-          - X-Client-Id:${consumer_uri}
+          "X-Client-Id": [ ${consumer_uri} ]
         methods:
           - GET
           - POST
