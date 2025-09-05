@@ -36,11 +36,15 @@ services:
     - name: ${service_name}.DENY
       tags: [ns.${gateway}.${ns_qualifier}]
       hosts:
-        - ${ap_host}
+        - ${route_host}
       paths:
-        - /
+        - ${route_path}
       methods:
         - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
       strip_path: true
       https_redirect_status_code: 426
       path_handling: v0
