@@ -80,55 +80,57 @@ def delete_config(namespace: str, qualifier="") -> object:
         abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
 
     elif cmd == "sync" and not local_environment:
-        try:
-            session = requests.Session()
-            session.headers.update({"Content-Type": "application/json"})
-            route_payload = {
-                "hosts": get_host_list(tempFolder),
-                "select_tag": selectTag,
-                "ns_attributes": ns_attributes.getAttrs()
-            }
-            dp = get_data_plane(ns_attributes)
-            rqst_url = app.config['data_planes'][dp]["kube-api"]
-            log.debug("[%s] - Initiating request to kube API" % (dp))
-            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
-                app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
-            log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
-            if res.status_code != 201:
-                log.debug("[%s] - The kube API could not process the request" % (dp))
-                raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
-            # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
-            # log.debug("%s - Prepared %d routes" % (namespace, route_count))
-            # if route_count > 0:
-            #     apply_routes(tempFolder)
-            #     log.debug("%s - Applied %d routes" % (namespace, route_count))
-            # route_count = prepare_delete_routes(namespace, selectTag, tempFolder)
-            # log.debug("%s - Prepared %d deletions" % (namespace, route_count))
-            # if route_count > 0:
-            #     delete_routes(tempFolder)
+        dp = get_data_plane(ns_attributes)
+        if not dp.startswith("sdx-"):
 
-            # # create Network Security Policies (nsp) for any upstream that
-            # # has the format: <name>.<ocp_ns>.svc
-            # log.debug("%s - Update NSPs" % (namespace))
-            # ocp_ns_list = get_ocp_service_namespaces(tempFolder)
-            # for ocp_ns in ocp_ns_list:
-            #     if check_nsp(namespace, ocp_ns) is False:
-            #         apply_nsp(namespace, ocp_ns, tempFolder)
+            try:
+                session = requests.Session()
+                session.headers.update({"Content-Type": "application/json"})
+                route_payload = {
+                    "hosts": get_host_list(tempFolder),
+                    "select_tag": selectTag,
+                    "ns_attributes": ns_attributes.getAttrs()
+                }
+                rqst_url = app.config['data_planes'][dp]["kube-api"]
+                log.debug("[%s] - Initiating request to kube API" % (dp))
+                res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+                    app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+                log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
+                if res.status_code != 201:
+                    log.debug("[%s] - The kube API could not process the request" % (dp))
+                    raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
+                # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
+                # log.debug("%s - Prepared %d routes" % (namespace, route_count))
+                # if route_count > 0:
+                #     apply_routes(tempFolder)
+                #     log.debug("%s - Applied %d routes" % (namespace, route_count))
+                # route_count = prepare_delete_routes(namespace, selectTag, tempFolder)
+                # log.debug("%s - Prepared %d deletions" % (namespace, route_count))
+                # if route_count > 0:
+                #     delete_routes(tempFolder)
 
-            # ok all looks good, so update a secret containing the original submitted request
-            # log.debug("%s - Update Original Config" % (namespace))
-            # write_submitted_config("", tempFolder)
-            # prep_and_apply_secret(namespace, selectTag, tempFolder)
-            # log.debug("%s - Updated Original Config" % (namespace))
-            session.close()
-        except HTTPException as ex:
-            traceback.print_exc()
-            log.error("Error updating custom routes. %s" % ex)
-            abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
-        except:
-            traceback.print_exc()
-            log.error("Error updating custom routes. %s" % sys.exc_info()[0])
-            abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
+                # # create Network Security Policies (nsp) for any upstream that
+                # # has the format: <name>.<ocp_ns>.svc
+                # log.debug("%s - Update NSPs" % (namespace))
+                # ocp_ns_list = get_ocp_service_namespaces(tempFolder)
+                # for ocp_ns in ocp_ns_list:
+                #     if check_nsp(namespace, ocp_ns) is False:
+                #         apply_nsp(namespace, ocp_ns, tempFolder)
+
+                # ok all looks good, so update a secret containing the original submitted request
+                # log.debug("%s - Update Original Config" % (namespace))
+                # write_submitted_config("", tempFolder)
+                # prep_and_apply_secret(namespace, selectTag, tempFolder)
+                # log.debug("%s - Updated Original Config" % (namespace))
+                session.close()
+            except HTTPException as ex:
+                traceback.print_exc()
+                log.error("Error updating custom routes. %s" % ex)
+                abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
+            except:
+                traceback.print_exc()
+                log.error("Error updating custom routes. %s" % sys.exc_info()[0])
+                abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
 
     cleanup(tempFolder)
 
