@@ -542,12 +542,11 @@ def patterned_write_config(namespace: str) -> object:
         # to be a delete document
         select_tag_qualifier = delete_qualifier
 
-        delete_doc = [
-            {
-                "_format_version": "3.0",
-                "services": []
-            }
-        ]
+        delete_doc = {
+            "_format_version": "3.0",
+            "services": []
+        }
+
         yaml_documents = [ yaml.load(yaml.dump(delete_doc), Loader=yaml.FullLoader) ]
 
     selectTag = "ns.%s" % namespace
