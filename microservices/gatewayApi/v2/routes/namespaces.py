@@ -120,32 +120,33 @@ def delete_namespace(namespace: str) -> object:
         abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
 
     elif cmd == "sync" and not local_environment:
-        try:
-            session = requests.Session()
-            session.headers.update({"Content-Type": "application/json"})
-            route_payload = {
-                "hosts": get_host_list(tempFolder),
-                "select_tag": selectTag,
-                "ns_attributes": ns_attributes.getAttrs()
-            }
-            dp = get_data_plane(ns_attributes)
-            rqst_url = app.config['data_planes'][dp]['kube-api']
-            log.debug("[%s] - Initiating request to kube API" % (dp))
-            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
-                app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
-            log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
-            if res.status_code != 201:
-                log.debug("[%s] - The kube API could not process the request" % (dp))
-                raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
-            session.close()
-        except HTTPException as ex:
-            traceback.print_exc()
-            log.error("Error updating custom routes. %s" % ex)
-            abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
-        except:
-            traceback.print_exc()
-            log.error("Error updating custom routes. %s" % sys.exc_info()[0])
-            abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
+        dp = get_data_plane(ns_attributes)
+        if not dp.startswith("sdx-"):
+            try:
+                session = requests.Session()
+                session.headers.update({"Content-Type": "application/json"})
+                route_payload = {
+                    "hosts": get_host_list(tempFolder),
+                    "select_tag": selectTag,
+                    "ns_attributes": ns_attributes.getAttrs()
+                }
+                rqst_url = app.config['data_planes'][dp]['kube-api']
+                log.debug("[%s] - Initiating request to kube API" % (dp))
+                res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+                    app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+                log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
+                if res.status_code != 201:
+                    log.debug("[%s] - The kube API could not process the request" % (dp))
+                    raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
+                session.close()
+            except HTTPException as ex:
+                traceback.print_exc()
+                log.error("Error updating custom routes. %s" % ex)
+                abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
+            except:
+                traceback.print_exc()
+                log.error("Error updating custom routes. %s" % sys.exc_info()[0])
+                abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
 
     cleanup(tempFolder)
 
