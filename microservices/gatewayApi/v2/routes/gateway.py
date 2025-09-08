@@ -459,6 +459,8 @@ def patterned_write_config(namespace: str) -> object:
 
     config = request.get_json()
 
+    delete = config.get("delete", False)
+    delete_qualifier = config.get("deleteQualifier", None)
     dry_run = config.get("dryRun", True)
     document = config.get("document", {})
 
@@ -486,6 +488,9 @@ def patterned_write_config(namespace: str) -> object:
 
     dfile = None
     select_tag_qualifier = None
+
+    if delete:
+        select_tag_qualifier = delete_qualifier
 
     # if 'configFile' in request.files and not request.files['configFile'].filename == '':
     #     log.debug("[%s] %s", namespace, request.files['configFile'])
@@ -531,6 +536,19 @@ def patterned_write_config(namespace: str) -> object:
     if len(yaml_documents) == 0:
         log.error("%s - %s" % (namespace, "Empty Configuration Passed"))
         abort_early(event_id, 'publish', namespace, jsonify(error="Empty Configuration Passed"))
+
+    if delete:
+        # if deleting, then set the select tag qualifier and override the document
+        # to be a delete document
+        select_tag_qualifier = delete_qualifier
+
+        delete_doc = [
+            {
+                "_format_version": "3.0",
+                "services": []
+            }
+        ]
+        yaml_documents = [ yaml.load(yaml.dump(delete_doc), Loader=yaml.FullLoader) ]
 
     selectTag = "ns.%s" % namespace
     ns_qualifier = None
