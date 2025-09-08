@@ -16,10 +16,10 @@ from patterns.eval import evaluate_pattern
 # obj = GatewayConfigPattern(**data)
 class GatewayConfigPattern:
     def __init__(self, pattern: str, service_name: str, upstream_uri: str, consumer_uri: str, consumer_client_id: str,
-           route_host: str, route_path: str, mtls_allow_list: str, ns_qualifer: str, openid_issuer, openid_audience, openid_scope, gateway: str = None):
+           route_host: str, route_path: str, mtls_allow_list: str, ns_qualifier: str, openid_issuer, openid_audience, openid_scope, gateway: str = None):
       self.pattern = pattern
       self.gateway = gateway
-      self.ns_qualifier = ns_qualifer
+      self.ns_qualifier = ns_qualifier
       self.consumer_uri = consumer_uri
       self.consumer_client_id = consumer_client_id
       self.service_name = service_name

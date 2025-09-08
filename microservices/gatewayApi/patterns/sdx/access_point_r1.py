@@ -31,7 +31,7 @@ services:
       enabled: false
       config:
         certificate_header_name: X-CERT-S-DN
-        allow: [ ${ap_allow_list} ]
+        allow: [ ${mtls_allow_list} ]
     routes:
     - name: ${service_name}.DENY
       tags: [ns.${gateway}.${ns_qualifier}]
