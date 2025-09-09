@@ -40,8 +40,6 @@ services:
           - ${route_host}
         paths:
           - ${route_path}
-        headers:
-          "X-Client-Id": [ ${consumer_uri} ]
         methods:
           - GET
           - POST
@@ -111,6 +109,14 @@ services:
           key_id: aps-kong-gateway
           issuer: https://aps-jwks-upstream-jwt-api-gov-bc-ca-lab.dev.api.gov.bc.ca
 
+      - name: request-transformer
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          add:
+            headers:
+              - "X-Client-Id:${consumer_uri}"
+                    
       # - name: oidc
       #   tags: [ns.gw-0a524]
       #   enabled: true

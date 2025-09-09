@@ -64,6 +64,15 @@ services:
           disable_userinfo_header: "yes"
           disable_id_token_header: "yes"
 
+      - name: response-signer
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          public_key_location: /etc/secrets/kong-upstream-jwt/tls.crt
+          private_key_location: /etc/secrets/kong-upstream-jwt/tls.key
+          key_id: "aps-kong-gateway"
+          issuer: "https://aps-jwks-upstream-jwt-api-gov-bc-ca-lab.dev.api.gov.bc.ca"
+        
     routes:
       - name: ${service_name}
         tags: [ns.${gateway}.${ns_qualifier}, sdx]
@@ -71,6 +80,8 @@ services:
           - ${route_host}
         paths:
           - ${route_path}
+        headers:
+          "X-Client-Id": [ ${consumer_uri} ]                    
         methods:
           - GET
           - POST
