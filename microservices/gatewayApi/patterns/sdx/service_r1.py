@@ -64,15 +64,6 @@ services:
           disable_userinfo_header: "yes"
           disable_id_token_header: "yes"
 
-      - name: response-signer
-        tags: [ns.${gateway}.${ns_qualifier}]
-        enabled: true
-        config:
-          public_key_location: /etc/secrets/kong-upstream-jwt/tls.crt
-          private_key_location: /etc/secrets/kong-upstream-jwt/tls.key
-          key_id: "aps-kong-gateway"
-          issuer: "https://aps-jwks-upstream-jwt-api-gov-bc-ca-lab.dev.api.gov.bc.ca"
-        
     routes:
       - name: ${service_name}
         tags: [ns.${gateway}.${ns_qualifier}, sdx]
@@ -92,6 +83,36 @@ services:
         path_handling: v0
         request_buffering: true
         response_buffering: true
+                    
+      - name: ${service_name}-SIGNED
+        tags: [ns.${gateway}.${ns_qualifier}, sdx]
+        hosts:
+          - ${route_host}
+        paths:
+          - ${route_path}
+        headers:
+          "X-Client-Id": [ ${consumer_uri} ]
+          "X-SDX-AP-SIGN": ["YES"]
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+        strip_path: true
+        https_redirect_status_code: 426
+        path_handling: v0
+        request_buffering: true
+        response_buffering: true
+        plugins:
+        - name: response-signer
+          tags: [ns.${gateway}.${ns_qualifier}]
+          enabled: true
+          config:
+            public_key_location: /etc/secrets/kong-upstream-jwt/tls.crt
+            private_key_location: /etc/secrets/kong-upstream-jwt/tls.key
+            key_id: "aps-kong-gateway"
+            issuer: "https://aps-jwks-upstream-jwt-api-gov-bc-ca-lab.dev.api.gov.bc.ca"
+
 """)
 
 def eval_service_pattern (context):
