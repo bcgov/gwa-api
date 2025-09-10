@@ -32,6 +32,11 @@ services:
       config:
         certificate_header_name: X-CERT-S-DN
         allow: [ ${mtls_allow_list} ]
+    - name: request-termination
+      tags: [ns.${gateway}.${ns_qualifier}]
+      config:
+        status_code: 401
+        message: "Access Denied. Route not found."                    
     routes:
     - name: ${service_name}.DENY
       tags: [ns.${gateway}.${ns_qualifier}, sdx]
@@ -50,18 +55,12 @@ services:
       path_handling: v0
       request_buffering: true
       response_buffering: true
-      plugins:
-      - name: request-termination
-        tags: [ns.${gateway}.${ns_qualifier}]
-        config:
-          status_code: 401
-          message: "Access Denied. Route not found."
 
-  - name: ${service_name}-CONSOLE
+  - name: ${service_name}.CONSOLE
     url: https://sdx-beta-api-gov-bc-ca-lab.dev.api.gov.bc.ca
     tags: [ns.${gateway}.${ns_qualifier}]
     routes:
-      - name: ${service_name}-CONSOLE
+      - name: ${service_name}.CONSOLE
         tags: [ns.${gateway}.${ns_qualifier}, sdx]
         hosts:
           - ${route_host}
@@ -77,12 +76,12 @@ services:
         request_buffering: true
         response_buffering: true
 
-  - name: ${service_name}-AUTH
+  - name: ${service_name}.AUTH
     url: https://httpbin.org
     tags: [ns.${gateway}.${ns_qualifier}]
     tls_verify: false
     routes:
-    - name: ${service_name}-AUTH
+    - name: ${service_name}.AUTH
       tags: [ns.${gateway}.${ns_qualifier}, sdx]
       hosts:
         - ${route_host}
