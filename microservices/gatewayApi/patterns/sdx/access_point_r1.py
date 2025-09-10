@@ -67,6 +67,8 @@ services:
           - ${route_host}
         paths:
           - /console
+          - /api/rd/
+          - /api/ds/
         methods:
           - GET
         strip_path: true
