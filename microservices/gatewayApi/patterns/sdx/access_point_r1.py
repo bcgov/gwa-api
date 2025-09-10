@@ -58,13 +58,13 @@ services:
           message: "Access Denied. Route not found."
 
   - name: ${service_name}-CONSOLE
-    url: http://sdx-demo-ui-lab-generic-api
+    url: https://sdx-beta-api-gov-bc-ca-lab.dev.api.gov.bc.ca
     tags: [ns.${gateway}.${ns_qualifier}]
     routes:
       - name: ${service_name}-CONSOLE
         tags: [ns.${gateway}.${ns_qualifier}, sdx]
         hosts:
-          - sdx.api.gov.bc.ca
+          - ${route_host}
         paths:
           - /console
         methods:
@@ -74,65 +74,6 @@ services:
         path_handling: v0
         request_buffering: true
         response_buffering: true
-                    
-  - name: ${service_name}-CONSOLE-DS
-    url: https://api-gov-bc-ca-lab.dev.api.gov.bc.ca/
-    tags: [ns.${gateway}.${ns_qualifier}]
-    routes:
-      - name: ${service_name}-CONSOLE-DS
-        tags: [ns.${gateway}.${ns_qualifier}, sdx]
-        hosts: 
-        - ${route_host}
-        paths:
-          - /api/ds
-        methods: [GET,PUT,POST,DELETE]
-        strip_path: true
-        preserve_host: false
-                    
-  - name: ${service_name}-CONSOLE-RD
-    url: https://bcgov.github.io/sdx-openapi/data/lab
-    tags: [ns.${gateway}.${ns_qualifier}]
-    routes:
-      - name: ${service_name}-CONSOLE-RD
-        tags: [ns.${gateway}.${ns_qualifier}, sdx]
-        hosts: 
-        - ${route_host}
-        paths:
-          - /api/rd
-        methods: [GET]
-        strip_path: true
-        preserve_host: false
-
-    plugins:
-    - name: pre-function
-      tags: [ns.${gateway}.${ns_qualifier}]
-      config:
-        access:
-        - |
-          -- Kong pre-function to rewrite the request path for /api/rd/{id} to /{id}.json
-          -- This function captures the {id} parameter and rewrites the path accordingly
-
-          -- Get the original request path
-          local original_path = ngx.var.request_uri
-
-          -- Use a pattern to extract the {id} from the path
-          local id = original_path:match("/api/rd/(.+)")
-
-          if id then
-              -- Construct the new path by appending .json to the extracted id
-              -- prepend current service path
-              local service = kong.router.get_service()
-              
-              local new_path = service.path .. "/" .. id .. ".json"
-
-              kong.service.request.set_path(new_path)
-
-              -- Optionally, log the path rewrite for debugging
-              ngx.log(ngx.WARN, "Rewritten path from ", original_path, " to ", new_path)
-          else
-              -- If no id is found, log a warning (optional)
-              ngx.log(ngx.WARN, "No ID found in the request path: ", original_path)
-          end                    
 
   - name: ${service_name}-AUTH
     url: https://httpbin.org
