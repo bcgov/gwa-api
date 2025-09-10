@@ -71,7 +71,7 @@ services:
           - /api/ds/
         methods:
           - GET
-        strip_path: true
+        strip_path: false
         https_redirect_status_code: 426
         path_handling: v0
         request_buffering: true
