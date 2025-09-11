@@ -42,7 +42,16 @@ services:
             - https://aps-jwks-upstream-jwt-api-gov-bc-ca-lab.dev.api.gov.bc.ca
           allowed_aud: ${consumer_client_id}
           header_names: [ SDX-AP-AUTH ]
-            
+
+      - name: jwt-keycloak
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          allowed_iss:
+            - ${openid_issuer}
+          allowed_aud: "${openid_audience}"
+          scope: "${openid_scope}"
+                                            
       - name: oidc
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
