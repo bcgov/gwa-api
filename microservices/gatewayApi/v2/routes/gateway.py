@@ -464,6 +464,7 @@ def patterned_write_config(namespace: str) -> object:
     delete = config.get("delete", False)
     delete_qualifier = config.get("deleteQualifier", None)
     dry_run = config.get("dryRun", True)
+    dump_only = config.get("dump", False)
     document = config.get("document", {})
 
     event_id = str(uuid.uuid4())
@@ -518,6 +519,8 @@ def patterned_write_config(namespace: str) -> object:
     cmd = "sync"
     if dry_run == 'true' or dry_run is True:
         cmd = "diff"
+    if dump_only == 'true' or dump_only is True:
+        cmd = "dump"
 
     if cmd == 'sync':
         record_gateway_event(event_id, 'publish', 'received', namespace)
