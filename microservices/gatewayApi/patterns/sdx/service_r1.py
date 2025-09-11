@@ -50,7 +50,8 @@ services:
           allowed_iss:
             - ${openid_issuer}
           allowed_aud: "${openid_audience}"
-          scope: "${openid_scope}"
+          scope:
+            - "${openid_scope}"
                                             
       - name: oidc
         tags: [ns.${gateway}.${ns_qualifier}]
