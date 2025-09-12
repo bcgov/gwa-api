@@ -116,9 +116,7 @@ services:
           config:
             access:
               - |
-                  local client_cert_path = "/etc/secrets/kong-client-tls/tls.crt"
-                  local client_key_path = "/etc/secrets/kong-client-tls/tls.key"
-
+                  local os = require "os"
                   local io = require "io"
                   local ssl = require('ngx.ssl')
 
@@ -128,6 +126,9 @@ services:
                   local httpc = http.new()
                   local req_body = kong.request.get_raw_body()
 
+                  local client_cert_path = os.getenv("KONG_CLIENT_SSL_CERT")
+                  local client_key_path = os.getenv("KONG_CLIENT_SSL_CERT_KEY")
+                    
                   if req_body then
                       -- Process the raw body string
                       kong.log.info("Request body: ", req_body)
@@ -161,8 +162,8 @@ services:
                   }
 
                   if not config.cert_file or not config.key_file then
-                      print("Failed to load certificates as cdata")
-                      return nil
+                      kong.log.info("Failed to load certificates as cdata")
+                      return kong.response.exit(500, "Failed to load certificates as cdata"))
                   end
                   
                   local res, err = httpc:request_uri(
