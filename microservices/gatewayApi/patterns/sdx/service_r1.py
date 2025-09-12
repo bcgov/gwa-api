@@ -125,4 +125,14 @@ services:
 """)
 
 def eval_service_pattern (context):
+  mtls_allow_list = context.get("mtls_allow_list", "")
+  # WORKAROUND - Seems like NGINX Client Cert does not include spaces
+  # when separating the DN attributes
+  # if mtls_allow_list has commas, then create two quoted values - one
+  # with a ", " and the other with just a ","
+  if "," in mtls_allow_list:
+    mtls_allow_list = f'"{mtls_allow_list.replace(",", ", ")}", "{mtls_allow_list}"'
+  else:
+    mtls_allow_list = f'"{mtls_allow_list}"'
+  context["mtls_allow_list"] = mtls_allow_list
   return template.substitute(context)
