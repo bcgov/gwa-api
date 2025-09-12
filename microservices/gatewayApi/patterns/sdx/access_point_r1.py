@@ -67,7 +67,6 @@ services:
         paths:
           - /console
           - /api/rd/
-          - /api/ds/
         methods:
           - GET
         strip_path: false
@@ -75,7 +74,22 @@ services:
         path_handling: v0
         request_buffering: true
         response_buffering: true
-
+      - name: ${service_name}.CONSOLE-DS-API
+        tags: [ns.${gateway}.${ns_qualifier}, sdx]
+        hosts:
+          - ${route_host}
+        paths:
+          - /api/ds/
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+        strip_path: false
+        https_redirect_status_code: 426
+        path_handling: v0
+        request_buffering: true
+        response_buffering: true
   - name: ${service_name}.AUTH
     url: https://httpbin.org
     tags: [ns.${gateway}.${ns_qualifier}]
