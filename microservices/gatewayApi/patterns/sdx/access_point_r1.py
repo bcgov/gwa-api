@@ -103,7 +103,6 @@ services:
         - /auth
       methods:
         - POST
-        - OPTIONS
       strip_path: false
       preserve_host: false
       https_redirect_status_code: 426
