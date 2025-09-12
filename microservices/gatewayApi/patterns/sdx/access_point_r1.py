@@ -137,8 +137,8 @@ services:
                   local function read_file(filename)
                       local file = io.open(filename, "r")
                       if not file then
-                          print("Error: Could not open file " .. filename)
-                          return nil
+                          kong.log.err("Error: Could not open file " .. filename)
+                          return kong.response.exit(500, "Error: Could not open file " .. filename)
                       end
                       
                       local content = file:read("*all")  -- Read entire file
@@ -162,8 +162,8 @@ services:
                   }
 
                   if not config.cert_file or not config.key_file then
-                      kong.log.info("Failed to load certificates as cdata")
-                      return kong.response.exit(500, "Failed to load certificates as cdata"))
+                      kong.log.err("Failed to load certificates as cdata")
+                      return kong.response.exit(500, "Failed to load certificates as cdata")
                   end
                   
                   local res, err = httpc:request_uri(
