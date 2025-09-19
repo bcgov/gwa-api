@@ -66,7 +66,26 @@ services:
           disable_id_token_header: "yes"
 
     routes:
-      - name: ${service_name}
+      - name: ${service_name}.OPTIONS
+        tags: [ns.${gateway}.${ns_qualifier}, sdx]
+        hosts:
+          - ${route_host}
+        paths:
+          - ${route_path}
+        methods:
+          - OPTIONS
+        strip_path: false
+        https_redirect_status_code: 426
+        path_handling: v0
+        request_buffering: true
+        response_buffering: true
+        plugins:
+        - name: jwt-keycloak
+          enabled: false
+        - name: oidc
+          enabled: false
+            
+      - name: ${service_name}.API
         tags: [ns.${gateway}.${ns_qualifier}, sdx]
         hosts:
           - ${route_host}
@@ -83,7 +102,7 @@ services:
         request_buffering: true
         response_buffering: true
                     
-      - name: ${service_name}-SIGNED
+      - name: ${service_name}.SIGNED
         tags: [ns.${gateway}.${ns_qualifier}, sdx]
         hosts:
           - ${route_host}
