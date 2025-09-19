@@ -88,7 +88,7 @@ services:
           enabled: false
             
       - name: ${service_name}.API
-        tags: [ns.${gateway}.${ns_qualifier}, sdx],
+        tags: [ns.${gateway}.${ns_qualifier}, sdx]
         hosts:
           - ${route_host}
         paths:
