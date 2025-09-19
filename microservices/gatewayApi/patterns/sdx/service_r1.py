@@ -81,12 +81,14 @@ services:
         response_buffering: true
         plugins:
         - name: jwt-keycloak
+          tags: [ns.${gateway}.${ns_qualifier}]
           enabled: false
         - name: oidc
+          tags: [ns.${gateway}.${ns_qualifier}]
           enabled: false
             
       - name: ${service_name}.API
-        tags: [ns.${gateway}.${ns_qualifier}, sdx]
+        tags: [ns.${gateway}.${ns_qualifier},
         hosts:
           - ${route_host}
         paths:
