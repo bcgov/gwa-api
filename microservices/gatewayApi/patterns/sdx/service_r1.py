@@ -18,30 +18,6 @@ services:
     retries: 0
     tls_verify: false
     plugins:
-      - name: mtls-auth
-        tags: [ns.${gateway}.${ns_qualifier}]
-        config:
-          error_response_code: 401
-          upstream_cert_cn_header: "X-CERT-CN"
-          upstream_cert_fingerprint_header: "X-CERT-FINGERPRINT"
-          upstream_cert_i_dn_header: "X-CERT-I-DN"
-          upstream_cert_s_dn_header: "X-CERT-S-DN"
-          upstream_cert_serial_header: "X-CERT-SERIAL"
-      - name: mtls-acl
-        tags: [ns.${gateway}.${ns_qualifier}]
-        enabled: true
-        config:
-          certificate_header_name: X-CERT-S-DN
-          allow: [ ${mtls_allow_list} ]
-
-      - name: jwt-keycloak_1010
-        tags: [ns.${gateway}.${ns_qualifier}]
-        enabled: false
-        config:
-          allowed_iss:
-            - https://aps-jwks-upstream-jwt-api-gov-bc-ca-lab.dev.api.gov.bc.ca
-          allowed_aud: ${consumer_client_id}
-          header_names: [ SDX-AP-AUTH ]
 
       - name: jwt-keycloak
         tags: [ns.${gateway}.${ns_qualifier}]
@@ -125,14 +101,4 @@ services:
 """)
 
 def eval_service_pattern (context):
-  mtls_allow_list = context.get("mtls_allow_list", "")
-  # WORKAROUND - Seems like NGINX Client Cert does not include spaces
-  # when separating the DN attributes
-  # if mtls_allow_list has commas, then create two quoted values - one
-  # with a ", " and the other with just a ","
-  if "," in mtls_allow_list:
-    mtls_allow_list = f'{mtls_allow_list.replace(", ", ",")}, {mtls_allow_list}'
-  else:
-    mtls_allow_list = f'{mtls_allow_list}'
-  context["mtls_allow_list"] = mtls_allow_list
   return template.substitute(context)
