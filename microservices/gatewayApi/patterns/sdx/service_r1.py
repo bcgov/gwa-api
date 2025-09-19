@@ -18,6 +18,22 @@ services:
     retries: 0
     tls_verify: false
     plugins:
+      - name: rate-limiting
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          policy: local
+          fault_tolerant: true
+          second: 50
+          limit_by: ip
+
+      - name: cors
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+          headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign"]
 
       - name: jwt-keycloak
         tags: [ns.${gateway}.${ns_qualifier}]
@@ -56,8 +72,6 @@ services:
           - ${route_host}
         paths:
           - ${route_path}
-        headers:
-          "X-Client-Id": [ ${consumer_uri} ]                    
         methods:
           - GET
           - POST
@@ -76,7 +90,6 @@ services:
         paths:
           - ${route_path}
         headers:
-          "X-Client-Id": [ ${consumer_uri} ]
           "X-SDX-AP-SIGN": ["YES"]
         methods:
           - GET
