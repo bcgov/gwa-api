@@ -86,6 +86,10 @@ services:
         - name: oidc
           tags: [ns.${gateway}.${ns_qualifier}]
           enabled: false
+          config:
+            client_secret: NOT_APPLICABLE
+            client_id: NOT_APPLICABLE
+            discovery: ${openid_issuer}/.well-known/openid-configuration                    
             
       - name: ${service_name}.API
         tags: [ns.${gateway}.${ns_qualifier}, sdx]
