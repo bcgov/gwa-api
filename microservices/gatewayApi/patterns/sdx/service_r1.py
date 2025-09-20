@@ -251,11 +251,6 @@ services:
                     return base64.decode_base64url(input)
                   end
 
-                  local DPOPHandler = {}
-
-                  DPOPHandler.PRIORITY = 1000
-                  DPOPHandler.VERSION = "1.0.0"
-
                   local plugin_schema = {
                     type = "record",
                     fields = {
