@@ -304,7 +304,7 @@ services:
                     if not auth_header then
                       return nil, "Authorization header missing"
                     end
-                    local token = auth_header:match("^DPoP%s+(.+)$") or auth_header:match("^Bearer%s+(.+)$")
+                    local token = auth_header:match("^DPoP%s+(.+)$$") or auth_header:match("^Bearer%s+(.+)$$")
                     if not token then
                       return nil, "Invalid Authorization header format"
                     end
