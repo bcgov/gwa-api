@@ -33,7 +33,7 @@ services:
         config:
           origins: ["*"]
           methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-          headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign"]
+          headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign", "DPoP"]
 
       - name: jwt-keycloak
         tags: [ns.${gateway}.${ns_qualifier}]
