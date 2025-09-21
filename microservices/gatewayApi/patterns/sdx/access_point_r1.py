@@ -26,12 +26,6 @@ services:
         upstream_cert_i_dn_header: "X-CERT-I-DN"
         upstream_cert_s_dn_header: "X-CERT-S-DN"
         upstream_cert_serial_header: "X-CERT-SERIAL"
-    - name: mtls-acl
-      tags: [ns.${gateway}.${ns_qualifier}]
-      enabled: false
-      config:
-        certificate_header_name: X-CERT-S-DN
-        allow: [ ${mtls_allow_list} ]
     - name: request-termination
       tags: [ns.${gateway}.${ns_qualifier}]
       config:
