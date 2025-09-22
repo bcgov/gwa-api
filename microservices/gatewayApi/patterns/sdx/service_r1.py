@@ -209,6 +209,7 @@ services:
                   end
 
                   kong.service.request.set_header("X-INTROSPECTION", res.body)
+                  kong.service.request.set_header("X-INBOUND-TOKEN", kong.request.get_header("Authorization"))
 
                   res.body = cjson.decode(res.body)
                   if not res.body then
