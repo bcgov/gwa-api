@@ -18,6 +18,16 @@ services:
     retries: 0
     tls_verify: false
     plugins:
+      - name: mtls-auth
+        tags: [ns.${gateway}.${ns_qualifier}]
+        config:
+          error_response_code: 401
+          upstream_cert_cn_header: "X-CERT-CN"
+          upstream_cert_fingerprint_header: "X-CERT-FINGERPRINT"
+          upstream_cert_i_dn_header: "X-CERT-I-DN"
+          upstream_cert_s_dn_header: "X-CERT-S-DN"
+          upstream_cert_serial_header: "X-CERT-SERIAL"
+
       - name: rate-limiting
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
@@ -65,6 +75,17 @@ services:
           disable_userinfo_header: "yes"
           disable_id_token_header: "yes"
 
+      - name: openid-authzen
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          # lua_ssl_trusted_certificate has to have the CA's - otherwise "unable to get local issuer certificate"
+          target_url: https://ping.api.gov.bc.ca
+          json_locator: []
+          # subject_claim: "sub"
+          # resource_type: "service_name|route_name|uri_path"
+          # action_name: "read"
+                    
     routes:
       - name: ${service_name}.OPTIONS
         tags: [ns.${gateway}.${ns_qualifier}, sdx]

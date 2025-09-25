@@ -67,7 +67,7 @@ services:
           origins: ["*"]
           methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
           headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign"]
-                    
+
       - name: oidc
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
@@ -89,17 +89,6 @@ services:
           disable_userinfo_header: "yes"
           disable_id_token_header: "yes"
 
-      - name: openid-authzen
-        tags: [ns.${gateway}.${ns_qualifier}]
-        enabled: true
-        config:
-          # lua_ssl_trusted_certificate has to have the CA's - otherwise "unable to get local issuer certificate"
-          target_url: https://ping.api.gov.bc.ca
-          json_locator: []
-          # subject_claim: "sub"
-          # resource_type: "service_name|route_name|uri_path"
-          # action_name: "read"
-
       - name: kong-upstream-jwt
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
@@ -116,7 +105,7 @@ services:
           add:
             headers:
               - "X-Client-Id:${consumer_uri}"
-                    
+
       # - name: oidc
       #   tags: [ns.gw-0a524]
       #   enabled: true
