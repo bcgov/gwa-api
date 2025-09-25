@@ -18,6 +18,23 @@ services:
     retries: 0
     tls_verify: false
     plugins:
+      - name: mtls-auth
+        tags: [ns.${gateway}.${ns_qualifier}]
+        config:
+          error_response_code: 401
+          upstream_cert_cn_header: "X-CERT-CN"
+          upstream_cert_fingerprint_header: "X-CERT-FINGERPRINT"
+          upstream_cert_i_dn_header: "X-CERT-I-DN"
+          upstream_cert_s_dn_header: "X-CERT-S-DN"
+          upstream_cert_serial_header: "X-CERT-SERIAL"
+
+      - name: mtls-acl
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          certificate_header_name: X-CERT-S-DN
+          allow: [ ${mtls_allow_list} ]
+
       - name: rate-limiting
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
@@ -681,5 +698,5 @@ services:
 
 """)
 
-def eval_service_pattern (context):
+def eval_service_mtls_pattern (context):
   return template.substitute(context)
