@@ -16,15 +16,6 @@ services:
     tags: [ns.${gateway}.${ns_qualifier}]
     retries: 0
     tls_verify: false
-    plugins:
-      - name: cors
-        tags: [ns.${gateway}.${ns_qualifier}]
-        enabled: true
-        config:
-          origins: ["*"]
-          methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-          headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign", "DPoP"]
-
     routes:
       - name: ${service_name}.API
         tags: [ns.${gateway}.${ns_qualifier}, sdx]
