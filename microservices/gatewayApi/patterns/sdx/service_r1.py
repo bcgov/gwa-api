@@ -658,7 +658,7 @@ services:
         paths:
           - ${route_path}
         headers:
-          "X-SDX-AP-SIGN": ["YES"]
+          "Accept": ["application/jws+jwt"]
         methods:
           - GET
           - POST

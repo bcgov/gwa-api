@@ -101,7 +101,7 @@ services:
           - ${route_path}
         headers:
           "X-Client-Id": [ ${consumer_uri} ]
-          "X-SDX-AP-SIGN": ["YES"]
+          "Accept": ["application/jws+jwt"]
         methods:
           - GET
           - POST
