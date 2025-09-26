@@ -51,7 +51,6 @@ services:
         paths:
           - ${route_path}
         headers:
-          "X-Client-Id": [ ${consumer_uri} ]
           "Accept": ["application/jws+jwt"]
         methods:
           - GET
