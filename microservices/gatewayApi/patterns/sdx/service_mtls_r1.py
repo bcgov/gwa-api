@@ -51,47 +51,6 @@ services:
           origins: ["*"]
           methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
           headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign", "DPoP"]
-
-      - name: jwt-keycloak
-        tags: [ns.${gateway}.${ns_qualifier}]
-        enabled: true
-        config:
-          allowed_iss:
-            - ${openid_issuer}
-          allowed_aud: "${openid_audience}"
-          scope: [ ${openid_scope} ]
-
-      - name: oidc
-        tags: [ns.${gateway}.${ns_qualifier}]
-        enabled: true
-        config:
-          client_secret: NOT_APPLICABLE
-          client_id: NOT_APPLICABLE
-          header_names: ["X-IDP-P-PERSON-PPID", "X-IDP-P-AZP-CLIENT-ID"]
-          bearer_jwt_auth_allowed_auds: [ ${openid_audience} ]
-          unauth_action: deny
-          bearer_only: "yes"
-          use_jwks: "yes"
-          bearer_jwt_auth_enable: "yes"
-          discovery: ${openid_issuer}/.well-known/openid-configuration
-          header_claims: ["sub", "azp"]
-
-          # scope and validate_scope do nothing when bearer_jwt_auth_enable is "yes"
-          # scope: ${openid_scope}
-          # validate_scope: "yes"
-          disable_userinfo_header: "yes"
-          disable_id_token_header: "yes"
-
-      - name: openid-authzen
-        tags: [ns.${gateway}.${ns_qualifier}]
-        enabled: true
-        config:
-          # lua_ssl_trusted_certificate has to have the CA's - otherwise "unable to get local issuer certificate"
-          target_url: https://ping.api.gov.bc.ca
-          json_locator: []
-          # subject_claim: "sub"
-          # resource_type: "service_name|route_name|uri_path"
-          # action_name: "read"
                     
     routes:
       - name: ${service_name}.OPTIONS
