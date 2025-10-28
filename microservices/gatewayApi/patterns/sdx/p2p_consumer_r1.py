@@ -107,6 +107,7 @@ services:
               - "X-Client-Id:${consumer_uri}"
 
       - name: dpop
+        tags: [ns.${gateway}.${ns_qualifier}]
         config:
           allowed_algorithms: [ES256]
           max_age: 60
@@ -114,10 +115,12 @@ services:
           nonce_cache_ttl: 300
 
       - name: trust-verify-digest
+        tags: [ns.${gateway}.${ns_qualifier}]
         config:
           direction: request
 
       - name: trust-sign
+        tags: [ns.${gateway}.${ns_qualifier}]
         config:
           signing_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
           keyid: sdx-gw-edge
@@ -127,11 +130,13 @@ services:
           direction: response
 
       - name: trust-timestamp
+        tags: [ns.${gateway}.${ns_qualifier}]
         config:
           policy_oid: "1.2.1.2.1"
           endpoint_url: "https://freetsa.org/tsr"
 
       - name: trust-ledger
+        tags: [ns.${gateway}.${ns_qualifier}]
         config:
           provider: rekor
           endpoint_url: "https://rekor.sigstore.dev"
