@@ -39,7 +39,7 @@ def test_application_r1(client):
         'openid_scope': '',
     }
 
-    response = evaluate_pattern('sdx-application-r1', context)
+    response = evaluate_pattern('sdx-p2p-consumer-r1', context)
     print(response)
     yaml_documents_iter = yaml.load_all(response, Loader=yaml.FullLoader)
     doc = next(yaml_documents_iter)
