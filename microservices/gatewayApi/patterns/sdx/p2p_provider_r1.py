@@ -124,7 +124,7 @@ services:
 
 """)
 
-def eval_p2p_service_pattern (context):
+def eval_p2p_provider_pattern (context):
   mtls_allow_list = context.get("mtls_allow_list", "")
   # WORKAROUND - Seems like NGINX Client Cert does not include spaces
   # when separating the DN attributes

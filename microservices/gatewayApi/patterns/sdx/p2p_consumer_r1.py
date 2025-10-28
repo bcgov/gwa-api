@@ -66,7 +66,7 @@ services:
         config:
           origins: ["*"]
           methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-          headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign"]
+          headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign", "Content-Digest", "Dpop"]
 
       - name: oidc
         tags: [ns.${gateway}.${ns_qualifier}]
@@ -106,6 +106,36 @@ services:
             headers:
               - "X-Client-Id:${consumer_uri}"
 
+      - name: dpop
+        config:
+          allowed_algorithms: [ES256]
+          max_age: 60
+          clock_skew: 60
+          nonce_cache_ttl: 300
+
+      - name: trust-verify-digest
+        config:
+          direction: request
+
+      - name: trust-sign
+        config:
+          signing_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
+          keyid: sdx-gw-edge
+          algorithm: sha512
+          signature_label: sig1
+          signature_input: "(@authority, @path)"
+          direction: response
+
+      - name: trust-timestamp
+        config:
+          policy_oid: "1.2.1.2.1"
+          endpoint_url: "https://freetsa.org/tsr"
+
+      - name: trust-ledger
+        config:
+          provider: rekor
+          endpoint_url: "https://rekor.sigstore.dev"
+
       # - name: oidc
       #   tags: [ns.gw-0a524]
       #   enabled: true
@@ -116,5 +146,5 @@ services:
       #     discovery: https://sdx-authz-apps-gov-bc-ca-lab.apps.gov.bc.ca/auth/realms/sdx/.well-known/openid-configuration
 """)
 
-def eval_application_pattern (context):
+def eval_p2p_consumer_pattern (context):
   return template.substitute(context)
