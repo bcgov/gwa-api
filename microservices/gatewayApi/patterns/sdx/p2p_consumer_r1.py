@@ -67,7 +67,7 @@ services:
           origins: ["*"]
           methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
           headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign", "Content-Digest", "Dpop"]
-          exposed_headers: ["Signature", "Signature-Input", "Content-Digest", "x-trust-ledger-body", "x-trust-ledger-status", "x-trust-timestamp", "x-kong-request-id"]
+          exposed_headers: ["*", "Signature", "Signature-Input", "Content-Digest", "x-trust-ledger-body", "x-trust-ledger-status", "x-trust-timestamp", "x-kong-request-id"]
                     
       - name: oidc
         tags: [ns.${gateway}.${ns_qualifier}]
@@ -75,14 +75,14 @@ services:
         config:
           client_secret: NOT_APPLICABLE
           client_id: NOT_APPLICABLE
-          header_names: ["X-IDP-C-PERSON-PPID", "X-IDP-C-AZP-CLIENT-ID"]
+          header_names: ["X-IDP-C-PERSON-PPID", "X-IDP-C-AZP-CLIENT-ID", "X-IDP-C-ISSUER"]
           bearer_jwt_auth_allowed_auds: [ ${openid_audience} ]
           unauth_action: deny
           bearer_only: "yes"
           use_jwks: "yes"
           bearer_jwt_auth_enable: "yes"
           discovery: ${openid_issuer}/.well-known/openid-configuration
-          header_claims: ["sub", "azp"]
+          header_claims: ["sub", "azp", "iss"]
 
           # scope and validate_scope do nothing when bearer_jwt_auth_enable is "yes"
           # scope: ${openid_scope}
@@ -127,7 +127,7 @@ services:
           keyid: sdx-gw-edge
           algorithm: sha512
           signature_label: sig1
-          signature_input: "(@authority, @path)"
+          signature_input: '("@authority", "@path", "x-kong-request-id", "content-digest", "X-IDP-C-PERSON-PPID", "X-IDP-C-AZP-CLIENT-ID", "X-IDP-C-ISSUER")'
           direction: response
 
       - name: trust-timestamp
