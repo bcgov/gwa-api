@@ -26,10 +26,10 @@ RUN curl -sL https://github.com/kong/deck/releases/download/v1.5.0/deck_1.5.0_li
    cp /tmp/deck /usr/local/bin/deck_kong2_150
 
 # gwa api (kong 3)
-RUN curl -sL https://github.com/Kong/deck/releases/download/v1.45.0/deck_1.45.0_linux_amd64.tar.gz -o deck.tar.gz && \
+RUN curl -sL https://github.com/Kong/deck/releases/download/v1.53.1/deck_1.53.1_linux_amd64.tar.gz -o deck.tar.gz && \
    tar -xf deck.tar.gz -C /tmp && \
    cp /tmp/deck /usr/local/bin/deck && \
-   cp /tmp/deck /usr/local/bin/deck_kong3_1450
+   cp /tmp/deck /usr/local/bin/deck_kong3_1531
 
 RUN python -m pip install --upgrade pip
 # FIX: No module named 'urllib3.packages.six'
