@@ -98,9 +98,11 @@ def add_routes(namespace: str, route: OCPRoute):
         # do routeable hosts
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
-        route_count = prepare_apply_routes(namespace, route.select_tag, hosts,
-                                           source_folder, get_data_plane(route.ns_attributes), ns_template_version, route.overrides,
-                                           route.certificates)
+        route_count = prepare_apply_routes(namespace, route.select_tag, 
+            [h for h in hosts if not should_skip_route_creation(h, route.ns_attributes)],
+            source_folder, get_data_plane(route.ns_attributes), 
+            ns_template_version, route.overrides,
+            route.certificates)
         logger.debug("[%s] - Prepared %s routes" % (namespace, route_count))
         if route_count > 0:
             apply_routes(source_folder)
@@ -327,6 +329,10 @@ async def verify_and_create_routes(namespace: str, request: Request):
             logger.debug("Creating %s routes - tmp %s" % (len(insert_batch), source_folder))
 
             for route in insert_batch:
+                if should_skip_route_creation(route['host'], route.ns_attributes):
+                    logger.debug(f"Skipping route creation for {route['host']} - using R1 general route")
+                    continue
+
                 overrides = {}
                 if 'sessionCookieEnabled' in route and route['sessionCookieEnabled']:
                     overrides['aps.route.session.cookie.enabled'] = [route['host']]
@@ -425,3 +431,15 @@ def clean_host (host, conf):
         return host.replace(conf['baseUrl'], 'gov.bc.ca').replace('-data-gov-bc-ca', '.data').replace('-api-gov-bc-ca', '.api').replace('-apps-gov-bc-ca', '.apps')
     else:
         return host
+
+def is_r1_route(host: str) -> bool:
+    r1_patterns = [
+        '.api.gov.bc.ca',
+        '.dev.api.gov.bc.ca',
+        '.test.api.gov.bc.ca'
+    ]
+    return any(host.endswith(pattern) for pattern in r1_patterns)
+
+def should_skip_route_creation(host: str, ns_attributes: dict) -> bool:
+    env = ns_attributes.get('environment', ['dev'])[0]
+    return env.lower() == 'prod' and is_r1_route(host)
