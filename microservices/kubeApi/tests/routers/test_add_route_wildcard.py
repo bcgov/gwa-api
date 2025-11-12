@@ -11,8 +11,8 @@ def mock_apply_routes(rootPath):
         content = f.read()
         assert routes_current_yaml == content
 
-def test_skip_route_prod_api(client):
-    """Test that routes ending in .api.gov.bc.ca are skipped when wildcard_enabled is True"""
+def test_skip_route(client):
+    """Test that routes ending in .api.gov.bc.ca are skipped when wildcard_enabled is True and conditions match"""
     with mock.patch('routers.routes.wildcard_enabled', {'enabled': True}):
         with mock.patch('clients.ocp_routes.time_secs') as dt:
             dt.return_value = 1715153983
@@ -35,19 +35,31 @@ def test_skip_route_prod_api(client):
                                 with mock.patch("routers.routes.apply_routes") as call_apply_routes:
                                     call_apply_routes.side_effect = mock_apply_routes_empty
 
-                                    data = {
-                                        "hosts": ["abc.api.gov.bc.ca"],
-                                        "select_tag": "ns.EXAMPLE-NS",
-                                        "ns_attributes": {
-                                            "perm-data-plane": ["data-plane-1"],
-                                            "environment": ["prod"]
-                                        }
-                                    }
-                                    response = client.put('/namespaces/examplens/routes', json=data)
-                                    assert response.status_code == 201
-                                    assert response.json()['message'] == 'created'
+                                    with mock.patch("routers.routes.prepare_apply_routes") as call_prepare_apply:
+                                        call_prepare_apply.return_value = 0
 
-def test_create_route_dev_api(client):
+                                        data = {
+                                            "hosts": ["abc.api.gov.bc.ca"],
+                                            "select_tag": "ns.EXAMPLE-NS",
+                                            "ns_attributes": {
+                                                "perm-data-plane": ["data-plane-1"],
+                                            },
+                                            "overrides": {
+                                                "aps.route.session.cookie.enabled": [],
+                                                "aps.route.dataclass.low": [],
+                                                "aps.route.dataclass.medium": ["abc.api.gov.bc.ca"],
+                                                "aps.route.dataclass.high": [],
+                                                "aps.route.dataclass.public": []
+                                            }
+                                        }
+                                        response = client.put('/namespaces/examplens/routes', json=data)
+                                        assert response.status_code == 201
+                                        # Verify that prepare_apply_routes was called with empty hosts list
+                                        call_prepare_apply.assert_called_once()
+                                        hosts_arg = call_prepare_apply.call_args[0][2]
+                                        assert hosts_arg == []
+
+def test_create_route(client):
     """Test that routes ending in .api.gov.bc.ca are created when wildcard_enabled is False"""
     with mock.patch('routers.routes.wildcard_enabled', {'enabled': False}):
         with mock.patch('clients.ocp_routes.time_secs') as dt:
@@ -71,17 +83,31 @@ def test_create_route_dev_api(client):
                                 with mock.patch("routers.routes.apply_routes") as call_apply_routes:
                                     call_apply_routes.side_effect = mock_apply_routes
 
-                                    data = {
-                                        "hosts": ["abc.api.gov.bc.ca"],
-                                        "select_tag": "ns.EXAMPLE-NS",
-                                        "ns_attributes": {
-                                            "perm-data-plane": ["data-plane-1"],
-                                            "environment": ["dev"]
+                                    with mock.patch("routers.routes.prepare_apply_routes") as call_prepare_apply:
+                                        call_prepare_apply.return_value = 0
+
+                                        data = {
+                                            "hosts": ["abc.api.gov.bc.ca"],
+                                            "select_tag": "ns.EXAMPLE-NS",
+                                            "ns_attributes": {
+                                                "perm-data-plane": ["data-plane-1"],
+                                            },
+                                            "overrides": {
+                                                "aps.route.session.cookie.enabled": [],
+                                                "aps.route.dataclass.low": [],
+                                                "aps.route.dataclass.medium": ["abc.api.gov.bc.ca"],
+                                                "aps.route.dataclass.high": [],
+                                                "aps.route.dataclass.public": []
+                                            }
                                         }
-                                    }
-                                    response = client.put('/namespaces/examplens/routes', json=data)
-                                    assert response.status_code == 201
-                                    assert response.json()['message'] == 'created'
+                                        response = client.put('/namespaces/examplens/routes', json=data)
+                                        assert response.status_code == 201
+                                        assert response.json()['message'] == 'created'
+                                        # Verify that prepare_apply_routes was called with non-empty hosts list
+                                        call_prepare_apply.assert_called_once()
+                                        hosts_arg = call_prepare_apply.call_args[0][2]
+                                        assert len(hosts_arg) > 0
+                                        assert "abc.api.gov.bc.ca" in hosts_arg
 
 routes_current_yaml = """
 apiVersion: route.openshift.io/v1

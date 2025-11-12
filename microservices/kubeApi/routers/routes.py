@@ -100,7 +100,11 @@ def add_routes(namespace: str, route: OCPRoute):
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
         route_count = prepare_apply_routes(namespace, route.select_tag, 
-            [h for h in hosts if not should_skip_route_creation(h)],
+            [h for h in hosts if not should_skip_route_creation(
+                h, 
+                h in (route.overrides.get("aps.route.session.cookie.enabled", []) if route.overrides else []),
+                "medium" if h in (route.overrides.get("aps.route.dataclass.medium", []) if route.overrides else []) else None
+            )],
             source_folder, get_data_plane(route.ns_attributes), 
             ns_template_version, route.overrides,
             route.certificates)
@@ -330,7 +334,7 @@ async def verify_and_create_routes(namespace: str, request: Request):
             logger.debug("Creating %s routes - tmp %s" % (len(insert_batch), source_folder))
 
             for route in insert_batch:
-                if should_skip_route_creation(route['host']):
+                if should_skip_route_creation(route['host'], route['sessionCookieEnabled'], route['dataClass']):
                     logger.debug(f"Skipping route creation for {route['host']} - using wildcard route")
                     continue
 
@@ -433,13 +437,23 @@ def clean_host (host, conf):
     else:
         return host
 
-def is_r1_route(host: str) -> bool:
+def is_r1_route(host: str, session_cookie_enabled: bool = False, data_class: Optional[str] = None) -> bool:
     r1_patterns = [
         '.api.gov.bc.ca',
         '.dev.api.gov.bc.ca',
         '.test.api.gov.bc.ca'
     ]
-    return any(host.endswith(pattern) for pattern in r1_patterns)
+    
+    if not any(host.endswith(pattern) for pattern in r1_patterns):
+        return False
+    
+    if session_cookie_enabled:
+        return False
+    
+    if data_class != 'medium':
+        return False
+    
+    return True
 
-def should_skip_route_creation(host: str) -> bool:
-    return wildcard_enabled['enabled'] and is_r1_route(host)
+def should_skip_route_creation(host: str, session_cookie_enabled: bool = False, data_class: Optional[str] = None) -> bool:
+    return wildcard_enabled['enabled'] and is_r1_route(host, session_cookie_enabled, data_class)
