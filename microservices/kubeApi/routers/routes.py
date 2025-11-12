@@ -14,6 +14,7 @@ import secrets
 from datetime import datetime
 from fastapi.logger import logger
 from config import settings
+from config.settings import wildcard_enabled
 from typing import Optional
 import socket
 import requests
@@ -99,7 +100,7 @@ def add_routes(namespace: str, route: OCPRoute):
         source_folder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), namespace)
         os.makedirs(source_folder, exist_ok=False)
         route_count = prepare_apply_routes(namespace, route.select_tag, 
-            [h for h in hosts if not should_skip_route_creation(h, route.ns_attributes)],
+            [h for h in hosts if not should_skip_route_creation(h)],
             source_folder, get_data_plane(route.ns_attributes), 
             ns_template_version, route.overrides,
             route.certificates)
@@ -329,8 +330,8 @@ async def verify_and_create_routes(namespace: str, request: Request):
             logger.debug("Creating %s routes - tmp %s" % (len(insert_batch), source_folder))
 
             for route in insert_batch:
-                if should_skip_route_creation(route['host'], route.ns_attributes):
-                    logger.debug(f"Skipping route creation for {route['host']} - using R1 general route")
+                if should_skip_route_creation(route['host']):
+                    logger.debug(f"Skipping route creation for {route['host']} - using wildcard route")
                     continue
 
                 overrides = {}
@@ -440,6 +441,5 @@ def is_r1_route(host: str) -> bool:
     ]
     return any(host.endswith(pattern) for pattern in r1_patterns)
 
-def should_skip_route_creation(host: str, ns_attributes: dict) -> bool:
-    env = ns_attributes.get('environment', ['dev'])[0]
-    return env.lower() == 'prod' and is_r1_route(host)
+def should_skip_route_creation(host: str) -> bool:
+    return wildcard_enabled['enabled'] and is_r1_route(host)

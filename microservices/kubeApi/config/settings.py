@@ -16,3 +16,8 @@ access_credentials = {
 }
 
 defaultDataPlane = config('DEFAULT_DATA_PLANE', default='dp-silver-kong-proxy')
+
+# Checks if wildcard routes are enabled for the cluster
+wildcard_enabled = {
+    "enabled": config('WILDCARD_ENABLED', cast=bool, default=False)
+}
