@@ -196,7 +196,8 @@ services:
 
                   kong.response.set_header("Content-Type", res.headers["Content-Type"] or "application/json")
                   return kong.response.exit(res.status, res.body)
-                      
+
+                                                     
     plugins:
     - name: cors
       tags: [ns.${gateway}.${ns_qualifier}]
@@ -216,7 +217,32 @@ services:
           - X-Client-Id
           - DPoP
 
-
+  - name: ${service_name}.JWKS
+    url: https://httpbin.org
+    tags: [ns.${gateway}.${ns_qualifier}]
+    tls_verify: false
+    routes:
+    - name: ${service_name}.JWKS
+      tags: [ns.${gateway}.${ns_qualifier}, sdx]
+      hosts:
+        - ${route_host}
+      paths:
+        - /jwks
+      methods:
+        - GET
+      strip_path: false
+      preserve_host: false
+      https_redirect_status_code: 426
+      path_handling: v0
+      request_buffering: true
+      response_buffering: true
+    plugins:
+      - name: trust-registry
+        tags: [ns.${gateway}.${ns_qualifier}]
+        config:
+          key_set: "set_123"
+             
+         
 """)
 
 def eval_access_point_pattern (context):
