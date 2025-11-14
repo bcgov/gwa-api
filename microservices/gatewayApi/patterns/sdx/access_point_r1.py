@@ -239,8 +239,7 @@ services:
     plugins:
       - name: trust-registry
         tags: [ns.${gateway}.${ns_qualifier}]
-        config:
-          key_set: "set_123"
+        config: {}
              
          
 """)
