@@ -123,9 +123,10 @@ services:
       - name: trust-sign
         tags: [ns.${gateway}.${ns_qualifier}]
         config:
-          signing_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
+          private_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
           keyid: ${service_name}.SIG.CURRENT
-          algorithm: sha512
+          alg: ES256
+          hash_alg: sha256
           signature_header_key: X-Signature
           signature_label: sig1
           signature_input: '("@authority", "@path", "x-kong-request-id", "content-digest", "X-IDP-C-PERSON-PPID", "X-IDP-C-AZP-CLIENT-ID", "X-IDP-C-ISSUER")'
