@@ -120,6 +120,15 @@ services:
         config:
           direction: request
 
+      - name: trust-verify-signature
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          direction: request
+          jwks_endpoint: https://${route_host}/jwks
+          manifest_type: signature-only
+          signature_header_key: X-Signature
+                    
       - name: trust-sign
         tags: [ns.${gateway}.${ns_qualifier}]
         config:
