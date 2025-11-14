@@ -73,6 +73,15 @@ services:
           disable_userinfo_header: "yes"
           disable_id_token_header: "yes"
 
+      - name: trust-verify-signature
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          direction: request
+          jwks_endpoint: https://${route_host}/jwks
+          manifest_type: signature-only
+          signature_header_key: X-Signature
+                    
     routes:
       - name: ${service_name}
         tags: [ns.${gateway}.${ns_qualifier}, sdx]

@@ -119,25 +119,17 @@ services:
         tags: [ns.${gateway}.${ns_qualifier}]
         config:
           direction: request
-
-      - name: trust-verify-signature
-        tags: [ns.${gateway}.${ns_qualifier}]
-        enabled: true
-        config:
-          direction: request
-          jwks_endpoint: https://${route_host}/jwks
-          manifest_type: signature-only
-          signature_header_key: X-Signature
                     
       - name: trust-sign
         tags: [ns.${gateway}.${ns_qualifier}]
         config:
           signing_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
-          keyid: sdx-gw-edge
+          keyid: ${service_name}.SIG.CURRENT
           algorithm: sha512
+          signature_header_key: X-Signature
           signature_label: sig1
           signature_input: '("@authority", "@path", "x-kong-request-id", "content-digest", "X-IDP-C-PERSON-PPID", "X-IDP-C-AZP-CLIENT-ID", "X-IDP-C-ISSUER")'
-          direction: response
+          direction: request
 
       - name: trust-timestamp
         tags: [ns.${gateway}.${ns_qualifier}]

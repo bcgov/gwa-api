@@ -217,6 +217,26 @@ services:
           - X-Client-Id
           - DPoP
 
+  - name: ${service_name}.HELLO
+    url: https://httpbin.org
+    tags: [ns.${gateway}.${ns_qualifier}]
+    tls_verify: false
+    routes:
+    - name: ${service_name}.HELLO
+      tags: [ns.${gateway}.${ns_qualifier}, sdx]
+      hosts:
+        - ${route_host}
+      paths:
+        - /hello
+      methods:
+        - GET
+      strip_path: false
+      preserve_host: false
+      https_redirect_status_code: 426
+      path_handling: v0
+      request_buffering: true
+      response_buffering: true
+                                        
   - name: ${service_name}.JWKS
     url: https://httpbin.org
     tags: [ns.${gateway}.${ns_qualifier}]
