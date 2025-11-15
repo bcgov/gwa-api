@@ -690,7 +690,7 @@ def patterned_write_config(namespace: str) -> object:
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
     out, err = deck_run.communicate()
     if deck_run.returncode != 0:
-        cleanup(tempFolder)
+        # cleanup(tempFolder)
         log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
         abort_early(event_id, 'publish', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
     # skip creation of routes in local development environment
