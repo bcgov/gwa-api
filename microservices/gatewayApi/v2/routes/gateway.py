@@ -980,7 +980,7 @@ def tags_transformation(namespace, yaml):
 def traverse_tags_transform(yaml, namespace, required_tag):
     object_count = 0
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates', 'key_sets', 'keys']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
