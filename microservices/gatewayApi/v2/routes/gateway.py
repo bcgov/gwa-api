@@ -607,7 +607,7 @@ def patterned_write_config(namespace: str) -> object:
 
         # After enrichments, dump config to file
         with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
-            yaml.dump(gw_config, file, width=9999, default_flow_style=False)
+            yaml.dump(gw_config, file, width=9999, default_flow_style=False, default_style="double-quoted")
 
         #######################
         # Validations
