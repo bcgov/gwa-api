@@ -1,4 +1,5 @@
 from patterns.sdx.access_point_r1 import eval_access_point_pattern
+from patterns.sdx.keys_r1 import eval_keys_pattern
 from patterns.sdx.service_r1 import eval_service_pattern
 from patterns.sdx.service_pub_r1 import eval_service_pub_pattern
 from patterns.sdx.service_mtls_r1 import eval_service_mtls_pattern
@@ -14,6 +15,8 @@ def evaluate_pattern(pattern, context):
     """
     if pattern == 'sdx-access-point-r1':
         return eval_access_point_pattern(context)
+    elif pattern == 'sdx-keys-r1':
+        return eval_keys_pattern(context)
     elif pattern == 'sdx-service-r1':
         return eval_service_pattern(context)
     elif pattern == 'sdx-service-mtls-r1':

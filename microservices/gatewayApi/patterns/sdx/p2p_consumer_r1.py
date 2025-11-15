@@ -129,7 +129,7 @@ services:
           hash_alg: sha256
           signature_header_key: X-Signature
           signature_label: sig1
-          signature_input: '("@authority", "@path", "x-kong-request-id", "content-digest", "X-IDP-C-PERSON-PPID", "X-IDP-C-AZP-CLIENT-ID", "X-IDP-C-ISSUER")'
+          signature_input: '("@authority")'
           direction: request
 
       - name: trust-timestamp
