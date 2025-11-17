@@ -54,5 +54,7 @@ bX5+5b0F6v9vQ1ZlZ5sX6Fz3Yx8u5m2K1v1ZlZ5sX6Fz3Yx8u5m2K1v1ZlZ5sX6Fz3Yx8u
     print(response)
     yaml_documents_iter = yaml.load_all(response, Loader=yaml.FullLoader)
     doc = next(yaml_documents_iter)
+    print(yaml.dump(doc, width=9999, default_flow_style=False, default_style="double-quoted"))
     assert doc['keys'][0]["name"] == context['key_name']
     assert doc['keys'][0]["tags"][0] == "ns.gw-yyy.all"
+    # assert doc['keys'][0]["pem"]["public_key"] == public_key_pem

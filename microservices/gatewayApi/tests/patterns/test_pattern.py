@@ -34,6 +34,7 @@ def test_application_r1(client):
         'route_path': '/LAB/MIN/CITZ/OTHER-SERVICE',
         'consumer_uri': '',
         'consumer_client_id': '',
+        'edge_kid': 'REQ-0001-LAB-MIN-CITZ-MY-UI.SIG.CURRENT',
         'openid_issuer': '',
         'openid_audience': '',
         'openid_scope': '',
