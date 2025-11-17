@@ -1000,7 +1000,7 @@ def traverse_tags_transform(yaml, namespace, required_tag):
 
 def traverse_has_ns_qualifier(yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates', 'key_sets', 'keys']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -1015,7 +1015,7 @@ def traverse_has_ns_qualifier(yaml, required_tag):
 
 def traverse_has_ns_tag_only(yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates', 'key_sets', 'keys']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -1036,7 +1036,7 @@ def has_ns_qualifier(tags, required_tag):
 
 def traverse_get_ns_qualifier(yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates', 'key_sets', 'keys']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
