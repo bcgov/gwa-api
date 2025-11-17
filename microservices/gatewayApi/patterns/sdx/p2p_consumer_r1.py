@@ -124,7 +124,7 @@ services:
         tags: [ns.${gateway}.${ns_qualifier}]
         config:
           private_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
-          keyid: ${service_name}.SIG.CURRENT
+          keyid: ${edge_kid}
           alg: ES256
           hash_alg: sha256
           signature_header_key: X-Signature
