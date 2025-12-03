@@ -465,7 +465,9 @@ def patterned_config(namespace: str) -> object:
     log = app.logger
 
     log.info("Received patterned config request for %s" % namespace)
-             
+
+    log.info("Request Data: %s" % request.data)
+    
     config = request.get_json()
 
     log.info("Config: %s" % config)
