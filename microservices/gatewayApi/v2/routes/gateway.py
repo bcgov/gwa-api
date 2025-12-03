@@ -532,7 +532,7 @@ def patterned_config(namespace: str) -> object:
         ns_qualifier = "%s.%s" % (selectTag, select_tag_qualifier)
 
     message = return_combined_yaml_files(yaml_documents)
-    return make_response(message, 200, {'Content-Type': 'application/yaml'})
+    return make_response(jsonify(yaml=message), 200, {'Content-Type': 'application/json'})
 
 
 @gw.route('/patterns',
