@@ -474,30 +474,11 @@ def patterned_config(namespace: str) -> object:
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
-    dp = get_data_plane(ns_attributes)
-
-    # Build a list of existing hosts that are outside this namespace
-    # They become reserved and any conflict will return an error
-    reserved_hosts = []
-    all_routes = get_routes()
-    tag_match = "ns.%s" % namespace
-    for route in all_routes:
-        if tag_match not in route['tags'] and 'hosts' in route and "sdx" not in route['tags']:
-            for host in route['hosts']:
-                reserved_hosts.append(host)
-    reserved_hosts = list(set(reserved_hosts))
-
     dfile = None
     select_tag_qualifier = None
 
     if delete:
         select_tag_qualifier = delete_qualifier
-
-    cmd = "sync"
-    if dry_run == 'true' or dry_run is True:
-        cmd = "diff"
-    if dump_only == 'true' or dump_only is True:
-        cmd = "dump"
 
     tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
     os.makedirs(tempFolder, exist_ok=False)
@@ -507,7 +488,7 @@ def patterned_config(namespace: str) -> object:
 
     dfile = gw_pattern_context.get_config_file()
 
-    # log.debug("Saved to %s" % tempFolder)
+    log.debug("Saved to %s" % tempFolder)
     yaml_documents = load_yaml_files(dfile)
 
     if len(yaml_documents) == 0:
