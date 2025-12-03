@@ -467,7 +467,7 @@ def patterned_config(namespace: str) -> object:
     log.info("Received patterned config request for %s" % namespace)
 
     log.info("Request Data: %s" % request.data)
-    
+
     config = request.get_json()
 
     log.info("Config: %s" % config)
@@ -522,8 +522,7 @@ def patterned_config(namespace: str) -> object:
     if select_tag_qualifier is not None and select_tag_qualifier != "" and "." not in select_tag_qualifier:
         ns_qualifier = "%s.%s" % (selectTag, select_tag_qualifier)
 
-    message = return_combined_yaml_files(yaml_documents)
-    return make_response(jsonify(yaml=message), 200, {'Content-Type': 'application/json'})
+    return make_response(jsonify(ns_qualifier=ns_qualifier, documents=yaml_documents), 200, {'Content-Type': 'application/json'})
 
 
 @gw.route('/patterns',
