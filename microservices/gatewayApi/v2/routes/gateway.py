@@ -450,10 +450,14 @@ def write_config(namespace: str) -> object:
 
     return make_response(jsonify(message=message, results=results))
 
+@gw.route('/hello',
+          methods=['GET'], strict_slashes=False)
+def hello(namespace: str) -> object:
+    return make_response(jsonify(message="hi", gateway=namespace), 200, {'Content-Type': 'application/json'})
+
+
 @gw.route('/pattern-output',
           methods=['PUT'], strict_slashes=False)
-@admin_jwt(None)
-@uma_enforce('namespace', 'GatewayConfig.Publish')
 def patterned_config(namespace: str) -> object:
     """
     :return: String of the generated yaml configuration
