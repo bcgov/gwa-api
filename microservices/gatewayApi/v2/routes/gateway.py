@@ -3,6 +3,7 @@ import shutil
 import sys
 import http
 import traceback
+from urllib import response
 from urllib.parse import urlparse
 from subprocess import Popen, PIPE, STDOUT
 import uuid
@@ -448,6 +449,91 @@ def write_config(namespace: str) -> object:
         results = results + "\n" + warning_message
 
     return make_response(jsonify(message=message, results=results))
+
+@gw.route('/pattern-output',
+          methods=['PUT'], strict_slashes=False)
+# @admin_jwt(None)
+# @uma_enforce('namespace', 'GatewayConfig.Publish')
+def patterned_config(namespace: str) -> object:
+    """
+    :return: String of the generated yaml configuration
+    """
+
+    config = request.get_json()
+
+    delete = config.get("delete", False)
+    delete_qualifier = config.get("deleteQualifier", None)
+    dry_run = config.get("dryRun", True)
+    dump_only = config.get("dump", False)
+    document = config.get("document", {})
+
+    log = app.logger
+
+    outFolder = namespace
+
+    ns_svc = NamespaceService()
+    ns_attributes = ns_svc.get_namespace_attributes(namespace)
+
+    dp = get_data_plane(ns_attributes)
+
+    # Build a list of existing hosts that are outside this namespace
+    # They become reserved and any conflict will return an error
+    reserved_hosts = []
+    all_routes = get_routes()
+    tag_match = "ns.%s" % namespace
+    for route in all_routes:
+        if tag_match not in route['tags'] and 'hosts' in route and "sdx" not in route['tags']:
+            for host in route['hosts']:
+                reserved_hosts.append(host)
+    reserved_hosts = list(set(reserved_hosts))
+
+    dfile = None
+    select_tag_qualifier = None
+
+    if delete:
+        select_tag_qualifier = delete_qualifier
+
+    cmd = "sync"
+    if dry_run == 'true' or dry_run is True:
+        cmd = "diff"
+    if dump_only == 'true' or dump_only is True:
+        cmd = "dump"
+
+    tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
+    os.makedirs(tempFolder, exist_ok=False)
+
+    gw_pattern_context = GatewayConfigPattern (document)
+    gw_pattern_context.set_gateway(namespace)
+
+    dfile = gw_pattern_context.get_config_file()
+
+    # log.debug("Saved to %s" % tempFolder)
+    yaml_documents = load_yaml_files(dfile)
+
+    if len(yaml_documents) == 0:
+        log.error("%s - %s" % (namespace, "Empty Configuration Passed"))
+        abort(make_response(jsonify(error="Empty Configuration Passed"), 400))
+
+    if delete:
+        # if deleting, then set the select tag qualifier and override the document
+        # to be a delete document
+        select_tag_qualifier = delete_qualifier
+
+        delete_doc = {
+            "_format_version": "3.0",
+            "services": []
+        }
+
+        yaml_documents = [ yaml.load(yaml.dump(delete_doc), Loader=yaml.FullLoader) ]
+
+    selectTag = "ns.%s" % namespace
+    ns_qualifier = None
+    if select_tag_qualifier is not None and select_tag_qualifier != "" and "." not in select_tag_qualifier:
+        ns_qualifier = "%s.%s" % (selectTag, select_tag_qualifier)
+
+    message = return_combined_yaml_files(yaml_documents)
+    return make_response(message, 200, {'Content-Type': 'application/yaml'})
+
 
 @gw.route('/patterns',
           methods=['PUT'], strict_slashes=False)
@@ -1076,4 +1162,9 @@ def clone_yaml_files (yaml_documents):
     for doc in yaml_documents:
         cloned_yaml.append(yaml.load(yaml.dump(doc), Loader=yaml.FullLoader))
     return cloned_yaml
-    
+
+def return_combined_yaml_files (yaml_documents):
+    combined_yaml = ""
+    for doc in yaml_documents:
+        combined_yaml = combined_yaml + "---\n" + yaml.safe_dump(doc, width=9999, sort_keys=False, default_flow_style=False, default_style="double-quoted")
+    return combined_yaml
