@@ -59,7 +59,7 @@ def setup_swagger_docs (app, versions):
 
     except:
         traceback.print_exc(file=sys.stdout)
-        log.error("Failed to do OIDC Discovery for %s, sleeping 5 seconds and trying again." % version)
+        log.error("Failed to do OIDC Discovery , sleeping 5 seconds and trying again.")
         time.sleep(5)
-        setup_swagger_docs(app, version)
+        setup_swagger_docs(app, versions)
 
