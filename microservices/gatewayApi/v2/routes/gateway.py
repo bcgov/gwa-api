@@ -462,8 +462,13 @@ def patterned_config(namespace: str) -> object:
     """
     :return: String of the generated yaml configuration
     """
+    log = app.logger
 
+    log.info("Received patterned config request for %s" % namespace)
+             
     config = request.get_json()
+
+    log.info("Config: %s" % config)
 
     delete = config.get("delete", False)
     delete_qualifier = config.get("deleteQualifier", None)
@@ -471,12 +476,11 @@ def patterned_config(namespace: str) -> object:
     dump_only = config.get("dump", False)
     document = config.get("document", {})
 
-    log = app.logger
 
     outFolder = namespace
 
-    ns_svc = NamespaceService()
-    ns_attributes = ns_svc.get_namespace_attributes(namespace)
+    # ns_svc = NamespaceService()
+    # ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
     dfile = None
     select_tag_qualifier = None
