@@ -452,8 +452,8 @@ def write_config(namespace: str) -> object:
 
 @gw.route('/pattern-output',
           methods=['PUT'], strict_slashes=False)
-# @admin_jwt(None)
-# @uma_enforce('namespace', 'GatewayConfig.Publish')
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
 def patterned_config(namespace: str) -> object:
     """
     :return: String of the generated yaml configuration
