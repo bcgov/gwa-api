@@ -72,6 +72,9 @@ services:
         tags: [ns.${gateway}.${ns_qualifier}]
         enabled: true
         config:
+          replace:
+            headers:
+              - "Host:${provider_endpoint}"
           add:
             headers:
               - "X-Client-Id:${consumer_uri}"
