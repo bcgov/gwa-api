@@ -103,5 +103,5 @@ services:
               - X-Powered-By
 """)
 
-def eval_p2p_consumer_pub_pattern (context):
+def eval_p2p_consumer_integrity_pattern (context):
   return template.substitute(context)
