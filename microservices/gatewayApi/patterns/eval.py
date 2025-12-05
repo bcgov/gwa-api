@@ -6,6 +6,7 @@ from patterns.sdx.service_mtls_r1 import eval_service_mtls_pattern
 from patterns.sdx.p2p_provider_r1 import eval_p2p_provider_pattern
 
 from patterns.sdx.p2p_provider_pub_r1 import eval_p2p_provider_pub_pattern
+from patterns.sdx.p2p_provider_integrity_r1 import eval_p2p_provider_integrity_pattern
 from patterns.sdx.p2p_consumer_r1 import eval_p2p_consumer_pattern
 from patterns.sdx.p2p_consumer_pub_r1 import eval_p2p_consumer_pub_pattern
 
@@ -27,6 +28,8 @@ def evaluate_pattern(pattern, context):
         return eval_p2p_provider_pattern(context)
     elif pattern == 'sdx-p2p-provider-pub-r1':
         return eval_p2p_provider_pub_pattern(context)
+    elif pattern == 'sdx-p2p-provider-integrity-r1':
+        return eval_p2p_provider_integrity_pattern(context)
     elif pattern == 'sdx-p2p-consumer-r1':
         return eval_p2p_consumer_pattern(context)
     elif pattern == 'sdx-p2p-consumer-pub-r1':
