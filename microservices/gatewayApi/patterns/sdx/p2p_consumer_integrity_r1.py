@@ -90,6 +90,17 @@ services:
           add:
             headers:
               - "X-Client-Id:${consumer_uri}"
+                    
+      - name: response-transformer
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          remove:
+            headers:
+              - Set-Cookie
+              - Server
+              - Via
+              - X-Powered-By
 """)
 
 def eval_p2p_consumer_pub_pattern (context):

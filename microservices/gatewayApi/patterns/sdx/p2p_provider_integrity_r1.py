@@ -30,7 +30,31 @@ services:
           signature_label: sig1
           signature_input: '("@authority")'
           direction: response
-   
+
+      - name: request-transformer
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          remove:
+            headers:
+              - Cookie
+              - Forwarded
+              - Priority
+              - Sec-Ch-Ua
+              - Sec-Ch-Ua-Mobile
+              - Sec-Ch-Ua-Platform
+              - Sec-Fetch-Dest
+              - Sec-Fetch-Mode
+              - Sec-Fetch-Site
+              - Sec-Fetch-User
+              - Upgrade-Insecure-Requests
+              - User-Agent
+              - Via
+              - X-Forwarded-Path
+              - X-Forwarded-Port
+              - X-Forwarded-Prefix
+              - X-Real-Ip
+
     routes:
       - name: ${service_name}
         tags: [ns.${gateway}.${ns_qualifier}, sdx]
