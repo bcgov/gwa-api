@@ -58,7 +58,7 @@ services:
           keyid: ${edge_kid}
           alg: ES256
           hash_alg: sha256
-          signature_header_key: X-Edge-C-Token
+          signature_header_key: X-Edge-Token
           signature_label: sig1
           signature_input: '("@authority")'
           direction: request
