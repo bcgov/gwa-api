@@ -19,6 +19,16 @@ services:
     tls_verify: false
 
     plugins:
+      - name: mtls-auth
+        tags: [ns.${gateway}.${ns_qualifier}]
+        config:
+          error_response_code: 401
+          upstream_cert_cn_header: "X-CERT-CN"
+          upstream_cert_fingerprint_header: "X-CERT-FINGERPRINT"
+          upstream_cert_i_dn_header: "X-CERT-I-DN"
+          upstream_cert_s_dn_header: "X-CERT-S-DN"
+          upstream_cert_serial_header: "X-CERT-SERIAL"
+               
       - name: trust-sign
         tags: [ns.${gateway}.${ns_qualifier}]
         config:
