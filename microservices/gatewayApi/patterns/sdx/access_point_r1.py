@@ -249,6 +249,7 @@ services:
         - localhost
       paths:
         - /jwks
+        - /.well-known/jwks.json
       methods:
         - GET
       strip_path: false
