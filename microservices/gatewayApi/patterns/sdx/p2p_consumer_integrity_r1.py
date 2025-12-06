@@ -51,9 +51,19 @@ services:
         request_buffering: true
         response_buffering: true
     plugins:
+      - name: trust-verify-signature
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          direction: response
+          jwks_endpoint: ${trust_jwks_endpoint}
+          manifest_type: signature-only
+          signature_header_key: X-Edge-Token
+
       - name: trust-sign
         tags: [ns.${gateway}.${ns_qualifier}]
         config:
+          direction: request
           private_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
           keyid: ${edge_kid}
           alg: ES256
@@ -61,7 +71,6 @@ services:
           signature_header_key: X-Edge-Token
           signature_label: sig1
           signature_input: '("@authority")'
-          direction: request
 
       - name: rate-limiting
         tags: [ns.${gateway}.${ns_qualifier}]

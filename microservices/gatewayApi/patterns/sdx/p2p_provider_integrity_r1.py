@@ -28,10 +28,20 @@ services:
           upstream_cert_i_dn_header: "X-CERT-I-DN"
           upstream_cert_s_dn_header: "X-CERT-S-DN"
           upstream_cert_serial_header: "X-CERT-SERIAL"
-               
+
+      - name: trust-verify-signature
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          direction: request
+          jwks_endpoint: ${trust_jwks_endpoint}
+          manifest_type: signature-only
+          signature_header_key: X-Edge-Token
+
       - name: trust-sign
         tags: [ns.${gateway}.${ns_qualifier}]
         config:
+          direction: response
           private_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
           keyid: ${edge_kid}
           alg: ES256
@@ -39,7 +49,6 @@ services:
           signature_header_key: X-Edge-Token
           signature_label: sig1
           signature_input: '("@authority")'
-          direction: response
 
       - name: request-transformer
         tags: [ns.${gateway}.${ns_qualifier}]
