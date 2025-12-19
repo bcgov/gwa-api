@@ -246,9 +246,7 @@ services:
       tags: [ns.${gateway}.${ns_qualifier}, sdx]
       hosts:
         - ${route_host}
-        - localhost
       paths:
-        - /jwks
         - /.well-known/jwks.json
       methods:
         - GET
