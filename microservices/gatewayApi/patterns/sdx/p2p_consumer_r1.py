@@ -124,12 +124,11 @@ services:
         tags: [ns.${gateway}.${ns_qualifier}]
         config:
           private_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
+          jwks_uri: "https://sdx.gov.bc.ca/keysets/min.citz/jwks.jose"
           keyid: ${edge_kid}
           alg: ES256
           hash_alg: sha256
-          signature_header_key: X-Signature
-          signature_label: sig1
-          signature_input: '("@authority")'
+          signature_header_key: X-Edge-Token
           direction: request
 
       - name: trust-timestamp

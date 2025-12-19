@@ -78,9 +78,8 @@ services:
         enabled: true
         config:
           direction: request
-          jwks_endpoint: https://${route_host}/jwks
           manifest_type: signature-only
-          signature_header_key: X-Signature
+          signature_header_key: X-Edge-Token
                     
     routes:
       - name: ${service_name}

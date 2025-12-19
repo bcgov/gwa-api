@@ -56,7 +56,6 @@ services:
         enabled: true
         config:
           direction: response
-          jwks_endpoint: ${trust_jwks_endpoint}
           manifest_type: signature-only
           signature_header_key: X-Edge-Token
 
@@ -65,12 +64,11 @@ services:
         config:
           direction: request
           private_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
+          jwks_uri: "https://sdx.gov.bc.ca/keysets/min.citz/jwks.jose"
           keyid: ${edge_kid}
           alg: ES256
           hash_alg: sha256
           signature_header_key: X-Edge-Token
-          signature_label: sig1
-          signature_input: '("@authority")'
 
       - name: rate-limiting
         tags: [ns.${gateway}.${ns_qualifier}]
