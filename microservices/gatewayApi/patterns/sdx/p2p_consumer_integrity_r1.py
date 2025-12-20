@@ -64,7 +64,7 @@ services:
         config:
           direction: request
           private_key_location: "/etc/secrets/sdx-edge-signing-cert/tls.key"
-          jwks_uri: "https://sdx.gov.bc.ca/keysets/min.citz/jwks.jose"
+          jwks_uri: "https://sdx-min-citz-jwks-api-gov-bc-ca-lab.dev.api.gov.bc.ca"
           keyid: ${edge_kid}
           alg: ES256
           hash_alg: sha256
