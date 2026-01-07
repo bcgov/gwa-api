@@ -1,0 +1,435 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OAS Spectral Validation API",
+    "description": "A governance API for discovering and using BCGov Spectral rulesets to validate OpenAPI Specification documents.\nRepository: https://github.com/bcgov/csit-api-governance-spectral-style-guide",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/versions": {
+      "get": {
+        "tags": [
+          "Discovery"
+        ],
+        "summary": "List available ruleset versions",
+        "description": "Returns all Git tags (versions) from the csit-api-governance-spectral-style-guide repository that contain Spectral rulesets.",
+        "operationId": "listVersions",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/versions/{version}/rulesets": {
+      "get": {
+        "tags": [
+          "Discovery"
+        ],
+        "summary": "List Spectral rulesets in a version",
+        "description": "Returns the list of Spectral rulesets available in the specified version.",
+        "operationId": "listRulesets",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Version (Git tag) name",
+              "examples": [
+                "v1.0.0"
+              ],
+              "title": "Version"
+            },
+            "description": "Version (Git tag) name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RulesetList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Version or ruleset not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/versions/{version}/rulesets/{ruleset}/validations": {
+      "post": {
+        "tags": [
+          "Validation"
+        ],
+        "summary": "Validate an OpenAPI document",
+        "description": "Creates a new validation resource by running Spectral against the uploaded OpenAPI document using the specified ruleset from the given version.",
+        "operationId": "createValidation",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Version (Git tag) name",
+              "examples": [
+                "v1.0.0"
+              ],
+              "title": "Version"
+            },
+            "description": "Version (Git tag) name"
+          },
+          {
+            "name": "ruleset",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Path to the Spectral rules file (URL-encoded if necessary)",
+              "examples": [
+                "rulesets/basic-ruleset.yml"
+              ],
+              "title": "Ruleset"
+            },
+            "description": "Path to the Spectral rules file (URL-encoded if necessary)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Validation completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request (missing file, unsupported format, etc.)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Version or ruleset not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "OAS document could not be parsed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "The raw OpenAPI document to validate. Send as JSON or YAML with appropriate Content-Type header.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "format": "binary",
+                "description": "OpenAPI document in JSON format"
+              },
+              "examples": {
+                "pet-store-json": {
+                  "summary": "An example JSON Open API specification",
+                  "value": "{\n  \"openapi\": \"3.1.0\",\n  \"info\": {\n    \"title\": \"Pet Store API\",\n    \"version\": \"1.0.0\",\n    \"description\": \"A simple example API for managing pets\"\n  },\n  \"paths\": {\n    \"/pets\": {\n      \"get\": {\n        \"summary\": \"List all pets\",\n        \"operationId\": \"listPets\",\n        \"responses\": {\n          \"200\": {\n            \"description\": \"A list of pets\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": {\n                  \"type\": \"array\",\n                  \"items\": {\n                    \"$ref\": \"#/components/schemas/Pet\"\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  },\n  \"components\": {\n    \"schemas\": {\n      \"Pet\": {\n        \"type\": \"object\",\n        \"required\": [\"id\", \"name\"],\n        \"properties\": {\n          \"id\": { \"type\": \"integer\" },\n          \"name\": { \"type\": \"string\" },\n          \"tag\": { \"type\": \"string\" }\n        }\n      }\n    }\n  }\n}\n"
+                }
+              }
+            },
+            "application/yaml": {
+              "schema": {
+                "type": "string",
+                "format": "binary",
+                "description": "OpenAPI document in YAML format"
+              },
+              "examples": {
+                "pet-store-yaml": {
+                  "summary": "An example YAML Open API specification",
+                  "value": "openapi: 3.1.0\ninfo:\n  title: Pet Store API\n  version: 1.0.0\n  description: A simple example API for managing pets\npaths:\n  /pets:\n    get:\n      summary: List all pets\n      operationId: listPets\n      responses:\n        '200':\n          description: A list of pets\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/Pet'\ncomponents:\n  schemas:\n    Pet:\n      type: object\n      required:\n        - id\n        - name\n      properties:\n        id:\n          type: integer\n        name:\n          type: string\n        tag:\n          type: string\n"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "ErrorResponse"
+      },
+      "Result": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Rule code or identifier"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable description of the issue"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity",
+            "description": "Severity level of the result"
+          },
+          "path": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Path",
+            "description": "JSONPath-like location in the document where the issue occurred"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "severity",
+          "path"
+        ],
+        "title": "Result"
+      },
+      "RulesetList": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "rulesets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rulesets",
+            "description": "Relative paths to rules files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "rulesets"
+        ],
+        "title": "RulesetList",
+        "description": "Sorted list of Rulesets"
+      },
+      "Severity": {
+        "type": "string",
+        "enum": [
+          "error",
+          "warn",
+          "info",
+          "hint"
+        ],
+        "title": "Severity"
+      },
+      "ValidationResponse": {
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "title": "Valid",
+            "description": "True if no errors were found (warnings may still exist)"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "The version (tag) used for validation"
+          },
+          "ruleset": {
+            "type": "string",
+            "title": "Ruleset",
+            "description": "The ruleset file path used for validation"
+          },
+          "durationMs": {
+            "type": "integer",
+            "title": "Duration Ms",
+            "description": "Validation duration in milliseconds"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ValidationResponseSummary"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/Result"
+            },
+            "type": "array",
+            "title": "Results",
+            "description": "Detailed validation results"
+          },
+          "validatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Validated At",
+            "description": "Timestamp when validation completed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valid",
+          "version",
+          "ruleset",
+          "durationMs",
+          "summary",
+          "results",
+          "validatedAt"
+        ],
+        "title": "ValidationResponse",
+        "description": "ValidationResponse"
+      },
+      "ValidationResponseSummary": {
+        "properties": {
+          "errors": {
+            "type": "integer",
+            "title": "Errors"
+          },
+          "warnings": {
+            "type": "integer",
+            "title": "Warnings"
+          },
+          "infos": {
+            "type": "integer",
+            "title": "Infos"
+          },
+          "hints": {
+            "type": "integer",
+            "title": "Hints"
+          }
+        },
+        "type": "object",
+        "required": [
+          "errors",
+          "warnings",
+          "infos",
+          "hints"
+        ],
+        "title": "ValidationResponseSummary",
+        "description": "Count of results by severity"
+      },
+      "VersionList": {
+        "properties": {
+          "versions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Versions",
+            "description": "The list of version names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "versions"
+        ],
+        "title": "VersionList",
+        "description": "Sorted list of version names (e.g., 'v1.0.0', 'v2.3.1')"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Discovery",
+      "description": "Browse available ruleset versions and files"
+    },
+    {
+      "name": "Validation",
+      "description": "Perform validation of OpenAPI documents"
+    }
+  ]
+}
