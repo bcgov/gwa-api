@@ -38,6 +38,35 @@ paths:
         "500":
           $ref: "#/components/responses/500InternalServerError"
 
+  /namespaces/{namespace}/gateway/pattern-output:
+    put:
+      summary: Produces gateway config based on pre-defined patterns
+      description: Returns the config
+      tags:
+        - Gateway
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
+
   /namespaces/{namespace}/gateway/patterns:
     put:
       summary: Updates the gateway config based on pre-defined patterns

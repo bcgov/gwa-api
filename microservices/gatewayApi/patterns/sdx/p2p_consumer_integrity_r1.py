@@ -86,6 +86,7 @@ services:
           origins: ["*"]
           methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
           headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign", "Content-Digest", "Dpop"]
+          exposed_headers: ["*", "Signature", "Signature-Input", "Content-Digest", "x-trust-ledger-body", "x-trust-ledger-status", "x-trust-timestamp", "x-kong-request-id"]
 
       - name: request-transformer
         tags: [ns.${gateway}.${ns_qualifier}]
