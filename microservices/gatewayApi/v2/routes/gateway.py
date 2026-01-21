@@ -48,8 +48,8 @@ def delete_config(namespace: str, qualifier="") -> object:
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
     dp = get_data_plane(ns_attributes)
-    rqst_url = app.config['data_planes'][dp]["kube-api"]
-    kong_addr_override = app.config['data_planes'][dp]["kong-addr"]
+    rqst_url = app.config['data_planes'][dp].get("kube-api")
+    kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
 
     log = app.logger
 
@@ -161,8 +161,8 @@ def write_config(namespace: str) -> object:
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
     dp = get_data_plane(ns_attributes)
-    rqst_url = app.config['data_planes'][dp]["kube-api"]
-    kong_addr_override = app.config['data_planes'][dp]["kong-addr"]
+    rqst_url = app.config['data_planes'][dp].get("kube-api")
+    kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
 
     # Build a list of existing hosts that are outside this namespace
     # They become reserved and any conflict will return an error
@@ -394,7 +394,7 @@ def write_config(namespace: str) -> object:
                     "overrides": route_payload["overrides"]
                 }
                 log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload_log))
-                rqst_url = app.config['data_planes'][dp]["kube-api"]
+
                 res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                     app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
                 log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
@@ -406,7 +406,7 @@ def write_config(namespace: str) -> object:
                 if has_namespace_local_host_permission(ns_attributes):
                     session = requests.Session()
                     session.headers.update({"Content-Type": "application/json"})
-                    rqst_url = app.config['data_planes'][dp]["kube-api"]
+
                     log.debug("[%s] - Initiating request to kube API for Certs" % (dp))
                     res = session.get(rqst_url + "/namespaces/%s/local_tls" % namespace, auth=(
                         app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))

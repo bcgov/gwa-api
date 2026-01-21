@@ -92,8 +92,8 @@ def delete_namespace(namespace: str) -> object:
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
     dp = get_data_plane(ns_attributes)
-    rqst_url = app.config['data_planes'][dp]["kube-api"]
-    kong_addr_override = app.config['data_planes'][dp]["kong-addr"]
+    rqst_url = app.config['data_planes'][dp].get("kube-api")
+    kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
 
     outFolder = namespace
 
