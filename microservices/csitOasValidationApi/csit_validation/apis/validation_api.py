@@ -15,6 +15,7 @@ from pydantic import Field, StrictStr
 from typing_extensions import Annotated
 from csit_validation.apis.errors.error_response import ErrorResponse
 from csit_validation.models.validation_response import ValidationResponse
+from csit_validation.apis.errors.problem_detail_response import ProblemDetailResponse
 
 
 router = APIRouter()
@@ -105,13 +106,13 @@ components:
 """
 
 @router.post(
-    "/versions/{version}/rulesets/{ruleset}/validations",
+    "/versions/{version}/rulesets/{ruleset:path}/validations",
     operation_id="createValidation",
     responses={
         200: {"model": ValidationResponse, "description": "Validation completed successfully"},
-        400: {"model": ErrorResponse, "description": "Invalid request (missing file, unsupported format, etc.)"},
+        400: {"model": ProblemDetailResponse, "description": "Invalid request (missing file, unsupported format, etc.)"},
         404: {"model": ErrorResponse, "description": "Version or ruleset not found"},
-        422: {"model": ErrorResponse, "description": "OAS document could not be parsed"},
+        422: {"model": ProblemDetailResponse, "description": "OAS document could not be parsed"},
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
     tags=["Validation"],

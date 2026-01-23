@@ -25,6 +25,17 @@ class RulesetList(BaseModel):
         "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
+        "json_schema_extra" : {
+            "examples": [
+                {
+                    "rulesets": [
+                        "basic-ruleset",
+                        "strict-ruleset"
+                    ],
+                    "version": "v0.1.0"
+                }
+            ]
+        }
     }
 
 

@@ -10,28 +10,23 @@ from typing import Tuple
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, Request
+from fastapi.responses import JSONResponse
 from starlette.requests import Request
 from packaging import version
 from csit_validation.apis.validation_api_base import BaseValidationApi
-from csit_validation.apis.errors.problem_details import (
-    ErrorItem,
-    ErrorLocation,
-    ProblemDetail,
-    create_problem_response
-)
+
+from csit_validation.apis.errors.problem_detail_error_item import ProblemDetailErrorItem
+from csit_validation.apis.errors.problem_detail_error_location import ProblemDetailErrorLocation
+from csit_validation.apis.errors.problem_detail_response import ProblemDetailResponse
 from csit_validation.models.validation_response import (
     ValidationResponse,
     ValidationResponseSummary
 )
-from csit_validation.services.github_ruleset_service import GitHubRulesetService
-from csit_validation.services.spectral_repo_cache import SpectralRepoCache
+from csit_validation.services.cached_rulesets_service import CachedRulesetsService
 from csit_validation.util.log_decorator import log_entry_exit
 from csit_validation.core.config import (
-    GITHUB_TOKEN,
-    GITHUB_REPO_OWNER,
-    GITHUB_REPO_NAME,
+    VERSION_TAG_PREFIX,
     RULESET_DIRECTORY,
-    RULESET_FILE_EXTENSIONS,
     GITHUB_TAG_CACHE_PATH,
 )
 
@@ -43,10 +38,7 @@ class ValidationApiImpl(BaseValidationApi):
     The Validation API endpoints support the validating of an OpenApi specification in json or yaml format, using 
     the version and ruleset discovered using the Discovery API.
 
-    The GitHubRulesetService is used to versify the version and rulesets requested.
-
-    The SpectralRepoCache is used to maintain a local cache of the rulesets from the https://github.com/bcgov/csit-api-governance-spectral-style-guide
-    repository.
+    The GitHubRulesetService is used to verify the version and rulesets requested.
 
     Stoplight Spectral is used to perform the validation on the uploaded json or yaml OAS file.
 
@@ -56,11 +48,9 @@ class ValidationApiImpl(BaseValidationApi):
     @log_entry_exit(logger)
     def __init__(self):
 
-        self.repo_owner = GITHUB_REPO_OWNER
-        self.repo_name = GITHUB_REPO_NAME
-        self.repo_token = GITHUB_TOKEN
+        self.github_tag_cache_path = GITHUB_TAG_CACHE_PATH
+        self.version_tag_prefix = VERSION_TAG_PREFIX
         self.ruleset_dir = RULESET_DIRECTORY
-        self.rules_file_extensions = RULESET_FILE_EXTENSIONS
         self.tag_prefix = "ruleset-"
         
         spectral_ver = self.get_spectral_version()
@@ -76,24 +66,10 @@ class ValidationApiImpl(BaseValidationApi):
         else:
             logger.info(f"Using Spectral CLI version {spectral_ver}")
         
-        self.gh = GitHubRulesetService(
-            self.repo_owner,
-            self.repo_name,
-            self.repo_token,
+        self.gh = CachedRulesetsService(
+            self.github_tag_cache_path,
+            self.version_tag_prefix,
             self.ruleset_dir,
-            self.rules_file_extensions,
-        )
-            
-        self._cache_dir = GITHUB_TAG_CACHE_PATH()
-        self._cache_dir.mkdir(parents=True, exist_ok=True)
-
-        # We don't pass the GITHUB_TOKEN to the SpectralRepoCache becuase it uses subprocesses to make
-        # git calls rather than via HTTPS requests.
-        self.cache = SpectralRepoCache(
-            self.repo_owner,
-            self.repo_name,
-            self._cache_dir,
-            3600, # Clean up cache once per hour
         )
 
     @log_entry_exit(logger)
@@ -218,20 +194,19 @@ class ValidationApiImpl(BaseValidationApi):
         request: Request
     ) -> ValidationResponse:
 
-        await self.gh.ensure_repo_exists()
-
-        prefixed_tag = await self.gh.get_tag_from_version(version)
+        version_to_tag_map = self.gh.get_valid_version_tags
+        prefixed_tag = version_to_tag_map.get(version)
         if prefixed_tag is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"Version '{version}' not found in {self.gh.repo_owner}/{self.gh.repo_name}"
+                detail=f"Version '{version}' not found"
             )
 
         ruleset_tuple = await self.gh.get_ruleset_tuple(prefixed_tag, ruleset)
         if ruleset_tuple is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"Ruleset '{ruleset}' not found for Version '{version}' in {self.gh.repo_owner}/{self.gh.repo_name}"
+                detail=f"Ruleset '{ruleset}' not found for Version '{version}'"
             )
 
         _, ruleset_rel_path = ruleset_tuple
@@ -239,57 +214,75 @@ class ValidationApiImpl(BaseValidationApi):
 
         raw_body = await request.body()
         if not raw_body.strip():
-            problem = ProblemDetail(title="Bad Request", status=400)
-            problem.add_error(ErrorItem(
-                location=ErrorLocation.BODY,
-                code="MISSING_BODY",
-                message="Request body is required and cannot be empty"
-            ))
-            return create_problem_response(problem)
+
+            return JSONResponse(
+                status_code=400,
+                content=ProblemDetailResponse(
+                    type = "tag:validation-errors",
+                    title = "Bad Request",
+                    status = 400,
+                    errors = [
+                        ProblemDetailErrorItem(
+                            type = "tag:validation-error",
+                            location = ProblemDetailErrorLocation.BODY,
+                            code = "MISSING_BODY",
+                            message = "Request body is required and cannot be empty"
+                        )
+                    ]
+                ).model_dump(
+                    mode="json",
+                    exclude_none=True)
+                )
+
 
         content_type = request.headers.get("content-type", "").lower().split(";")[0].strip()
         allowed = {"application/json", "application/yaml"}
         if content_type not in allowed:
-            problem = ProblemDetail(title="Unsupported Media Type", status=415)
-            problem.add_error(ErrorItem(
-                location=ErrorLocation.HEADER,
-                field="content-type",
-                code="UNSUPPORTED_MEDIA_TYPE",
-                message="Only JSON and YAML are supported",
-                received=content_type or "missing"
-            ))
-            return create_problem_response(problem)
+
+            return JSONResponse(
+                status_code=415,
+                content=ProblemDetailResponse(
+                    type = "tag:validation-errors",
+                    title = "Unsupported Media Type",
+                    status = 415,
+                    errors = [
+                        ProblemDetailErrorItem(
+                            type = "tag:validation-error",
+                            location = ProblemDetailErrorLocation.HEADER,
+                            field = "content-type",
+                            code = "UNSUPPORTED_MEDIA_TYPE",
+                            message = "Only JSON and YAML are supported",
+                            received = content_type or "missing"
+                        )
+                    ]
+                ).model_dump(
+                    mode="json",
+                    exclude_none=True)
+                )
 
         # ── Main logic ───────────────────────────────────────────────
 
         logger.debug("<Processing request")
 
-        cache_dir = self.cache.get_cache_dir_for_tag(prefixed_tag)
+        cache_dir = Path(self.github_tag_cache_path()) / "tags" / prefixed_tag
         cached_ruleset_path = cache_dir / ruleset_rel_path
+        logger.debug(f"cached_ruleset_path={cached_ruleset_path}")
 
         if not cached_ruleset_path.is_file():
             raise HTTPException(500, f"Cached ruleset file not found: {cached_ruleset_path}")
 
-        lock = self.cache.get_tag_lock(prefixed_tag)
-        logger.debug(f"lock = {lock}")
-        lock.acquire_read()
-        try:
+        valid, results, summary, duration_ms = await self._run_spectral_cli(
+            raw_body, cached_ruleset_path, content_type
+        )
 
-            valid, results, summary, duration_ms = await self._run_spectral_cli(
-                raw_body, cached_ruleset_path, content_type
-            )
+        logger.debug(">Processing request")
 
-            logger.debug(">Processing request")
-
-            return ValidationResponse(
-                valid=valid,
-                version=version,
-                ruleset=ruleset,
-                duration_ms=duration_ms,
-                summary=summary,
-                results=results,
-                validated_at=datetime.now(timezone.utc)
-            )
-        
-        finally:
-            lock.release_read()
+        return ValidationResponse(
+            valid=valid,
+            version=version,
+            ruleset=ruleset,
+            duration_ms=duration_ms,
+            summary=summary,
+            results=results,
+            validated_at=datetime.now(timezone.utc)
+        )

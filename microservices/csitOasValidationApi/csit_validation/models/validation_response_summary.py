@@ -27,6 +27,16 @@ class ValidationResponseSummary(BaseModel):
         "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
+        "json_schema_extra" : {
+            "examples": [
+                {
+                    "errors": 1,
+                    "hints": 0,
+                    "infos": 0,
+                    "warnings": 0
+                }
+            ]
+        }
     }
 
 

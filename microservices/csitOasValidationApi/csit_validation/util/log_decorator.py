@@ -1,7 +1,7 @@
 from functools import wraps
 import logging
 import sys
-import asyncio
+import inspect
 from typing import Callable, Any, Optional
 
 
@@ -49,7 +49,7 @@ def log_entry_exit(logger: Optional[logging.Logger] = None) -> Callable:
                 raise
 
         # Choose appropriate wrapper based on function type
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper

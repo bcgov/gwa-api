@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
+from csit_validation.apis.root_api import router as RootApiRouter
 from csit_validation.apis.discovery_api import router as DiscoveryApiRouter
 from csit_validation.apis.validation_api import router as ValidationApiRouter
 
@@ -26,6 +27,7 @@ app = FastAPI(
     openapi_tags=tags_metadata
 )
 
+app.include_router(RootApiRouter)
 app.include_router(DiscoveryApiRouter)
 app.include_router(ValidationApiRouter)
 

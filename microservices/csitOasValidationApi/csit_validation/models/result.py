@@ -1,12 +1,12 @@
 from __future__ import annotations
 import pprint
-import re  # noqa: F401
 import json
 
 from enum import Enum
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
+from pydantic import BaseModel, GetJsonSchemaHandler, Field, StrictStr, field_validator
+from pydantic.json_schema import JsonSchemaValue
 from typing import Any, ClassVar, Dict, List
 try:
     from typing import Self
@@ -18,6 +18,20 @@ class Severity(str, Enum):
     warn = "warn"
     info = "info"
     hint = "hint"
+    
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls,
+        core_schema,
+        handler: GetJsonSchemaHandler,
+    ) -> JsonSchemaValue:
+        # Let Pydantic generate the base schema: {"type": "string", "enum": ["error", "warn", ...]}
+        json_schema = handler(core_schema)
+
+        # Add the example(s) at the schema level (sibling to "enum")
+        json_schema["examples"] = ["error"]
+
+        return json_schema
 
 class Result(BaseModel):
     code: StrictStr = Field(description="Rule code or identifier")
@@ -37,6 +51,16 @@ class Result(BaseModel):
         "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "code": "operation-id-camel-case",
+                    "message": "operationId should be camelCase (starts with lowercase letter, no separators)",
+                    "path": ["paths", "/users/{id}", "get", "operationId"],
+                    "severity": "error"
+                }
+            ]
+        }
     }
 
 
@@ -66,17 +90,10 @@ class Result(BaseModel):
         """
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude={},
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in path (list)
-        _items = []
-        if self.path:
-            for _item in self.path:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['path'] = _items
+        # No need for special handling of path — it's just List[str]
         return _dict
 
     @classmethod
@@ -88,12 +105,11 @@ class Result(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
+        # Simple direct mapping — path is List[str]
         _obj = cls.model_validate({
             "code": obj.get("code"),
             "message": obj.get("message"),
             "severity": obj.get("severity"),
-            "path": [ResultPathInner.from_dict(_item) for _item in obj.get("path")] if obj.get("path") is not None else None
+            "path": obj.get("path") if obj.get("path") is not None else None,
         })
         return _obj
-
-

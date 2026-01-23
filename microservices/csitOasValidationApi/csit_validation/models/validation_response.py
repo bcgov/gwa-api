@@ -32,6 +32,36 @@ class ValidationResponse(BaseModel):
         "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
+        "json_schema_extra" : {
+            "examples": [
+                {
+                    "durationMs": 5000,
+                    "ruleset": "basic-ruleset",
+                    "results": [
+                    {
+                        "code": "operation-id-camel-case",
+                        "message": "operationId should be camelCase (starts with lowercase letter, no separators)",
+                        "path": [
+                        "paths", 
+                        "/users/{id}", 
+                        "get", 
+                        "operationId"
+                        ],
+                        "severity": "error"
+                    }
+                    ],
+                    "summary": {
+                    "errors": 1,
+                    "hints": 0,
+                    "infos": 0,
+                    "warnings": 0
+                    },
+                    "valid": False,
+                    "validatedAt": "2025-06-17T14:35:22.147Z",
+                    "version": "v0.1.0"
+                }
+            ]
+        }
     }
 
 

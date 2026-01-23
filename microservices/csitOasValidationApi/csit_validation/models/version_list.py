@@ -24,6 +24,16 @@ class VersionList(BaseModel):
         "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
+        "json_schema_extra" : {
+            "examples": [
+                {
+                    "versions": [
+                    "v1.0.0", 
+                    "v2.3.1"
+                    ]
+                }
+            ]
+        }
     }
 
 

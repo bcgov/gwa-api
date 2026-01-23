@@ -32,12 +32,12 @@ for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
     tags=["Discovery"],
-    summary="List available ruleset versions",
+    summary="List available versions of the API Governance rules",
     response_model_by_alias=True,
 )
 async def list_versions(
 ) -> VersionList:
-    """Returns all Git tags (versions) from the csit-api-governance-spectral-style-guide repository that contain Spectral rulesets."""
+    """Returns all Git tags (versions) from the csit-api-governance-spectral-style-guide repository which contain Spectral rulesets."""
     if not BaseDiscoveryApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseDiscoveryApi.subclasses[0]().list_versions()

@@ -6,23 +6,44 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
+from pydantic import BaseModel, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional, Annotated
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
+DETAILS_JSON_SCHEMA_EXTRA = {
+    "example": {
+        "correlationId": "req-abc123-xyz",
+        "timestamp": "2026-01-16T19:22:00Z"
+    }
+}
+
 class ErrorResponse(BaseModel):
-    error: StrictStr
-    message: StrictStr
-    details: Optional[Dict[str, Any]] = None
+    """
+    Standard error response format for unexpected or server-side errors (e.g., 500 Internal Server Error, 403 Forbidden, 401 Unauthorized, etc.). This is used when a more structured Problem Details response (RFC 9457) is not appropriate or when the error is general rather than validation-specific.
+    """
+    error: StrictStr = Field(description="A short, machine-readable error code or identifier that categorizes the type of error. This field is stable and intended for programmatic handling by clients (e.g., mapping to specific error-handling logic). Common values include 'internal_error', 'forbidden', 'unauthorized', 'rate_limit_exceeded', etc.", json_schema_extra={"example":"forbidden"})
+    message: StrictStr = Field(description="A human-readable summary of the error, suitable for display to end-users or logging. Should be clear, concise, and avoid exposing internal technical details or sensitive information (per security best practices).", json_schema_extra={"example":"You are not authorized to access this resource"})
+    details: Optional[Dict[str, Any]] = Field(default=None, description="Optional additional context or structured details about the error. This can include extra information useful for debugging (e.g., error codes from downstream systems, correlation IDs, or custom attributes). Use sparingly and avoid including sensitive data.", json_schema_extra=DETAILS_JSON_SCHEMA_EXTRA)
     __properties: ClassVar[List[str]] = ["error", "message", "details"]
 
     model_config = {
         "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
+        "json_schema_extra" : {
+            "examples": [
+                {
+                    "error": "forbidden",
+                    "message": "You are not authorized to access this resource",
+                    "details": {
+                        "correlationId": "req-abc123-xyz"
+                    }
+                }
+            ]
+        }
     }
 
 

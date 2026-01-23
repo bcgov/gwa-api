@@ -50,6 +50,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+ruleset_tag_cache/
 
 # Translations
 *.mo
