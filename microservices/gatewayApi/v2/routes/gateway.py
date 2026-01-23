@@ -167,14 +167,16 @@ def write_config(namespace: str) -> object:
     # Build a list of existing hosts that are outside this namespace
     # They become reserved and any conflict will return an error
     reserved_hosts = []
-    all_routes = get_routes()
-    tag_match = "ns.%s" % namespace
-    for route in all_routes:
-        if tag_match not in route['tags'] and 'hosts' in route:
-            for host in route['hosts']:
-                reserved_hosts.append(host)
-    reserved_hosts = list(set(reserved_hosts))
 
+    do_enforce_reserved_hosts = app.config['data_planes'][dp].get("enforce-reserved-hosts", True)
+    if do_enforce_reserved_hosts:
+        all_routes = get_routes()
+        tag_match = "ns.%s" % namespace
+        for route in all_routes:
+            if tag_match not in route['tags'] and 'hosts' in route:
+                for host in route['hosts']:
+                    reserved_hosts.append(host)
+        reserved_hosts = list(set(reserved_hosts))
 
     dfile = None
     select_tag_qualifier = None
