@@ -40,7 +40,6 @@ Set it for this project
 
 ```bash
 cd microservices/csitOasValidationApi
-pyenv local 3.14.0
 ```
 
 Verify the version:
@@ -54,6 +53,7 @@ Install Poetry
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
 poetry config keyring.enabled false
+poetry env use 3.14
 poetry install
 ```
 

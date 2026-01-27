@@ -54,7 +54,7 @@ for tag in "${TAGS[@]}"; do
     git -C "$BARE_REPO" worktree add --detach "../$target" "$tag"
 
     # Optional: show a quick summary
-    (cd "$target" && git log -1 --oneline --decorate)
+    (cd "$target" && git --no-pager log -1 --oneline --decorate)
     echo ""
 done
 
