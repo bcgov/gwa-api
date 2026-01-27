@@ -92,7 +92,7 @@ def delete_namespace(namespace: str) -> object:
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
     dp = get_data_plane(ns_attributes)
-    rqst_url = app.config['data_planes'][dp].get("kube-api")
+    kube_api_url = app.config['data_planes'][dp].get("kube-api")
     kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
 
     outFolder = namespace
@@ -121,7 +121,7 @@ def delete_namespace(namespace: str) -> object:
         cleanup(tempFolder)
         log.warn("%s - %s" % (namespace, out.decode('utf-8')))
         abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
-    elif rqst_url is None:
+    elif kube_api_url is None:
         log.debug("[%s] No kube API URL configured, skipping route deletion" % (namespace))
     elif cmd == "sync" and not local_environment:
         try:
@@ -134,7 +134,7 @@ def delete_namespace(namespace: str) -> object:
             }
 
             log.debug("[%s] - Initiating request to kube API" % (dp))
-            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+            res = session.put(kube_api_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                 app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
             log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
             if res.status_code != 201:

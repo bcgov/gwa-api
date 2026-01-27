@@ -27,11 +27,11 @@ def get_statuses(namespace: str) -> object:
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
     dp = get_data_plane(ns_attributes)
-    rqst_url = app.config['data_planes'][dp]["kube-api"]
+    kube_api_url = app.config['data_planes'][dp]["kube-api"]
 
     res = []
 
-    if rqst_url is None:
+    if kube_api_url is None:
         log.error("[%s] No kube API URL configured, skipping status retrieval" % (dp))
         return make_response(jsonify({"message": "The data plane does not support this operation"}), 400)
 
@@ -46,7 +46,7 @@ def get_statuses(namespace: str) -> object:
 
         log.debug("[%s] - Initiating request to kube API" % (dp))
 
-        res = session.get(rqst_url + "/namespaces/%s/service-status" % namespace,
+        res = session.get(kube_api_url + "/namespaces/%s/service-status" % namespace,
                           json=service_payload,
                           auth=(app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
 
