@@ -24,6 +24,10 @@
       "kube-api": "http://kube-api",
       "kube-ns": "abcd-1234",
       "validate-upstreams": true
+    },
+    "sdx-edge": {
+      "kong-addr": "http://kong-addr-api",
+      "enforce-reserved-hosts": false
     }
   },
   "kubeApiCreds": {
@@ -31,5 +35,5 @@
     "kubeApiUser": "username"
   },
   "compatibilityApiUrl": "http://compatibility-api",
-   "deckCLI": "deck"
+  "deckCLI": "deck"
 }
