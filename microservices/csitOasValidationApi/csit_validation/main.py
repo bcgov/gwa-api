@@ -48,6 +48,13 @@ def custom_openapi():
         license_info=app.license_info,  
     )
 
+    # Remove internal/operational endpoints from public API spec
+    # Health endpoints are not exposed and are for internal use only
+    # Root endpoint is just a redirect to /docs
+    internal_paths = ["/", "/livez", "/readyz", "/health"]
+    for path in internal_paths:
+        openapi_schema.get("paths", {}).pop(path, None)
+
     # Remove any response entries that have "x-remove": true
     for path_item in openapi_schema.get("paths", {}).values():
         for operation in path_item.values():
@@ -67,6 +74,12 @@ def custom_openapi():
     schemas = components.get("schemas", {})
     schemas.pop("HTTPValidationError", None)
     schemas.pop("ValidationError", None)
+    
+    # Remove HealthResponse schema if health endpoint is removed
+    # (only remove if not used elsewhere)
+    if "/health" in internal_paths:
+        schemas.pop("HealthResponse", None)
+        schemas.pop("HealthStatus", None)
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema
