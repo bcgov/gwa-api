@@ -1,5 +1,5 @@
-from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
+from fastapi_offline import FastAPIOffline
 
 from csit_validation.apis.root_api import router as RootApiRouter
 from csit_validation.apis.discovery_api import router as DiscoveryApiRouter
@@ -16,7 +16,9 @@ tags_metadata = [
     },
 ]
 
-app = FastAPI(
+# Use FastAPIOffline instead of FastAPI to serve Swagger UI assets locally
+# This avoids CDN dependencies that may be blocked by firewalls
+app = FastAPIOffline(
     title="OAS Spectral Validation API",
     description=(
         "A governance API for discovering and using BCGov Spectral rulesets "
