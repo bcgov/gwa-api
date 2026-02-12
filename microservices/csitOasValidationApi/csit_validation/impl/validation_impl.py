@@ -120,8 +120,10 @@ class ValidationApiImpl(BaseValidationApi):
 
             # Write output to temporary files to avoid pipe buffer size limits (64KB default on many systems)
             # This ensures we can capture arbitrarily large outputs from Spectral
-            output_path = Path(tempfile.mktemp(suffix='.json'))
-            error_path = Path(tempfile.mktemp(suffix='.err'))
+            with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as tmp_output:
+                output_path = Path(tmp_output.name)
+            with tempfile.NamedTemporaryFile(suffix='.err', delete=False) as tmp_error:
+                error_path = Path(tmp_error.name)
 
             try:
                 # Run spectral and redirect output to files to avoid buffer limits
