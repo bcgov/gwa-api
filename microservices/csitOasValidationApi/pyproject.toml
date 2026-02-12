@@ -12,6 +12,7 @@ fastapi = "^0.128.0"
 uvicorn = {extras = ["standard"], version = "^0.30.0"}
 semver = "^3.0.4"
 packaging = "^26.0"
+fastapi-offline = "^1.7.6"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "^0.27.0"

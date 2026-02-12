@@ -118,21 +118,75 @@ class ValidationApiImpl(BaseValidationApi):
                 str(tmp_path)
             ]
 
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False
-            )
+            # Write output to temporary files to avoid pipe buffer size limits (64KB default on many systems)
+            # This ensures we can capture arbitrarily large outputs from Spectral
+            with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as tmp_output:
+                output_path = Path(tmp_output.name)
+            with tempfile.NamedTemporaryFile(suffix='.err', delete=False) as tmp_error:
+                error_path = Path(tmp_error.name)
+
+            try:
+                # Run spectral and redirect output to files to avoid buffer limits
+                with open(output_path, 'w', encoding='utf-8') as out_file, \
+                     open(error_path, 'w', encoding='utf-8') as err_file:
+                    process = subprocess.Popen(
+                        cmd,
+                        stdout=out_file,
+                        stderr=err_file,
+                        text=True
+                    )
+                    
+                    try:
+                        process.wait(timeout=30)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait()
+                        raise HTTPException(500, "Spectral validation timed out after 30 seconds")
+                
+                # Read the output files after process completes
+                with open(output_path, 'r', encoding='utf-8') as out_file:
+                    stdout = out_file.read()
+                
+                with open(error_path, 'r', encoding='utf-8') as err_file:
+                    stderr = err_file.read()
+            finally:
+                # Clean up temporary output files
+                output_path.unlink(missing_ok=True)
+                error_path.unlink(missing_ok=True)
 
             duration_ms = round((time.perf_counter() - start_time) * 1000)
 
-            if result.returncode not in (0, 1):
-                logger.error(f"Spectral failed (code {result.returncode}):\n{result.stderr}")
+            if process.returncode not in (0, 1):
+                logger.error(f"Spectral failed (code {process.returncode}):\n{stderr}")
                 raise HTTPException(500, "Spectral validation engine internal error")
 
-            output = json.loads(result.stdout) if result.stdout.strip() else []
+            # Parse JSON output, handling empty or whitespace-only output
+            stdout_stripped = stdout.strip() if stdout else ""
+            if not stdout_stripped:
+                output = []
+            else:
+                try:
+                    output = json.loads(stdout_stripped)
+                except json.JSONDecodeError as e:
+                    logger.error(
+                        f"Failed to parse Spectral JSON output. "
+                        f"Error: {e}. "
+                        f"Output length: {len(stdout_stripped)} chars. "
+                        f"First 500 chars: {stdout_stripped[:500]}"
+                    )
+                    # Log the problematic area around the error
+                    if e.pos is not None:
+                        start_pos = max(0, e.pos - 200)
+                        end_pos = min(len(stdout_stripped), e.pos + 200)
+                        logger.error(
+                            f"Context around error position {e.pos}: "
+                            f"{stdout_stripped[start_pos:end_pos]}"
+                        )
+                    raise HTTPException(
+                        500,
+                        f"Spectral output parsing failed: {str(e)}. "
+                        f"The output may have been truncated or malformed."
+                    )
 
             mapped_results = []
             counts = {"error": 0, "warn": 0, "info": 0, "hint": 0}
