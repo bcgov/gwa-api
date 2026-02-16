@@ -20,7 +20,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2 
+          fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -81,7 +81,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2 
+          fetch-depth: 2
       - name: Check if build needed
         id: check
         run: |
@@ -93,10 +93,10 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in gatewayApi, skipping build"
-      - uses: docker/build-push-action@v1
+      - uses: docker/build-push-action@v6
         if: steps.check.outputs.build_needed == 'true'
         with:
-          registry: docker.pkg.github.com
+          registry: ghcr.io
           username: $GITHUB_ACTOR
           password: ${{ secrets.GITHUB_TOKEN }}
           repository: bcgov/gwa-api/gwa-gateway-api
@@ -114,7 +114,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2 
+          fetch-depth: 2
       - name: Check if build needed
         id: check
         run: |
@@ -147,7 +147,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2 
+          fetch-depth: 2
       - name: Check if build needed
         id: check
         run: |
@@ -180,7 +180,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2 
+          fetch-depth: 2
       - name: Check if build needed
         id: check
         run: |
