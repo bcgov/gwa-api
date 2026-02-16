@@ -110,9 +110,8 @@ jobs:
       - uses: docker/build-push-action@v6
         if: steps.check.outputs.build_needed == 'true'
         with:
-          registry: ghcr.io
-          path: microservices/gatewayApi
-          dockerfile: microservices/gatewayApi/Dockerfile
+          context: microservices/gatewayApi
+          file: microservices/gatewayApi/Dockerfile
           tags: ${{ steps.docker_meta.outputs.tags }}
           add_git_labels: true
           push: true
