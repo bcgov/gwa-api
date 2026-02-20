@@ -1,0 +1,22 @@
+extends: spectral:oas
+
+rules:
+  # Your custom rule - MUST have given + then
+  operation-id-camel-case:
+    description: operationId should be camelCase (starts with lowercase letter, no separators)
+    severity: info
+    given: $..operationId
+    then:
+      function: pattern
+      functionOptions:
+        match: ^[a-z][a-zA-Z0-9]*$
+
+  # Disable noisy built-ins - short syntax is allowed
+  oas3-api-servers: off
+  info-contact: off
+  operation-description: off
+  operation-tag-defined: off
+  operation-success-response: off
+
+  # Keep hint for missing info description
+  info-description: hint
