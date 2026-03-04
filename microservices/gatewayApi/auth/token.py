@@ -16,7 +16,7 @@ def OIDCDiscovery(base_url):
     if server_metadata_r.status_code != 200:
         raise Exception(
             f"Error getting auth server metadata from url: {server_metadata_url}"
-            + ", status_code: {server_metadata_r.status_code}"
+            + f", status_code: {server_metadata_r.status_code}"
         )
     server_metadata = server_metadata_r.json()
     return server_metadata
@@ -42,7 +42,7 @@ class OIDCTokenValidator(BearerTokenValidator):
         if jwk_r.status_code != 200:
             raise Exception(
                 f"Error getting jwk from url: {server_metadata['jwks_uri']}"
-                + ", status_code: {jwk_r.status_code}"
+                + f", status_code: {jwk_r.status_code}"
             )
         self.jwk = jwk_r.json()
 
