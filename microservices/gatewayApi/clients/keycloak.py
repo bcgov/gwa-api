@@ -13,7 +13,7 @@ def admin_api(conf):
         realm_name=conf['realm'],
         client_id=conf['clientId'],
         user_realm_name=conf['userRealm'],
-        verify=True)
+        verify=False)
 
 
     keycloak_admin = KeycloakAdmin(connection=keycloak_connection)
