@@ -9,7 +9,8 @@ authors = ["Nithin Shekar Kuruba <nithinshekar.kuruba@gov.bc.ca>"]
 python = "^3.9"
 requests = "^2.26.0"
 schedule = "^1.2.1"
-python-keycloak = "4.7.2"
+python-keycloak = "4.7.3"
+httpx = ">=0.23.2,<0.28"
 cryptography = "^43.0.3"
 
 [tool.poetry.dev-dependencies]
