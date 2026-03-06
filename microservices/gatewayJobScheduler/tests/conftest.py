@@ -40,11 +40,13 @@ os.environ.update({
     'KC_CLIENT_ID': 'test-client',
     'KC_USERNAME': 'test-admin',
     'KC_PASSWORD': 'test-password',
-    'KC_USER_REALM': 'test-realm'
+    'KC_USER_REALM': 'test-realm',
+    'DATA_PLANE': 'test-dp'
 })
 
 mock_keycloak_admin = mock.Mock()
 sys.modules['keycloak'] = mock.Mock()
+sys.modules['keycloak'].KeycloakOpenIDConnection = mock.Mock()
 sys.modules['keycloak'].KeycloakAdmin = mock.Mock(return_value=mock_keycloak_admin)
 
 @pytest.fixture(autouse=True)

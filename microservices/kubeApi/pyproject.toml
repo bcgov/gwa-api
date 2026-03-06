@@ -6,11 +6,11 @@ package-mode = false
 authors = ["Nithin Shekar Kuruba <nithinshekar.kuruba@gov.bc.ca>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 fastapi = "^0.70.0"
 uvicorn = "^0.15.0"
 PyYAML = "^6.0"
-python-keycloak = "^0.26.1"
+python-keycloak = "4.7.2"
 Authlib = "^0.15.4"
 cryptography = "^43.0.3"
 

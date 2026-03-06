@@ -6,10 +6,10 @@ description = "Job scheduler to run jobs at specified intervals"
 authors = ["Nithin Shekar Kuruba <nithinshekar.kuruba@gov.bc.ca>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 requests = "^2.26.0"
 schedule = "^1.2.1"
-python-keycloak = "^0.26.1"
+python-keycloak = "4.7.2"
 cryptography = "^43.0.3"
 
 [tool.poetry.dev-dependencies]
