@@ -132,6 +132,7 @@ def transform_data_by_ns(routes, certs, cert_snis):
     except Exception as err:
         traceback.print_exc()
         logger.error("Error transforming data. %s" % str(err))
+        return {}
 
 def get_namespaces_with_perm_data_plane(perm_data_plane_value):
     """

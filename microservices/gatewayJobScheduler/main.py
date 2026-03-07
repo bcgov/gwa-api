@@ -38,6 +38,8 @@ def sync_routes():
     namespaces = get_namespaces_with_perm_data_plane(perm_data_plane_value)
 
     data = transform_data_by_ns(routes, certs, cert_snis)
+    if data is None:
+        data = {}
 
     # Add missing namespaces with no routes
     for ns in namespaces:

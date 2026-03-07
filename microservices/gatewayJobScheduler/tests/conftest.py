@@ -3,6 +3,7 @@ import logging
 import logging.config
 import os
 import sys
+import types
 from unittest import mock
 
 logging.config.dictConfig({
@@ -45,9 +46,14 @@ os.environ.update({
 })
 
 mock_keycloak_admin = mock.Mock()
-sys.modules['keycloak'] = mock.Mock()
-sys.modules['keycloak'].KeycloakOpenIDConnection = mock.Mock()
-sys.modules['keycloak'].KeycloakAdmin = mock.Mock(return_value=mock_keycloak_admin)
+keycloak_exceptions = types.ModuleType('keycloak.exceptions')
+keycloak_exceptions.KeycloakGetError = type('KeycloakGetError', (Exception,), {})
+sys.modules['keycloak.exceptions'] = keycloak_exceptions
+keycloak_module = types.ModuleType('keycloak')
+keycloak_module.KeycloakOpenIDConnection = mock.Mock()
+keycloak_module.KeycloakAdmin = mock.Mock(return_value=mock_keycloak_admin)
+keycloak_module.exceptions = keycloak_exceptions
+sys.modules['keycloak'] = keycloak_module
 
 @pytest.fixture(autouse=True)
 def mock_keycloak_clients():
