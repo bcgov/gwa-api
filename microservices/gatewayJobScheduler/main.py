@@ -32,14 +32,17 @@ def sync_routes():
         logger.error('Failed to get existing routes - %s' % (exc_info()[0]))
         clear('sync-routes')
         exit(1)
+    try:
+        # Get Gold namespaces from Keycloak
+        perm_data_plane_value = os.getenv('DATA_PLANE')
+        namespaces = get_namespaces_with_perm_data_plane(perm_data_plane_value)
 
-    # Get Gold namespaces from Keycloak
-    perm_data_plane_value = os.getenv('DATA_PLANE')
-    namespaces = get_namespaces_with_perm_data_plane(perm_data_plane_value)
-
-    data = transform_data_by_ns(routes, certs, cert_snis)
-    if data is None:
-        data = {}
+        data = transform_data_by_ns(routes, certs, cert_snis)
+    except Exception:
+        traceback.print_exc()
+        logger.error('Failed to build namespace route data - aborting sync to avoid accidental deletions')
+        clear('sync-routes')
+        exit(1)
 
     # Add missing namespaces with no routes
     for ns in namespaces:
