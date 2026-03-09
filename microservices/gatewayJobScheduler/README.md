@@ -1,4 +1,4 @@
-# Kube API
+# Gateway Scheduler API
 
 ## Getting Started
 

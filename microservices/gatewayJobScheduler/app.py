@@ -4,7 +4,6 @@ import traceback
 from clients.namespace import NamespaceService
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-from clients.keycloak import admin_api
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +84,9 @@ def _get_certificate_for_host(host, namespace, cert_snis, certs):
             
     raise Exception("Certificate not found for host %s" % host)
 
-def transform_data_by_ns(routes, certs, cert_snis):
+def transform_data_by_ns(kc, routes, certs, cert_snis):
     """Transform route data organized by namespace"""
-    ns_svc = NamespaceService()
+    ns_svc = NamespaceService(kc)
     try:
         ns_dict = {}
         ns_attr_dict = {}
@@ -132,13 +131,12 @@ def transform_data_by_ns(routes, certs, cert_snis):
     except Exception as err:
         traceback.print_exc()
         logger.error("Error transforming data. %s" % str(err))
-        return {}
+        raise
 
-def get_namespaces_with_perm_data_plane(perm_data_plane_value):
+def get_namespaces_with_perm_data_plane(kc, perm_data_plane_value):
     """
     Fetch namespaces from Keycloak group 'ns' with attribute perm-data-plane matching the given value
     """
-    kc = admin_api()
     namespaces = []
     # Find the 'ns' group
     ns_groups = kc.get_groups()
