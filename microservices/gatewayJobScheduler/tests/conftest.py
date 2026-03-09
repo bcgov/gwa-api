@@ -47,7 +47,13 @@ os.environ.update({
 
 mock_keycloak_admin = mock.Mock()
 keycloak_exceptions = types.ModuleType('keycloak.exceptions')
-keycloak_exceptions.KeycloakGetError = type('KeycloakGetError', (Exception,), {})
+
+class _MockKeycloakGetError(Exception):
+    def __init__(self, *args, response_code=None, **kwargs):
+        super().__init__(*args)
+        self.response_code = response_code
+
+keycloak_exceptions.KeycloakGetError = _MockKeycloakGetError
 sys.modules['keycloak.exceptions'] = keycloak_exceptions
 keycloak_module = types.ModuleType('keycloak')
 keycloak_module.KeycloakOpenIDConnection = mock.Mock()
