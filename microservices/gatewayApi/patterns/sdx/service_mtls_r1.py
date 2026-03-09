@@ -1,0 +1,106 @@
+
+from string import Template
+
+
+
+###
+### Service API
+###
+### - all routes are protected by mTLS
+### - default 401 response for all requests
+###
+template = Template("""
+_format_version: "3.0"
+services:
+  - name: ${service_name}
+    url: ${upstream_uri}
+    tags: [ns.${gateway}.${ns_qualifier}]
+    retries: 0
+    tls_verify: false
+    plugins:
+      - name: mtls-auth
+        tags: [ns.${gateway}.${ns_qualifier}]
+        config:
+          error_response_code: 401
+          upstream_cert_cn_header: "X-CERT-CN"
+          upstream_cert_fingerprint_header: "X-CERT-FINGERPRINT"
+          upstream_cert_i_dn_header: "X-CERT-I-DN"
+          upstream_cert_s_dn_header: "X-CERT-S-DN"
+          upstream_cert_serial_header: "X-CERT-SERIAL"
+
+      - name: mtls-acl
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          certificate_header_name: X-CERT-S-DN
+          allow: [ ${mtls_allow_list} ]
+
+      - name: rate-limiting
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          policy: local
+          fault_tolerant: true
+          second: 50
+          limit_by: ip
+
+      - name: cors
+        tags: [ns.${gateway}.${ns_qualifier}]
+        enabled: true
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+          headers: ["Accept", "Accept-Version", "Content-Length", "Content-Type", "Authorization", "X-Client-Id", "X-Sdx-Ap-Sign", "DPoP"]
+                    
+    routes:
+      - name: ${service_name}.OPTIONS
+        tags: [ns.${gateway}.${ns_qualifier}, sdx]
+        hosts:
+          - ${route_host}
+        paths:
+          - ${route_path}
+        methods:
+          - OPTIONS
+        strip_path: false
+        https_redirect_status_code: 426
+        path_handling: v0
+        request_buffering: true
+        response_buffering: true
+        plugins:
+        - name: jwt-keycloak
+          tags: [ns.${gateway}.${ns_qualifier}]
+          enabled: false
+          config:
+            allowed_iss:
+              - ${openid_issuer}
+            allowed_aud: "${openid_audience}"
+            scope: [ ${openid_scope} ]
+        - name: oidc
+          tags: [ns.${gateway}.${ns_qualifier}]
+          enabled: false
+          config:
+            client_secret: NOT_APPLICABLE
+            client_id: NOT_APPLICABLE
+            discovery: ${openid_issuer}/.well-known/openid-configuration                    
+            
+      - name: ${service_name}.API
+        tags: [ns.${gateway}.${ns_qualifier}, sdx]
+        hosts:
+          - ${route_host}
+        paths:
+          - ${route_path}
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+        strip_path: true
+        https_redirect_status_code: 426
+        path_handling: v0
+        request_buffering: true
+        response_buffering: true
+
+""")
+
+def eval_service_mtls_pattern (context):
+  return template.substitute(context)

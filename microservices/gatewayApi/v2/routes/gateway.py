@@ -3,6 +3,7 @@ import shutil
 import sys
 import http
 import traceback
+from urllib import response
 from urllib.parse import urlparse
 from subprocess import Popen, PIPE, STDOUT
 import uuid
@@ -24,6 +25,7 @@ from utils.transforms import plugins_transformations, add_version_if_missing
 from utils.masking import mask
 from utils.deck import deck_cmd_sync_diff, deck_cmd_validate
 from clients.compatibility import check_kong3_compatibility
+from v2.models.gateway_config_pattern import GatewayConfigPattern
 
 gw = Blueprint('gwa_v2', 'gateway')
 local_environment = os.environ.get("LOCAL_ENVIRONMENT", default=False)
@@ -79,55 +81,57 @@ def delete_config(namespace: str, qualifier="") -> object:
         abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
 
     elif cmd == "sync" and not local_environment:
-        try:
-            session = requests.Session()
-            session.headers.update({"Content-Type": "application/json"})
-            route_payload = {
-                "hosts": get_host_list(tempFolder),
-                "select_tag": selectTag,
-                "ns_attributes": ns_attributes.getAttrs()
-            }
-            dp = get_data_plane(ns_attributes)
-            rqst_url = app.config['data_planes'][dp]["kube-api"]
-            log.debug("[%s] - Initiating request to kube API" % (dp))
-            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
-                app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
-            log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
-            if res.status_code != 201:
-                log.debug("[%s] - The kube API could not process the request" % (dp))
-                raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
-            # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
-            # log.debug("%s - Prepared %d routes" % (namespace, route_count))
-            # if route_count > 0:
-            #     apply_routes(tempFolder)
-            #     log.debug("%s - Applied %d routes" % (namespace, route_count))
-            # route_count = prepare_delete_routes(namespace, selectTag, tempFolder)
-            # log.debug("%s - Prepared %d deletions" % (namespace, route_count))
-            # if route_count > 0:
-            #     delete_routes(tempFolder)
+        dp = get_data_plane(ns_attributes)
+        if not dp.startswith("sdx-"):
 
-            # # create Network Security Policies (nsp) for any upstream that
-            # # has the format: <name>.<ocp_ns>.svc
-            # log.debug("%s - Update NSPs" % (namespace))
-            # ocp_ns_list = get_ocp_service_namespaces(tempFolder)
-            # for ocp_ns in ocp_ns_list:
-            #     if check_nsp(namespace, ocp_ns) is False:
-            #         apply_nsp(namespace, ocp_ns, tempFolder)
+            try:
+                session = requests.Session()
+                session.headers.update({"Content-Type": "application/json"})
+                route_payload = {
+                    "hosts": get_host_list(tempFolder),
+                    "select_tag": selectTag,
+                    "ns_attributes": ns_attributes.getAttrs()
+                }
+                rqst_url = app.config['data_planes'][dp]["kube-api"]
+                log.debug("[%s] - Initiating request to kube API" % (dp))
+                res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+                    app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+                log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
+                if res.status_code != 201:
+                    log.debug("[%s] - The kube API could not process the request" % (dp))
+                    raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
+                # route_count = prepare_apply_routes(namespace, selectTag, is_host_transform_enabled(), tempFolder)
+                # log.debug("%s - Prepared %d routes" % (namespace, route_count))
+                # if route_count > 0:
+                #     apply_routes(tempFolder)
+                #     log.debug("%s - Applied %d routes" % (namespace, route_count))
+                # route_count = prepare_delete_routes(namespace, selectTag, tempFolder)
+                # log.debug("%s - Prepared %d deletions" % (namespace, route_count))
+                # if route_count > 0:
+                #     delete_routes(tempFolder)
 
-            # ok all looks good, so update a secret containing the original submitted request
-            # log.debug("%s - Update Original Config" % (namespace))
-            # write_submitted_config("", tempFolder)
-            # prep_and_apply_secret(namespace, selectTag, tempFolder)
-            # log.debug("%s - Updated Original Config" % (namespace))
-            session.close()
-        except HTTPException as ex:
-            traceback.print_exc()
-            log.error("Error updating custom routes. %s" % ex)
-            abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
-        except:
-            traceback.print_exc()
-            log.error("Error updating custom routes. %s" % sys.exc_info()[0])
-            abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
+                # # create Network Security Policies (nsp) for any upstream that
+                # # has the format: <name>.<ocp_ns>.svc
+                # log.debug("%s - Update NSPs" % (namespace))
+                # ocp_ns_list = get_ocp_service_namespaces(tempFolder)
+                # for ocp_ns in ocp_ns_list:
+                #     if check_nsp(namespace, ocp_ns) is False:
+                #         apply_nsp(namespace, ocp_ns, tempFolder)
+
+                # ok all looks good, so update a secret containing the original submitted request
+                # log.debug("%s - Update Original Config" % (namespace))
+                # write_submitted_config("", tempFolder)
+                # prep_and_apply_secret(namespace, selectTag, tempFolder)
+                # log.debug("%s - Updated Original Config" % (namespace))
+                session.close()
+            except HTTPException as ex:
+                traceback.print_exc()
+                log.error("Error updating custom routes. %s" % ex)
+                abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
+            except:
+                traceback.print_exc()
+                log.error("Error updating custom routes. %s" % sys.exc_info()[0])
+                abort_early(event_id, 'delete', namespace, jsonify(error="Partially failed."))
 
     cleanup(tempFolder)
 
@@ -163,7 +167,7 @@ def write_config(namespace: str) -> object:
     all_routes = get_routes()
     tag_match = "ns.%s" % namespace
     for route in all_routes:
-        if tag_match not in route['tags'] and 'hosts' in route:
+        if tag_match not in route['tags'] and 'hosts' in route and "sdx" not in route['tags']:
             for host in route['hosts']:
                 reserved_hosts.append(host)
     reserved_hosts = list(set(reserved_hosts))
@@ -292,7 +296,10 @@ def write_config(namespace: str) -> object:
         try:
             protected_kube_namespaces = json.loads(app.config['protectedKubeNamespaces'])
 
-            do_validate_upstreams = app.config['data_planes'][dp].get("validate-upstreams", False)
+            if dp.startswith("sdx-"):
+                do_validate_upstreams = False
+            else:
+                do_validate_upstreams = app.config['data_planes'][dp].get("validate-upstreams", False)
 
             log.debug("Validate upstreams %s %s" % (dp, do_validate_upstreams))
             validate_upstream(gw_config, ns_attributes, protected_kube_namespaces, do_validate_upstreams)
@@ -351,7 +358,421 @@ def write_config(namespace: str) -> object:
     # skip creation of routes in local development environment
     elif cmd == "sync" and not local_environment:
         try:
-            if update_routes_flag:
+            if update_routes_flag and not dp.startswith("sdx-"):
+                host_list = get_host_list(tempFolder)
+                certs = []
+                custom_domain_in_host_list = False
+                for host in host_list:
+                    if is_host_custom_domain(host):
+                        custom_domain_in_host_list = True
+                        break
+                if custom_domain_in_host_list:
+                    certs = get_public_certs_by_ns(namespace)
+                    log.debug("[%s] Found %d certs in namespace" % (namespace, len(certs)))
+                session = requests.Session()
+                session.headers.update({"Content-Type": "application/json"})
+                route_payload = {
+                    "hosts": host_list,
+                    "select_tag": selectTag,
+                    "ns_attributes": ns_attributes.getAttrs(),
+                    "overrides": {
+                        "aps.route.session.cookie.enabled": get_route_overrides(tempFolder, "aps.route.session.cookie.enabled"),
+                        "aps.route.dataclass.low": get_route_overrides(tempFolder, "aps.route.dataclass.low"),
+                        "aps.route.dataclass.medium": get_route_overrides(tempFolder, "aps.route.dataclass.medium"),
+                        "aps.route.dataclass.high": get_route_overrides(tempFolder, "aps.route.dataclass.high"),
+                        "aps.route.dataclass.public": get_route_overrides(tempFolder, "aps.route.dataclass.public"),
+                    },
+                    "certificates": certs
+                }
+                # Create a copy without certificates for logging
+                route_payload_log = {
+                    "hosts": host_list,
+                    "select_tag": selectTag,
+                    "ns_attributes": ns_attributes.getAttrs(),
+                    "overrides": route_payload["overrides"]
+                }
+                log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload_log))
+                rqst_url = app.config['data_planes'][dp]["kube-api"]
+                res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+                    app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+                log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
+                if res.status_code != 201:
+                    log.debug("[%s] - The kube API could not process the request" % (dp))
+                    raise Exception("[%s] - Failed to apply routes: %s" % (dp, str(res.text)))
+                session.close()
+                
+                if has_namespace_local_host_permission(ns_attributes):
+                    session = requests.Session()
+                    session.headers.update({"Content-Type": "application/json"})
+                    rqst_url = app.config['data_planes'][dp]["kube-api"]
+                    log.debug("[%s] - Initiating request to kube API for Certs" % (dp))
+                    res = session.get(rqst_url + "/namespaces/%s/local_tls" % namespace, auth=(
+                        app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
+                    log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
+                    if res.status_code != 200:
+                        log.debug("[%s] - The kube API could not process the request" % (dp))
+                        raise Exception("[%s] - Failed to get certs: %s" % (dp, str(res.text)))
+                    cert_data = res.json()
+                    session.close()
+
+                    register_kong_certs(namespace, cert_data)
+                
+        except HTTPException as ex:
+            traceback.print_exc()
+            log.error("[%s] Error updating custom routes. %s" % (namespace, ex))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Partially failed."))
+        except:
+            traceback.print_exc()
+            log.error("[%s] Error updating custom routes. %s" % (namespace, sys.exc_info()[0]))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Partially failed."))
+
+    cleanup(tempFolder)
+
+    log.debug("[%s] The exit code was: %d" % (namespace, deck_run.returncode))
+
+    message = "Sync successful."
+    if cmd == 'diff':
+        message = "Dry-run.  No changes applied."
+
+    if cmd == 'sync':
+        record_gateway_event(event_id, 'published', 'completed', namespace, blob=orig_config)
+
+    results = mask(out.decode('utf-8'))
+    
+    # Add Kong 3 compatibility warning if needed
+    if has_incompatible_routes:
+        # Add unique failed routes
+        unique_failed_routes = sorted(set(all_failed_routes))
+        route_list = "\n".join(f"  - {route}" for route in unique_failed_routes)
+        warning_message = warning_message + "\n" + route_list
+        
+        results = results + "\n" + warning_message
+
+    return make_response(jsonify(message=message, results=results))
+
+@gw.route('/hello',
+          methods=['GET'], strict_slashes=False)
+def hello(namespace: str) -> object:
+    return make_response(jsonify(message="hi", gateway=namespace), 200, {'Content-Type': 'application/json'})
+
+
+@gw.route('/pattern-output',
+          methods=['PUT'], strict_slashes=False)
+def patterned_config(namespace: str) -> object:
+    """
+    :return: String of the generated yaml configuration
+    """
+    log = app.logger
+
+    log.info("Received patterned config request for %s" % namespace)
+
+    log.info("Request Data: %s" % request.data)
+
+    config = request.get_json()
+
+    log.info("Config: %s" % config)
+
+    delete = config.get("delete", False)
+    delete_qualifier = config.get("deleteQualifier", None)
+    dry_run = config.get("dryRun", True)
+    dump_only = config.get("dump", False)
+    document = config.get("document", {})
+
+
+    outFolder = namespace
+
+    # ns_svc = NamespaceService()
+    # ns_attributes = ns_svc.get_namespace_attributes(namespace)
+
+    dfile = None
+    select_tag_qualifier = None
+
+    if delete:
+        select_tag_qualifier = delete_qualifier
+
+    tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
+    os.makedirs(tempFolder, exist_ok=False)
+
+    gw_pattern_context = GatewayConfigPattern (document)
+    gw_pattern_context.set_gateway(namespace)
+
+    dfile = gw_pattern_context.get_config_file()
+
+    log.debug("Saved to %s" % tempFolder)
+    yaml_documents = load_yaml_files(dfile)
+
+    if len(yaml_documents) == 0:
+        log.error("%s - %s" % (namespace, "Empty Configuration Passed"))
+        abort(make_response(jsonify(error="Empty Configuration Passed"), 400))
+
+    if delete:
+        # if deleting, then set the select tag qualifier and override the document
+        # to be a delete document
+        select_tag_qualifier = delete_qualifier
+
+        delete_doc = {
+            "_format_version": "3.0",
+            "services": []
+        }
+
+        yaml_documents = [ yaml.load(yaml.dump(delete_doc), Loader=yaml.FullLoader) ]
+
+    selectTag = "ns.%s" % namespace
+    ns_qualifier = None
+    if select_tag_qualifier is not None and select_tag_qualifier != "" and "." not in select_tag_qualifier:
+        ns_qualifier = "%s.%s" % (selectTag, select_tag_qualifier)
+
+    return make_response(jsonify(ns_qualifier=ns_qualifier, documents=yaml_documents), 200, {'Content-Type': 'application/json'})
+
+
+@gw.route('/patterns',
+          methods=['PUT'], strict_slashes=False)
+@admin_jwt(None)
+@uma_enforce('namespace', 'GatewayConfig.Publish')
+def patterned_write_config(namespace: str) -> object:
+    """
+    (Over)write
+    :return: JSON of success message or error message
+    """
+
+    config = request.get_json()
+
+    delete = config.get("delete", False)
+    delete_qualifier = config.get("deleteQualifier", None)
+    dry_run = config.get("dryRun", True)
+    dump_only = config.get("dump", False)
+    document = config.get("document", {})
+
+    event_id = str(uuid.uuid4())
+
+    log = app.logger
+
+    outFolder = namespace
+
+    ns_svc = NamespaceService()
+    ns_attributes = ns_svc.get_namespace_attributes(namespace)
+
+    dp = get_data_plane(ns_attributes)
+
+    # Build a list of existing hosts that are outside this namespace
+    # They become reserved and any conflict will return an error
+    reserved_hosts = []
+    all_routes = get_routes()
+    tag_match = "ns.%s" % namespace
+    for route in all_routes:
+        if tag_match not in route['tags'] and 'hosts' in route and "sdx" not in route['tags']:
+            for host in route['hosts']:
+                reserved_hosts.append(host)
+    reserved_hosts = list(set(reserved_hosts))
+
+    dfile = None
+    select_tag_qualifier = None
+
+    if delete:
+        select_tag_qualifier = delete_qualifier
+
+    # if 'configFile' in request.files and not request.files['configFile'].filename == '':
+    #     log.debug("[%s] %s", namespace, request.files['configFile'])
+    #     dfile = request.files['configFile']
+    #     dry_run = request.values['dryRun']
+    #     if "qualifier" in request.values:
+    #         select_tag_qualifier = request.values['qualifier']
+    # elif request.content_type.startswith("application/json") \
+    #     and 'configFile' in request.json \
+    #     and not request.json['configFile'] in [None, '']:
+    #     dfile = request.json['configFile']
+    #     dry_run = request.json['dryRun']
+    #     if "qualifier" in request.json:
+    #         select_tag_qualifier = request.json['qualifier']
+    # else:
+    #     log.error("Missing input")
+    #     log.error("%s", request.get_data())
+    #     log.error(request.form)
+    #     log.error(request.content_type)
+    #     log.error(request.headers)
+    #     abort_early(event_id, 'publish', namespace, jsonify(error="Missing input"))
+
+    cmd = "sync"
+    if dry_run == 'true' or dry_run is True:
+        cmd = "diff"
+    if dump_only == 'true' or dump_only is True:
+        cmd = "dump"
+
+    if cmd == 'sync':
+        record_gateway_event(event_id, 'publish', 'received', namespace)
+
+    tempFolder = "%s/%s/%s" % ('/tmp', uuid.uuid4(), outFolder)
+    os.makedirs(tempFolder, exist_ok=False)
+
+    # dfile.save("%s/%s" % (tempFolder, 'config.yaml'))
+
+    gw_pattern_context = GatewayConfigPattern (document)
+    gw_pattern_context.set_gateway(namespace)
+
+    dfile = gw_pattern_context.get_config_file()
+
+    # log.debug("Saved to %s" % tempFolder)
+    yaml_documents = load_yaml_files(dfile)
+
+    if len(yaml_documents) == 0:
+        log.error("%s - %s" % (namespace, "Empty Configuration Passed"))
+        abort_early(event_id, 'publish', namespace, jsonify(error="Empty Configuration Passed"))
+
+    if delete:
+        # if deleting, then set the select tag qualifier and override the document
+        # to be a delete document
+        select_tag_qualifier = delete_qualifier
+
+        delete_doc = {
+            "_format_version": "3.0",
+            "services": []
+        }
+
+        yaml_documents = [ yaml.load(yaml.dump(delete_doc), Loader=yaml.FullLoader) ]
+
+    selectTag = "ns.%s" % namespace
+    ns_qualifier = None
+    if select_tag_qualifier is not None and select_tag_qualifier != "" and "." not in select_tag_qualifier:
+        ns_qualifier = "%s.%s" % (selectTag, select_tag_qualifier)
+
+    orig_config = prep_submitted_config(clone_yaml_files(yaml_documents))
+
+    update_routes_flag = False
+    
+    all_failed_routes = []
+    has_incompatible_routes = False
+
+    for index, gw_config in enumerate(yaml_documents):
+        log.info("[%s] Parsing file %s" % (namespace, index))
+
+        if gw_config is None:
+            continue
+
+        #######################
+        # Enrichments
+        #######################
+
+        # Add format version if its missing - needed in Kong v3+
+        add_version_if_missing(gw_config)
+
+        # Transformation route hosts if in non-prod environment (HOST_TRANSFORM_ENABLED)
+        host_transformation(namespace, dp, gw_config)
+
+        # If there is a tag with a pipeline qualifier (i.e./ ns.<namespace>.dev)
+        # then add to tags automatically the tag: ns.<namespace>
+        object_count = tags_transformation(namespace, gw_config)
+
+        # Enrich the rate-limiting plugin with the appropriate Redis details
+        plugins_transformations(namespace, gw_config)
+
+        # Disabled:
+        #
+        # Check Kong 3 compatibility
+        #is_compatible, compatibility_message, failed_routes, kong2_config = check_kong3_compatibility(namespace, gw_config)
+        #if not is_compatible:
+        #    warning_message = compatibility_message
+
+        # Track incompatible routes
+        #if not is_compatible:
+        #    has_incompatible_routes = True
+        #    all_failed_routes.extend(failed_routes)
+        
+        # Use kong2_config (which has compatibility tags) regardless of compatibility status
+        #if kong2_config:
+        #    gw_config = kong2_config
+
+        # After enrichments, dump config to file
+        with open("%s/%s" % (tempFolder, 'config-%02d.yaml' % index), 'w') as file:
+            yaml.dump(gw_config, file, width=9999, default_flow_style=False, default_style="double-quoted")
+
+        #######################
+        # Validations
+        #######################
+
+        # Validate that the every object is tagged with the namespace
+        try:
+            validate_base_entities(gw_config, ns_attributes)
+            validate_tags(gw_config, selectTag)
+        except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Tag Validation Errors: %s" % ex))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
+
+        # Validate that hosts are valid
+        try:
+            validate_hosts(gw_config, reserved_hosts, ns_attributes)
+        except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Host Validation Errors: %s" % ex))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
+
+        # Validate upstream URLs are valid
+        try:
+            protected_kube_namespaces = json.loads(app.config['protectedKubeNamespaces'])
+
+            if dp.startswith("sdx-"):
+                do_validate_upstreams = False
+            else:
+                do_validate_upstreams = app.config['data_planes'][dp].get("validate-upstreams", False)
+
+            log.debug("Validate upstreams %s %s" % (dp, do_validate_upstreams))
+            validate_upstream(gw_config, ns_attributes, protected_kube_namespaces, do_validate_upstreams)
+        except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Upstream Validation Errors: %s" % ex))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
+
+        # Validation #3
+        # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
+
+        # Validate based on DNS 952
+
+        nsq = traverse_get_ns_qualifier(gw_config, selectTag)
+        if nsq is not None:
+            if ns_qualifier is not None and nsq != ns_qualifier:
+                abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" %
+                            ("Conflicting ns qualifiers (%s != %s)" % (ns_qualifier, nsq))))
+            ns_qualifier = nsq
+            log.info("[%s] CHANGING ns_qualifier %s" % (namespace, ns_qualifier))
+        elif ns_qualifier is not None and object_count > 0:
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" %
+                ("Specified qualifier (%s) does not match tags in configuration (%s)" % (ns_qualifier, selectTag))))
+
+        if update_routes_check(gw_config):
+            update_routes_flag = True
+
+    if ns_qualifier is not None:
+        selectTag = ns_qualifier
+
+    # Call the 'deck' command
+    deck_cli = app.config['deckCLI']
+
+    log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
+
+    args = deck_cmd_validate(deck_cli, tempFolder)
+
+    log.debug("[%s] Running %s" % (namespace, args))
+    deck_validate = Popen(args, stdout=PIPE, stderr=STDOUT)
+    out, err = deck_validate.communicate()
+
+    if deck_validate.returncode != 0:
+        log.warning("[%s] - %s" % (namespace, out.decode('utf-8')))
+        abort_early(event_id, 'validate', namespace, jsonify(
+            error="Validation Failed.", results=mask(out.decode('utf-8'))))
+
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder)
+    
+    log.debug("[%s] Running %s" % (namespace, args))
+    deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
+    out, err = deck_run.communicate()
+    if deck_run.returncode != 0:
+        # cleanup(tempFolder)
+        log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
+        abort_early(event_id, 'publish', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
+    # skip creation of routes in local development environment
+    elif cmd == "sync" and not local_environment:
+        try:
+            if update_routes_flag and not dp.startswith("sdx-"):
                 host_list = get_host_list(tempFolder)
                 certs = []
                 custom_domain_in_host_list = False
@@ -453,7 +874,7 @@ def cleanup(dir_path):
         log.error("Error: %s : %s" % (dir_path, e.strerror))
 
 def validate_base_entities(yaml, ns_attributes):
-    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates']
+    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates', 'key_sets', 'keys']
 
     allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
     if allow_protected_ns:
@@ -483,7 +904,7 @@ def validate_tags(yaml, required_tag):
 def traverse(source, errors, yaml, required_tag, qualifiers):
     # If at root level, allow different resources than if its traversed down a level
     if source == "":
-        traversables = ['services', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+        traversables = ['services', 'upstreams', 'consumers', 'certificates', 'ca_certificates', 'key_sets', 'keys']
     else:
         traversables = ['routes', 'plugins']
 
@@ -635,7 +1056,7 @@ def tags_transformation(namespace, yaml):
 def traverse_tags_transform(yaml, namespace, required_tag):
     object_count = 0
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates', 'key_sets', 'keys']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -655,7 +1076,7 @@ def traverse_tags_transform(yaml, namespace, required_tag):
 
 def traverse_has_ns_qualifier(yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates', 'key_sets', 'keys']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -670,7 +1091,7 @@ def traverse_has_ns_qualifier(yaml, required_tag):
 
 def traverse_has_ns_tag_only(yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates', 'key_sets', 'keys']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -691,7 +1112,7 @@ def has_ns_qualifier(tags, required_tag):
 
 def traverse_get_ns_qualifier(yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates', 'key_sets', 'keys']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -731,4 +1152,9 @@ def clone_yaml_files (yaml_documents):
     for doc in yaml_documents:
         cloned_yaml.append(yaml.load(yaml.dump(doc), Loader=yaml.FullLoader))
     return cloned_yaml
-    
+
+def return_combined_yaml_files (yaml_documents):
+    combined_yaml = ""
+    for doc in yaml_documents:
+        combined_yaml = combined_yaml + "---\n" + yaml.safe_dump(doc, width=9999, sort_keys=False, default_flow_style=False, default_style="double-quoted")
+    return combined_yaml

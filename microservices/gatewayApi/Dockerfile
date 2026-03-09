@@ -5,7 +5,7 @@
 #  && go mod download \
 #  && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o deck \
 #       -ldflags "-s -w -X github.com/kong/deck/cmd.VERSION=$TAG -X github.com/kong/deck/cmd.COMMIT=$COMMIT"
-FROM python:3.11-alpine3.20
+FROM python:3.13-alpine3.22
 
 RUN mkdir /.kube
 
@@ -26,17 +26,17 @@ RUN curl -sL https://github.com/kong/deck/releases/download/v1.5.0/deck_1.5.0_li
    cp /tmp/deck /usr/local/bin/deck_kong2_150
 
 # gwa api (kong 3)
-RUN curl -sL https://github.com/Kong/deck/releases/download/v1.45.0/deck_1.45.0_linux_amd64.tar.gz -o deck.tar.gz && \
+RUN curl -sL https://github.com/Kong/deck/releases/download/v1.53.1/deck_1.53.1_linux_amd64.tar.gz -o deck.tar.gz && \
    tar -xf deck.tar.gz -C /tmp && \
    cp /tmp/deck /usr/local/bin/deck && \
-   cp /tmp/deck /usr/local/bin/deck_kong3_1450
+   cp /tmp/deck /usr/local/bin/deck_kong3_1531
 
 RUN python -m pip install --upgrade pip
 # FIX: No module named 'urllib3.packages.six'
 RUN pip uninstall urllib3 && pip install urllib3
 RUN cd /tmp && \
     curl -sSL https://install.python-poetry.org > get-poetry.py && \
-    POETRY_HOME=/opt/poetry python get-poetry.py --version 1.8.2 && \
+    POETRY_HOME=/opt/poetry python get-poetry.py --version 1.8.5 && \
     cd /usr/local/bin && \
     ln -s /opt/poetry/bin/poetry && \
     poetry config virtualenvs.create false

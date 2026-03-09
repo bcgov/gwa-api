@@ -7,6 +7,7 @@ from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
 from templates.v1.routes import ROUTE, ROUTE_HEAD
 from templates.v2.routes import V2_ROUTE
+from templates.v3.routes import V3_ROUTE
 from config import settings
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -29,6 +30,9 @@ ROUTES = {
     },
     "v2": {
         "ROUTE": V2_ROUTE
+    },
+    "v3": {
+        "ROUTE": V3_ROUTE
     }
 }
 

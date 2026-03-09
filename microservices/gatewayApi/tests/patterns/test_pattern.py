@@ -1,0 +1,48 @@
+from os import environ
+from patterns.eval import evaluate_pattern
+import yaml
+
+def test_service_r1(client):
+    context = {
+        'ns_qualifier': 'all',
+        'service_name': 'LAB-MIN-CITZ-MY-SERVICE',
+        'gateway': 'gw-xxx',
+        'upstream_uri': 'https://app-service-r1.example.com',
+        'mtls_allow_list': 'ap-01.example.com',
+        'route_host': 'ap-02.example.com',
+        'route_path': '/LAB/MIN/CITZ/MY-SERVICE',
+        'consumer_uri': '',
+        'consumer_client_id': '',
+        'openid_issuer': '',
+        'openid_audience': '',
+        'openid_scope': '',
+    }
+    
+    response = evaluate_pattern('sdx-service-r1', context)
+    print(response)
+    yaml_documents_iter = yaml.load_all(response, Loader=yaml.FullLoader)
+    doc = next(yaml_documents_iter)
+    assert doc['services'][0]["name"] == context['service_name']
+
+def test_application_r1(client):
+    context = {
+        'ns_qualifier': 'all',
+        'service_name': 'REQ-0001-LAB-MIN-CITZ-MY-UI',
+        'gateway': 'gw-xxx',
+        'upstream_uri': 'https://ap-02.example.com',
+        'route_host': 'ap-01.example.com',
+        'route_path': '/LAB/MIN/CITZ/OTHER-SERVICE',
+        'consumer_uri': '',
+        'consumer_client_id': '',
+        'edge_kid': 'REQ-0001-LAB-MIN-CITZ-MY-UI.SIG.CURRENT',
+        'openid_issuer': '',
+        'openid_audience': '',
+        'openid_scope': '',
+    }
+
+    response = evaluate_pattern('sdx-p2p-consumer-r1', context)
+    print(response)
+    yaml_documents_iter = yaml.load_all(response, Loader=yaml.FullLoader)
+    doc = next(yaml_documents_iter)
+    assert doc['services'][0]["name"] == context['service_name']
+
