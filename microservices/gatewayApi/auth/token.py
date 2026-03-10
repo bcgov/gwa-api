@@ -37,8 +37,7 @@ class OIDCTokenValidator(BearerTokenValidator):
 
         server_url = conf.data['keycloak']['serverUrl']
         realm = conf.data['keycloak']['realm']
-        baseUrl = f"{server_url}realms/{realm}"
-
+        baseUrl = f"{server_url.rstrip('/')}/realms/{realm}"
         self.aud = conf.data['tokenMatch']['aud']
 
         server_metadata = OIDCDiscovery(baseUrl)
