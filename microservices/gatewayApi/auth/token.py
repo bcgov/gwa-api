@@ -10,6 +10,12 @@ from config import Config
 
 logger = logging.getLogger(__name__)
 
+
+def realm_base_url(server_url: str, realm: str) -> str:
+    """Build Keycloak realm base URL, normalizing server_url with or without trailing slash."""
+    return f"{server_url.rstrip('/')}/realms/{realm}"
+
+
 def OIDCDiscovery(base_url):
     conf = Config()
 
@@ -37,7 +43,7 @@ class OIDCTokenValidator(BearerTokenValidator):
 
         server_url = conf.data['keycloak']['serverUrl']
         realm = conf.data['keycloak']['realm']
-        baseUrl = f"{server_url.rstrip('/')}/realms/{realm}"
+        baseUrl = realm_base_url(server_url, realm)
         self.aud = conf.data['tokenMatch']['aud']
 
         server_metadata = OIDCDiscovery(baseUrl)
