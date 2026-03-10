@@ -37,16 +37,19 @@ class OIDCTokenValidator(BearerTokenValidator):
 
         server_url = conf.data['keycloak']['serverUrl']
         realm = conf.data['keycloak']['realm']
-        base_url = f"{server_url}realms/{realm}"
+        baseUrl = f"{server_url}realms/{realm}"
 
         self.aud = conf.data['tokenMatch']['aud']
 
-        jwks_url = f"{base_url}/protocol/openid-connect/certs"
-        logger.info(f"Fetching JWK from: {jwks_url}")
-        jwk_r = requests.get(jwks_url)
+        server_metadata = OIDCDiscovery(baseUrl)
+
+        # Fetch the public key for validating Bearer token
+        jwks_uri = server_metadata['jwks_uri']
+        logger.info(f"Fetching JWK from: {jwks_uri}")
+        jwk_r = requests.get(jwks_uri)
         if jwk_r.status_code != 200:
             raise Exception(
-                f"Error getting jwk from url: {jwks_url}, "
+                f"Error getting jwk from url: {jwks_uri}, "
                 f"status_code: {jwk_r.status_code}, "
                 f"response: {jwk_r.text[:500]}"
             )
