@@ -145,3 +145,40 @@ def test_valid_strict_dp_upstream(client):
     }
     response = client.put('/v2/namespaces/mytest3/gateway', json=data)
     assert response.status_code == 200
+
+
+def test_key_sets_and_keys_require_tags(client):
+    configFile = '''
+        key_sets:
+        - name: my-key-set
+          tags: ["ns.mytest", "another"]
+        keys:
+        - name: my-key
+          tags: ["ns.mytest", "another"]
+        '''
+
+    data = {
+        "configFile": configFile,
+        "dryRun": True
+    }
+    response = client.put('/v2/namespaces/mytest/gateway', json=data)
+    assert response.status_code == 200
+
+
+def test_key_sets_and_keys_invalid_tags(client):
+    configFile = '''
+        key_sets:
+        - name: my-key-set
+          tags: ["ns.other", "another"]
+        keys:
+        - name: my-key
+          tags: ["ns.mytest", "another"]
+        '''
+
+    data = {
+        "configFile": configFile,
+        "dryRun": True
+    }
+    response = client.put('/v2/namespaces/mytest/gateway', json=data)
+    assert response.status_code == 400
+    assert "invalid ns tag ns.other" in json.dumps(response.json)
