@@ -27,7 +27,7 @@ urllib3 = "2.2.3"
 requests = "^2.32"
 flask-jwt-simple = "0.0.3"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 autopep8 = "^1.5.7"
 pycodestyle = "2.10.0"
 pylint = "1.7.2"

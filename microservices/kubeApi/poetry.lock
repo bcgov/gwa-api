@@ -954,4 +954,4 @@ standard = ["PyYAML (>=5.1)", "colorama (>=0.4) ; sys_platform == \"win32\"", "h
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "33f03fa59cfa0aeab8e21e1860c446f0f4435ecb97c5f366aad3b19635b0f3b0"
+content-hash = "40c5b74a8ad757a634ae3bde33cb3f902bba7b449d1606eecc3a875c9ba58bf6"
