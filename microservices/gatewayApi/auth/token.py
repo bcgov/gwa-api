@@ -1,3 +1,4 @@
+import logging
 import requests
 import time
 from authlib.jose import JsonWebToken
@@ -7,18 +8,29 @@ from authlib.oauth2.rfc6750 import BearerTokenValidator
 from flask import current_app, g
 from config import Config
 
+logger = logging.getLogger(__name__)
+
+
+def realm_base_url(server_url: str, realm: str) -> str:
+    """Build Keycloak realm base URL, normalizing server_url with or without trailing slash."""
+    return f"{server_url.rstrip('/')}/realms/{realm}"
+
+
 def OIDCDiscovery(base_url):
     conf = Config()
 
     # Fetch the openid metadata so we may know the jwk endpoint uri
     server_metadata_url = f"{base_url}/.well-known/openid-configuration"
+    logger.info(f"Fetching OIDC metadata from: {server_metadata_url}")
     server_metadata_r = requests.get(server_metadata_url)
     if server_metadata_r.status_code != 200:
         raise Exception(
-            f"Error getting auth server metadata from url: {server_metadata_url}"
-            + ", status_code: {server_metadata_r.status_code}"
+            f"Error getting auth server metadata from url: {server_metadata_url}, "
+            f"status_code: {server_metadata_r.status_code}, "
+            f"response: {server_metadata_r.text[:500]}"
         )
     server_metadata = server_metadata_r.json()
+    logger.info(f"OIDC discovery succeeded. jwks_uri: {server_metadata.get('jwks_uri')}")
     return server_metadata
 
 class OIDCTokenValidator(BearerTokenValidator):
@@ -31,20 +43,23 @@ class OIDCTokenValidator(BearerTokenValidator):
 
         server_url = conf.data['keycloak']['serverUrl']
         realm = conf.data['keycloak']['realm']
-        baseUrl = "%srealms/%s" % (server_url, realm)
-
+        baseUrl = realm_base_url(server_url, realm)
         self.aud = conf.data['tokenMatch']['aud']
 
         server_metadata = OIDCDiscovery(baseUrl)
 
         # Fetch the public key for validating Bearer token
-        jwk_r = requests.get(server_metadata['jwks_uri'])
+        jwks_uri = server_metadata['jwks_uri']
+        logger.info(f"Fetching JWK from: {jwks_uri}")
+        jwk_r = requests.get(jwks_uri)
         if jwk_r.status_code != 200:
             raise Exception(
-                f"Error getting jwk from url: {server_metadata['jwks_uri']}"
-                + ", status_code: {jwk_r.status_code}"
+                f"Error getting jwk from url: {jwks_uri}, "
+                f"status_code: {jwk_r.status_code}, "
+                f"response: {jwk_r.text[:500]}"
             )
         self.jwk = jwk_r.json()
+        logger.info("JWK fetched successfully")
 
     def authenticate_token(self, token_string):
         jwt = JsonWebToken(['RS256'])

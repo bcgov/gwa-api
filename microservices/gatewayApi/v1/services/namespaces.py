@@ -9,12 +9,12 @@ class NamespaceService:
     priv_attrs = ['perm-domains', 'perm-protected-ns', 'perm-data-plane']
 
     def __init__(self):
-        self.keycloak_admin = admin_api()
+        self.keycloak_admin = admin_api(app.config['keycloak'])
 
     def get_namespace(self, namespace):
         group_base_path = get_base_group_path('viewer')
         ns_group_summary = self.keycloak_admin.get_group_by_path(
-            path="%s/%s" % (group_base_path, namespace), search_in_subgroups=True)
+            path="%s/%s" % (group_base_path, namespace))
         ns_group = self.keycloak_admin.get_group(ns_group_summary['id'])
         return ns_group
 
@@ -44,10 +44,8 @@ class NamespaceService:
                 self.keycloak_admin.create_group({"name": get_base_group_name(role_name)})
                 parent_group = self.keycloak_admin.get_group_by_path(group_base_path)
 
-            response = self.keycloak_admin.create_group(payload, parent=parent_group['id'])
+            new_users_group_id = self.keycloak_admin.create_group(payload, parent=parent_group['id'])
             log.debug("[%s] Group %s/%s created!" % (namespace, group_base_path, namespace))
-
-            new_users_group_id = response['id']
 
             if initial_username is not None:
                 user_id = self.keycloak_admin.get_user_id(initial_username)
