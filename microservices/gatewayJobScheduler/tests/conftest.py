@@ -3,6 +3,7 @@ import logging
 import logging.config
 import os
 import sys
+import types
 from unittest import mock
 
 logging.config.dictConfig({
@@ -40,12 +41,25 @@ os.environ.update({
     'KC_CLIENT_ID': 'test-client',
     'KC_USERNAME': 'test-admin',
     'KC_PASSWORD': 'test-password',
-    'KC_USER_REALM': 'test-realm'
+    'KC_USER_REALM': 'test-realm',
+    'DATA_PLANE': 'test-dp'
 })
 
 mock_keycloak_admin = mock.Mock()
-sys.modules['keycloak'] = mock.Mock()
-sys.modules['keycloak'].KeycloakAdmin = mock.Mock(return_value=mock_keycloak_admin)
+keycloak_exceptions = types.ModuleType('keycloak.exceptions')
+
+class _MockKeycloakGetError(Exception):
+    def __init__(self, *args, response_code=None, **kwargs):
+        super().__init__(*args)
+        self.response_code = response_code
+
+keycloak_exceptions.KeycloakGetError = _MockKeycloakGetError
+sys.modules['keycloak.exceptions'] = keycloak_exceptions
+keycloak_module = types.ModuleType('keycloak')
+keycloak_module.KeycloakOpenIDConnection = mock.Mock()
+keycloak_module.KeycloakAdmin = mock.Mock(return_value=mock_keycloak_admin)
+keycloak_module.exceptions = keycloak_exceptions
+sys.modules['keycloak'] = keycloak_module
 
 @pytest.fixture(autouse=True)
 def mock_keycloak_clients():

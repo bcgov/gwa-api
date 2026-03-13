@@ -1,16 +1,20 @@
 
 from flask import current_app as app
-from keycloak import KeycloakAdmin
+from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
 from keycloak.exceptions import KeycloakGetError
 
-def admin_api():
-    conf = app.config['keycloak']
+#     conf = app.config['keycloak']
 
-    keycloak_admin = KeycloakAdmin(server_url=conf['serverUrl'],
+def admin_api(conf):
+
+    keycloak_connection = KeycloakOpenIDConnection(server_url=conf['serverUrl'],
         username=conf['username'],
         password=conf['password'],
         realm_name=conf['realm'],
         client_id=conf['clientId'],
         user_realm_name=conf['userRealm'],
         verify=True)
+
+
+    keycloak_admin = KeycloakAdmin(connection=keycloak_connection)
     return keycloak_admin
