@@ -99,7 +99,7 @@ def delete_namespace(namespace: str) -> object:
 
     try:
         for role_name in ['viewer', 'admin']:
-            group = keycloak_admin.get_group_by_path("%s/%s" % (get_base_group_path(role_name), namespace), search_in_subgroups=True)
+            group = keycloak_admin.get_group_by_path("%s/%s" % (get_base_group_path(role_name), namespace))
             if group is not None:
                 keycloak_admin.delete_group (group['id'])
 

@@ -280,7 +280,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 2 
       - name: Check if build needed
         id: check
         run: |

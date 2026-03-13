@@ -35,7 +35,7 @@ def test_get_namespaces_with_perm_data_plane_happy_path(mock_keycloak_clients):
         ]
     }
     
-    result = get_namespaces_with_perm_data_plane('test-dp')
+    result = get_namespaces_with_perm_data_plane(mock_kc, 'test-dp')
     
     assert result == ['namespace1', 'namespace2']
     mock_kc.get_groups.assert_called_once()
@@ -51,7 +51,7 @@ def test_get_namespaces_with_perm_data_plane_no_ns_group(mock_keycloak_clients):
         {'id': 'group2', 'name': 'another-group'}
     ]
     
-    result = get_namespaces_with_perm_data_plane('test-dp')
+    result = get_namespaces_with_perm_data_plane(mock_kc, 'test-dp')
     
     assert result == []
     mock_kc.get_groups.assert_called_once()
@@ -68,7 +68,7 @@ def test_get_namespaces_with_perm_data_plane_no_subgroups(mock_keycloak_clients)
     # Mock empty subgroups
     mock_kc.get_group.return_value = {'subGroups': []}
     
-    result = get_namespaces_with_perm_data_plane('test-dp')
+    result = get_namespaces_with_perm_data_plane(mock_kc, 'test-dp')
     
     assert result == []
     mock_kc.get_group.assert_called_once_with('ns-group-id')
@@ -98,7 +98,7 @@ def test_get_namespaces_with_perm_data_plane_no_matching_namespaces(mock_keycloa
         ]
     }
     
-    result = get_namespaces_with_perm_data_plane('test-dp')
+    result = get_namespaces_with_perm_data_plane(mock_kc, 'test-dp')
     
     assert result == []
 
@@ -138,7 +138,7 @@ def test_get_namespaces_with_perm_data_plane_missing_attributes(mock_keycloak_cl
         ]
     }
     
-    result = get_namespaces_with_perm_data_plane('test-dp')
+    result = get_namespaces_with_perm_data_plane(mock_kc, 'test-dp')
     
     assert result == ['namespace1']
 
@@ -153,6 +153,6 @@ def test_get_namespaces_with_perm_data_plane_missing_subgroups_key(mock_keycloak
     # Mock response without subGroups key
     mock_kc.get_group.return_value = {}
     
-    result = get_namespaces_with_perm_data_plane('test-dp')
+    result = get_namespaces_with_perm_data_plane(mock_kc, 'test-dp')
     
     assert result == []
