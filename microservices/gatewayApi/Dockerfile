@@ -32,8 +32,7 @@ RUN curl -sL https://github.com/Kong/deck/releases/download/v1.53.1/deck_1.53.1_
    cp /tmp/deck /usr/local/bin/deck_kong3_1531
 
 RUN python -m pip install --upgrade pip
-# FIX: No module named 'urllib3.packages.six'
-RUN pip uninstall urllib3 && pip install urllib3
+
 RUN cd /tmp && \
     curl -sSL https://install.python-poetry.org > get-poetry.py && \
     POETRY_HOME=/opt/poetry python get-poetry.py --version 1.8.5 && \
