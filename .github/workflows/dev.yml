@@ -1,6 +1,9 @@
 # This is a basic workflow to help you get started with Actions
 
 name: Build
+permissions:
+  contents: read
+  packages: write
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -68,6 +71,22 @@ jobs:
           poetry run coverage run --branch -m pytest -s -v
           poetry run coverage xml
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Test coverage for CSIT OAS Validation API
+        run: |
+          export PATH=/root/.local/bin:$PATH
+          sudo apt install -y nodejs npm
+          sudo npm install -g @stoplight/spectral-cli@6.14.2
+          cd microservices/csitOasValidationApi
+          poetry env use python3.14
+          poetry install --no-root
+          ./checkout-ruleset-tags.sh ruleset_tag_cache || true
+          export GITHUB_TAG_CACHE_PATH="$(realpath -m ./ruleset_tag_cache)"
+          poetry run coverage run --branch -m pytest -s -v
+          poetry run coverage xml
+
       - name: SonarCloud Scan
         uses: sonarsource/sonarqube-scan-action@master
         env:
@@ -93,19 +112,31 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in gatewayApi, skipping build"
-      - uses: docker/build-push-action@v1
+      - name: Sanitize tag name
+        if: steps.check.outputs.build_needed == 'true'
+        id: tag
+        run: echo "tag=$(echo '${{ github.ref_name }}' | tr '/' '-')" >> $GITHUB_OUTPUT
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.build_needed == 'true'
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        if: steps.check.outputs.build_needed == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      - uses: docker/build-push-action@v5
         if: steps.check.outputs.build_needed == 'true'
         with:
-          registry: docker.pkg.github.com
-          username: $GITHUB_ACTOR
-          password: ${{ secrets.GITHUB_TOKEN }}
-          repository: bcgov/gwa-api/gwa-gateway-api
-          path: microservices/gatewayApi
-          dockerfile: microservices/gatewayApi/Dockerfile
-          tag_with_ref: true
-          tag_with_sha: false
-          add_git_labels: true
+          context: microservices/gatewayApi
+          file: microservices/gatewayApi/Dockerfile
           push: true
+          tags: ghcr.io/bcgov/gwa-api/gwa-gateway-api:${{ steps.tag.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
   gwa-scheduler:
     needs: sonar-scan
@@ -126,19 +157,31 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in gatewayJobScheduler, skipping build"
-      - uses: docker/build-push-action@v1
+      - name: Sanitize tag name
+        if: steps.check.outputs.build_needed == 'true'
+        id: tag
+        run: echo "tag=$(echo '${{ github.ref_name }}' | tr '/' '-')" >> $GITHUB_OUTPUT
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.build_needed == 'true'
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        if: steps.check.outputs.build_needed == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      - uses: docker/build-push-action@v5
         if: steps.check.outputs.build_needed == 'true'
         with:
-          registry: docker.pkg.github.com
-          username: $GITHUB_ACTOR
-          password: ${{ secrets.GITHUB_TOKEN }}
-          repository: bcgov/gwa-api/gwa-scheduler
-          path: microservices/gatewayJobScheduler
-          dockerfile: microservices/gatewayJobScheduler/Dockerfile
-          tag_with_ref: true
-          tag_with_sha: false
-          add_git_labels: true
+          context: microservices/gatewayJobScheduler
+          file: microservices/gatewayJobScheduler/Dockerfile
           push: true
+          tags: ghcr.io/bcgov/gwa-api/gwa-scheduler:${{ steps.tag.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
   gwa-kube-api:
     needs: sonar-scan
@@ -159,19 +202,31 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in kubeApi, skipping build"
-      - uses: docker/build-push-action@v1
+      - name: Sanitize tag name
+        if: steps.check.outputs.build_needed == 'true'
+        id: tag
+        run: echo "tag=$(echo '${{ github.ref_name }}' | tr '/' '-')" >> $GITHUB_OUTPUT
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.build_needed == 'true'
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        if: steps.check.outputs.build_needed == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      - uses: docker/build-push-action@v5
         if: steps.check.outputs.build_needed == 'true'
         with:
-          registry: docker.pkg.github.com
-          username: $GITHUB_ACTOR
-          password: ${{ secrets.GITHUB_TOKEN }}
-          repository: bcgov/gwa-api/gwa-kube-api
-          path: microservices/kubeApi
-          dockerfile: microservices/kubeApi/Dockerfile
-          tag_with_ref: true
-          tag_with_sha: false
-          add_git_labels: true
+          context: microservices/kubeApi
+          file: microservices/kubeApi/Dockerfile
           push: true
+          tags: ghcr.io/bcgov/gwa-api/gwa-kube-api:${{ steps.tag.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
   gwa-compatibility-api:
     needs: sonar-scan
@@ -192,16 +247,73 @@ jobs:
       - name: Skip message
         if: steps.check.outputs.build_needed == 'false'
         run: echo "No changes in compatibilityApi, skipping build"
-      - uses: docker/build-push-action@v1
+      - name: Sanitize tag name
+        if: steps.check.outputs.build_needed == 'true'
+        id: tag
+        run: echo "tag=$(echo '${{ github.ref_name }}' | tr '/' '-')" >> $GITHUB_OUTPUT
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.build_needed == 'true'
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        if: steps.check.outputs.build_needed == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      - uses: docker/build-push-action@v5
         if: steps.check.outputs.build_needed == 'true'
         with:
-          registry: docker.pkg.github.com
-          username: $GITHUB_ACTOR
-          password: ${{ secrets.GITHUB_TOKEN }}
-          repository: bcgov/gwa-api/gwa-compatibility-api
-          path: microservices/compatibilityApi
-          dockerfile: microservices/compatibilityApi/Dockerfile
-          tag_with_ref: true
-          tag_with_sha: false
-          add_git_labels: true
+          context: microservices/compatibilityApi
+          file: microservices/compatibilityApi/Dockerfile
           push: true
+          tags: ghcr.io/bcgov/gwa-api/gwa-compatibility-api:${{ steps.tag.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+  gwa-csit-oas-validation-api:
+    needs: sonar-scan
+    name: Docker Image for gwa-csit-oas-validation-api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 
+      - name: Check if build needed
+        id: check
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -q "^microservices/csitOasValidationApi/\|^.github/workflows/dev.yml"; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Skip message
+        if: steps.check.outputs.build_needed == 'false'
+        run: echo "No changes in csitOasValidationApi, skipping build"
+      - name: Sanitize tag name
+        if: steps.check.outputs.build_needed == 'true'
+        id: tag
+        run: echo "tag=$(echo '${{ github.ref_name }}' | tr '/' '-')" >> $GITHUB_OUTPUT
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.build_needed == 'true'
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        if: steps.check.outputs.build_needed == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
+      - uses: docker/build-push-action@v5
+        if: steps.check.outputs.build_needed == 'true'
+        with:
+          context: microservices/csitOasValidationApi
+          file: microservices/csitOasValidationApi/Dockerfile
+          push: true
+          tags: ghcr.io/bcgov/gwa-api/gwa-csit-oas-validation-api:${{ steps.tag.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
