@@ -17,7 +17,7 @@ See [sdx-ca-token-api-spec.md](sdx-ca-token-api-spec.md) for the full specificat
 |--------------------------------|----------|------------------------------------|-----------------------------------|
 | `STEP_CA_URL`                  | Yes      |                                    | In-cluster CA URL                 |
 | `STEP_CA_FINGERPRINT`          | Yes      |                                    | Root CA fingerprint for bootstrap |
-| `LOG_LEVEL`                    | No       | `INFO`                             | Python log level                  |
+| `LOG_LEVEL`                    | No       | `DEBUG`                            | Python log level                  |
 | `STEP_PROVISIONER_PASSWORD_FILE` | No     | `/etc/step-provisioner/password`   | Path to provisioner password file |
 | `STEP_PROVISIONER_KID`         | No       |                                    | Provisioner key ID                |
 | `STEP_PROVISIONER_ISSUER`      | No       |                                    | Provisioner issuer name           |

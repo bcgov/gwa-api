@@ -7,7 +7,14 @@ logging.config.dictConfig({
     'formatters': {
         'json': {
             '()': 'pythonjsonlogger.json.JsonFormatter',
-            'format': '%(asctime)s %(levelname)s %(name)s %(funcName)s %(message)s',
+            'format': '%(levelname)s %(name)s %(funcName)s %(message)s',
+            'timestamp': True,  # Adds ISO-8601 timestamp field
+            'reserved_attrs': [  # Exclude uvicorn's color_message field
+                'color_message', 'args', 'created', 'exc_info', 'exc_text',
+                'filename', 'levelno', 'lineno', 'module', 'msecs', 'msg',
+                'pathname', 'process', 'processName', 'relativeCreated',
+                'stack_info', 'thread', 'threadName', 'taskName'
+            ],
         },
     },
     'handlers': {

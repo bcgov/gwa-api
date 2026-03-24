@@ -3,7 +3,7 @@ import os
 
 config = Config(env_file=".env" if os.path.exists(".env") else None)
 
-log_level = config('LOG_LEVEL', default='INFO')
+log_level = config('LOG_LEVEL', default='DEBUG')
 step_ca_url = config('STEP_CA_URL', default='')
 step_ca_fingerprint = config('STEP_CA_FINGERPRINT', default='')
 

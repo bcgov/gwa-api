@@ -96,7 +96,7 @@ Run this as part of application startup (e.g., a FastAPI lifespan event). If boo
 | --------------------- | --------------------------------- | ----------------------------------------------------- |
 | `STEP_CA_URL`         | In-cluster CA URL                 | `https://sdx-ca-step-certificates.b8840c-dev.svc:443` |
 | `STEP_CA_FINGERPRINT` | Root CA fingerprint for bootstrap | `abc123...` (SHA-256 hex)                             |
-| `LOG_LEVEL`           | Python log level                  | `INFO`                                                |
+| `LOG_LEVEL`           | Python log level                  | `DEBUG`                                               |
 
 ### Mounted Secrets
 
