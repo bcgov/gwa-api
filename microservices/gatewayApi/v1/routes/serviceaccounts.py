@@ -70,6 +70,20 @@ def create_service_account(namespace: str) -> object:
     try:
         response = keycloak_admin.create_client (j)
         cuuid = keycloak_admin.get_client_id(cid)
+
+        # KC 26 may not honour defaultClientScopes from the JSON payload,
+        # so explicitly assign the realm's default scopes to the new client.
+        realm = keycloak_admin.realm_name
+        default_scopes_raw = keycloak_admin.raw_get(
+            f"admin/realms/{realm}/default-default-client-scopes"
+        )
+        if default_scopes_raw.status_code == 200:
+            for scope in default_scopes_raw.json():
+                keycloak_admin.raw_put(
+                    f"admin/realms/{realm}/clients/{cuuid}/default-client-scopes/{scope['id']}",
+                    data=None,
+                )
+
         r = keycloak_admin.generate_client_secrets(cuuid)
         return ({'client_id': cid, 'client_secret': r['value']}, 201)
     except KeycloakGetError as err:

@@ -96,7 +96,13 @@
         }
     ],
     "defaultClientScopes": [
-        "role_list"
+        "role_list",
+        "profile",
+        "email",
+        "roles",
+        "acr",
+        "basic",
+        "web-origins"
     ],
     "optionalClientScopes": [],
     "access": {
