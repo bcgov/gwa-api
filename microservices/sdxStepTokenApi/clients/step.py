@@ -1,6 +1,7 @@
 from subprocess import Popen, PIPE, STDOUT
 from typing import Callable
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,35 @@ def bootstrap(
     logger.info("Step CA bootstrap succeeded")
 
 
+def _validate_subject_and_san(subject: str, san: list[str] | None) -> None:
+    """Validate subject and SAN values before invoking the step CLI.
+
+    This limits the characters and length of user-controlled values that are
+    passed as command-line arguments, reducing the risk of abuse.
+    """
+    if not subject:
+        raise RuntimeError("subject must not be empty")
+
+    if len(subject) > 255:
+        raise RuntimeError("subject is too long")
+
+    # Allow common characters used in DNS names, emails, and IPs.
+    pattern = re.compile(r"^[A-Za-z0-9_.*:@\-]+$")
+    if not pattern.match(subject):
+        raise RuntimeError("subject contains invalid characters")
+
+    if san:
+        if len(san) > 100:
+            raise RuntimeError("too many SAN entries")
+        for entry in san:
+            if not entry:
+                raise RuntimeError("SAN entries must not be empty")
+            if len(entry) > 255:
+                raise RuntimeError("SAN entry is too long")
+            if not pattern.match(entry):
+                raise RuntimeError("SAN entry contains invalid characters")
+
+
 def generate_token(
     subject: str,
     san: list[str] | None = None,
@@ -56,6 +86,8 @@ def generate_token(
     Returns the token string on success.
     Raises RuntimeError on failure.
     """
+    _validate_subject_and_san(subject, san)
+
     args = [
         "step", "ca", "token", subject,
         "--provisioner-password-file", provisioner_password_file,
