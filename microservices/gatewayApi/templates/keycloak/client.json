@@ -39,7 +39,7 @@
         "saml.onetimeuse.condition": "false"
     },
     "authenticationFlowBindingOverrides": {},
-    "fullScopeAllowed": false,
+    "fullScopeAllowed": true,
     "nodeReRegistrationTimeout": -1,
     "protocolMappers": [
         {
