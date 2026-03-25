@@ -39,7 +39,7 @@
         "saml.onetimeuse.condition": "false"
     },
     "authenticationFlowBindingOverrides": {},
-    "fullScopeAllowed": true,
+    "fullScopeAllowed": false,
     "nodeReRegistrationTimeout": -1,
     "protocolMappers": [
         {
@@ -96,13 +96,7 @@
         }
     ],
     "defaultClientScopes": [
-        "role_list",
-        "profile",
-        "email",
-        "roles",
-        "acr",
-        "basic",
-        "web-origins"
+        "role_list"
     ],
     "optionalClientScopes": [],
     "access": {
