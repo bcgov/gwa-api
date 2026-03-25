@@ -13,8 +13,8 @@ class NamespaceService:
 
     def get_namespace(self, namespace):
         group_base_path = get_base_group_path('viewer')
-        ns_group_summary = safe_get_group_by_path(
-            self.keycloak_admin, "%s/%s" % (group_base_path, namespace))
+        self.keycloak_admin.get_group_by_path(
+            path="%s/%s" % (group_base_path, namespace))
         ns_group = self.keycloak_admin.get_group(ns_group_summary['id'])
         return ns_group
 
