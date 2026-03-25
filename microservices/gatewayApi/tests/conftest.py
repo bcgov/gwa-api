@@ -69,6 +69,8 @@ def mock_keycloak(mocker):
                 return {"id": "g003"}
             elif path == "/ns/customcert":
                 return {"id": "g004"}
+            elif path == "/ns/sdx01":
+                return {"id": "grpsdx01"}
             else:
                 return {"id": "g001"}
         def get_group(id):
@@ -98,6 +100,13 @@ def mock_keycloak(mocker):
                 return {
                     "attributes": {
                         "perm-domains": [ ".api.gov.bc.ca", ".custom.gov.bc.ca" ]
+                    }
+                }
+            elif id == "grpsdx01":
+                return {
+                    "attributes": {
+                        "perm-data-plane": ["sdx-edge"],
+                        "perm-domains": [ "sdx01.servers.sdx" ]
                     }
                 }
 
