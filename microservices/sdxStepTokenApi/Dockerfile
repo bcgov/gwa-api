@@ -28,9 +28,13 @@ RUN apk add --no-cache openssl ca-certificates
 COPY --from=builder /usr/local/bin/step /usr/local/bin/step
 COPY --from=builder /build/.venv /opt/venv
 
+# Create step config directory and make it writable for any user
+RUN mkdir -p /step && chmod 777 /step
+
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    STEPPATH=/step
 
 COPY . /app
 
