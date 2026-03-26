@@ -19,7 +19,7 @@ from v1.services.namespaces import NamespaceService, get_base_group_path
 
 from v1.auth.auth import admin_jwt, enforce_authorization, enforce_role_authorization, users_group_root, admins_group_root
 
-from clients.keycloak import admin_api
+from clients.keycloak import admin_api, safe_get_group_by_path
 from utils.validators import namespace_valid, namespace_validation_rule
 
 ns = Blueprint('namespaces', 'namespaces')
@@ -99,7 +99,7 @@ def delete_namespace(namespace: str) -> object:
 
     try:
         for role_name in ['viewer', 'admin']:
-            group = keycloak_admin.get_group_by_path("%s/%s" % (get_base_group_path(role_name), namespace))
+            group = safe_get_group_by_path(keycloak_admin, "%s/%s" % (get_base_group_path(role_name), namespace))
             if group is not None:
                 keycloak_admin.delete_group (group['id'])
 
@@ -149,12 +149,12 @@ def membership_sync (namespace, role_name, desired_membership_list):
 
     base_group_path = get_base_group_path (role_name)
 
-    group = keycloak_admin.get_group_by_path("%s/%s" % (base_group_path, namespace), search_in_subgroups=True)
+    group = safe_get_group_by_path(keycloak_admin, "%s/%s" % (base_group_path, namespace), search_in_subgroups=True)
 
     if group is None:
         log.warn("[%s] Group %s/%s Missing!" % (namespace, base_group_path, namespace))
         create_group (namespace, base_group_path, role_name)
-        group = keycloak_admin.get_group_by_path("%s/%s" % (base_group_path, namespace), search_in_subgroups=True)
+        group = safe_get_group_by_path(keycloak_admin, "%s/%s" % (base_group_path, namespace), search_in_subgroups=True)
 
     group = keycloak_admin.get_group (group['id'])
 
@@ -195,10 +195,10 @@ def create_group(namespace, group_base_path, role_name):
     log = app.logger
     keycloak_admin = admin_api()
 
-    parent_group = keycloak_admin.get_group_by_path(group_base_path)
+    parent_group = safe_get_group_by_path(keycloak_admin, group_base_path)
     if parent_group is None:
         keycloak_admin.create_group ({"name": get_base_group_name(role_name)})
-        parent_group = keycloak_admin.get_group_by_path(group_base_path)
+        parent_group = safe_get_group_by_path(keycloak_admin, group_base_path)
 
     keycloak_admin.create_group ({"name": namespace}, parent=parent_group['id'])
     log.debug("[%s] Group %s/%s created!", namespace, group_base_path, namespace)

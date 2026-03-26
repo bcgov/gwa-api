@@ -24,7 +24,8 @@
       "kube-api": "http://kube-api",
       "kube-ns": "abcd-1234",
       "validate-upstreams": true
-    }
+    },
+    "sdx-edge": {}
   },
   "kubeApiCreds": {
     "kubeApiPass": "password",

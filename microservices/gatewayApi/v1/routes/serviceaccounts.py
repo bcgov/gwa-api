@@ -124,4 +124,3 @@ def delete_service_account(namespace: str, client_id: str) -> object:
     except KeycloakGetError as err:
         log.error(err)
         abort(make_response(jsonify(error="Failed to delete service account"), 400))
-

@@ -47,6 +47,10 @@ def delete_config(namespace: str, qualifier="") -> object:
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
+    dp = get_data_plane(ns_attributes)
+    kube_api_url = app.config['data_planes'][dp].get("kube-api")
+    kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
+
     log = app.logger
 
     outFolder = namespace
@@ -68,7 +72,7 @@ def delete_config(namespace: str, qualifier="") -> object:
     deck_cli = app.config['deckCLI']
 
     log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
-    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder)
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override)
 
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -77,6 +81,9 @@ def delete_config(namespace: str, qualifier="") -> object:
         cleanup(tempFolder)
         log.warn("%s - %s" % (namespace, out.decode('utf-8')))
         abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
+
+    elif kube_api_url is None:
+        log.debug("[%s] No kube API URL configured, skipping route deletion" % (namespace))
 
     elif cmd == "sync" and not local_environment:
         try:
@@ -87,10 +94,8 @@ def delete_config(namespace: str, qualifier="") -> object:
                 "select_tag": selectTag,
                 "ns_attributes": ns_attributes.getAttrs()
             }
-            dp = get_data_plane(ns_attributes)
-            rqst_url = app.config['data_planes'][dp]["kube-api"]
             log.debug("[%s] - Initiating request to kube API" % (dp))
-            res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+            res = session.put(kube_api_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                 app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
             log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
             if res.status_code != 201:
@@ -156,18 +161,22 @@ def write_config(namespace: str) -> object:
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
     dp = get_data_plane(ns_attributes)
+    kube_api_url = app.config['data_planes'][dp].get("kube-api")
+    kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
 
     # Build a list of existing hosts that are outside this namespace
     # They become reserved and any conflict will return an error
     reserved_hosts = []
-    all_routes = get_routes()
-    tag_match = "ns.%s" % namespace
-    for route in all_routes:
-        if tag_match not in route['tags'] and 'hosts' in route:
-            for host in route['hosts']:
-                reserved_hosts.append(host)
-    reserved_hosts = list(set(reserved_hosts))
 
+    do_enforce_reserved_hosts = app.config['data_planes'][dp].get("enforce-reserved-hosts", True)
+    if do_enforce_reserved_hosts:
+        all_routes = get_routes()
+        tag_match = "ns.%s" % namespace
+        for route in all_routes:
+            if tag_match not in route['tags'] and 'hosts' in route:
+                for host in route['hosts']:
+                    reserved_hosts.append(host)
+        reserved_hosts = list(set(reserved_hosts))
 
     dfile = None
     select_tag_qualifier = None
@@ -328,7 +337,7 @@ def write_config(namespace: str) -> object:
 
     log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
 
-    args = deck_cmd_validate(deck_cli, tempFolder)
+    args = deck_cmd_validate(deck_cli, tempFolder, kong_addr_override)
 
     log.debug("[%s] Running %s" % (namespace, args))
     deck_validate = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -339,7 +348,7 @@ def write_config(namespace: str) -> object:
         abort_early(event_id, 'validate', namespace, jsonify(
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
-    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder)
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override)
     
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -349,6 +358,8 @@ def write_config(namespace: str) -> object:
         log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
         abort_early(event_id, 'publish', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
     # skip creation of routes in local development environment
+    elif kube_api_url is None:
+        log.debug("[%s] No kube API URL configured, skipping route creation" % (namespace))
     elif cmd == "sync" and not local_environment:
         try:
             if update_routes_flag:
@@ -385,8 +396,8 @@ def write_config(namespace: str) -> object:
                     "overrides": route_payload["overrides"]
                 }
                 log.debug("[%s] - Initiating request to kube API %s" % (dp, route_payload_log))
-                rqst_url = app.config['data_planes'][dp]["kube-api"]
-                res = session.put(rqst_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
+
+                res = session.put(kube_api_url + "/namespaces/%s/routes" % namespace, json=route_payload, auth=(
                     app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
                 log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
                 if res.status_code != 201:
@@ -397,9 +408,9 @@ def write_config(namespace: str) -> object:
                 if has_namespace_local_host_permission(ns_attributes):
                     session = requests.Session()
                     session.headers.update({"Content-Type": "application/json"})
-                    rqst_url = app.config['data_planes'][dp]["kube-api"]
+
                     log.debug("[%s] - Initiating request to kube API for Certs" % (dp))
-                    res = session.get(rqst_url + "/namespaces/%s/local_tls" % namespace, auth=(
+                    res = session.get(kube_api_url + "/namespaces/%s/local_tls" % namespace, auth=(
                         app.config['kubeApiCreds']['kubeApiUser'], app.config['kubeApiCreds']['kubeApiPass']))
                     log.debug("[%s] - The kube API responded with %s" % (dp, res.status_code))
                     if res.status_code != 200:
@@ -453,7 +464,7 @@ def cleanup(dir_path):
         log.error("Error: %s : %s" % (dir_path, e.strerror))
 
 def validate_base_entities(yaml, ns_attributes):
-    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates']
+    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates', 'key_sets', 'keys']
 
     allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
     if allow_protected_ns:
@@ -483,7 +494,7 @@ def validate_tags(yaml, required_tag):
 def traverse(source, errors, yaml, required_tag, qualifiers):
     # If at root level, allow different resources than if its traversed down a level
     if source == "":
-        traversables = ['services', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+        traversables = ['services', 'upstreams', 'consumers', 'certificates', 'key_sets', 'keys', 'ca_certificates']
     else:
         traversables = ['routes', 'plugins']
 
@@ -635,7 +646,7 @@ def tags_transformation(namespace, yaml):
 def traverse_tags_transform(yaml, namespace, required_tag):
     object_count = 0
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'key_sets', 'keys', 'ca_certificates']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -670,7 +681,7 @@ def traverse_has_ns_qualifier(yaml, required_tag):
 
 def traverse_has_ns_tag_only(yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'key_sets', 'keys', 'ca_certificates']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
@@ -691,7 +702,7 @@ def has_ns_qualifier(tags, required_tag):
 
 def traverse_get_ns_qualifier(yaml, required_tag):
     log = app.logger
-    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'ca_certificates']
+    traversables = ['services', 'routes', 'plugins', 'upstreams', 'consumers', 'certificates', 'key_sets', 'keys', 'ca_certificates']
     for k in yaml:
         if k in traversables:
             for item in yaml[k]:
