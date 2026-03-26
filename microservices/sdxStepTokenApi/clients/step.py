@@ -1,15 +1,30 @@
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, TimeoutExpired
 from typing import Callable
 import logging
 import re
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_TIMEOUT_SECONDS = 30
 
-def run_step_command(args: list[str]) -> tuple[int, str, str]:
-    """Runs a step CLI command and returns (return_code, stdout, stderr)."""
+
+def run_step_command(
+    args: list[str], timeout: int = DEFAULT_TIMEOUT_SECONDS
+) -> tuple[int, str, str]:
+    """Runs a step CLI command and returns (return_code, stdout, stderr).
+
+    Raises:
+        RuntimeError: If the command times out or fails to execute.
+    """
     process = Popen(args, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate()
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+    except TimeoutExpired:
+        process.kill()
+        stdout, stderr = process.communicate()
+        raise RuntimeError(
+            f"step command timed out after {timeout}s: {' '.join(args)}"
+        )
     return (
         process.returncode,
         stdout.decode('utf-8') if stdout else "",
