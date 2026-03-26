@@ -9,13 +9,13 @@ RUN curl -sL https://github.com/smallstep/cli/releases/download/v0.30.0/step_lin
     mv /tmp/bin/step /usr/local/bin/step && \
     rm /tmp/step.tar.gz
 
-RUN pip install --no-cache-dir poetry==1.8.2
+RUN pip install --no-cache-dir poetry==2.3.2
 
 COPY pyproject.toml poetry.lock ./
 
 RUN poetry config virtualenvs.create true && \
     poetry config virtualenvs.in-project true && \
-    poetry install --no-root --no-dev
+    poetry install --no-root --without dev
 
 # --- runtime ---
 
