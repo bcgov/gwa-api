@@ -81,6 +81,15 @@ jobs:
           poetry run coverage run --branch -m pytest -s -v
           poetry run coverage xml
 
+      - name: Test coverage for SDX CA Token API
+        run: |
+          export PATH=/root/.local/bin:$PATH
+          cd microservices/sdxStepTokenApi
+          poetry env use python3.14
+          poetry install --no-root
+          poetry run coverage run --branch -m pytest -s -v
+          poetry run coverage xml
+
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
         env:
@@ -157,6 +166,17 @@ jobs:
           file: microservices/csitOasValidationApi/Dockerfile
           push: true
           tags: ghcr.io/bcgov/gwa-api/gwa-csit-oas-validation-api:${{ steps.release.outputs.tag_name }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Create gwa-sdx-ca-token-api docker image related to the release
+        uses: docker/build-push-action@v5
+        with:
+          context: microservices/sdxStepTokenApi
+          file: microservices/sdxStepTokenApi/Dockerfile
+          push: true
+          tags: ghcr.io/bcgov/gwa-api/gwa-sdx-ca-token-api:${{ steps.release.outputs.tag_name }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
