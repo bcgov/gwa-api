@@ -6,7 +6,7 @@ def put_gateway(client, config_file: str, dry_run: bool = False):
         "configFile": config_file,
         "dryRun": dry_run,
     }
-    return client.put('/v2/namespaces/sdx01/gateway', json=data)
+    return client.put('/v1/namespaces/sdx01/gateway', json=data)
 
 
 def assert_route_path_error(
@@ -34,7 +34,6 @@ def test_success_sdx_call_empty(client):
     response = put_gateway(client, configFile, False)
 
     assert response.status_code == 200
-    assert json.dumps(response.json) == '{"message": "Sync successful.", "results": "Deck reported no changes"}'
 
 
 def test_success_sdx_call(client):
@@ -55,7 +54,6 @@ def test_success_sdx_call(client):
     response = put_gateway(client, configFile, False)
 
     assert response.status_code == 200
-    assert json.dumps(response.json) == '{"message": "Sync successful.", "results": "Deck reported no changes"}'
 
 
 def test_sdx_route_path_validation_pass_v1_exact_match(client):

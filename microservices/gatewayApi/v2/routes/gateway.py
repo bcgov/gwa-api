@@ -19,7 +19,7 @@ from v2.services.namespaces import NamespaceService
 from clients.portal import record_gateway_event
 from clients.kong import get_routes, register_kong_certs, get_public_certs_by_ns
 from clients.ocp_gateway_secret import prep_submitted_config
-from utils.validators import host_valid, validate_upstream
+from utils.validators import host_valid, validate_upstream, validate_route_paths
 from utils.transforms import plugins_transformations, add_version_if_missing
 from utils.masking import mask
 from utils.deck import deck_cmd_sync_diff, deck_cmd_validate
@@ -308,6 +308,19 @@ def write_config(namespace: str) -> object:
         except Exception as ex:
             traceback.print_exc()
             log.error("%s - %s" % (namespace, " Upstream Validation Errors: %s" % ex))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
+
+        # Validate route paths are valid
+        try:
+
+            do_validate_route_paths = app.config['data_planes'][dp].get("enforce-route-paths", False)
+
+            log.debug("Validate route paths %s %s" % (dp, do_validate_route_paths))
+
+            validate_route_paths(gw_config, ns_attributes, do_validate_route_paths)
+        except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Route Path Validation Errors: %s" % ex))
             abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
 
         # Validation #3
