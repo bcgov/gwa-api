@@ -81,22 +81,6 @@ def validate_route_paths(yaml, ns_attributes, do_validate_route_paths: bool = Fa
     perm_route_paths = ns_attributes.get('perm-route-paths', [])
 
     for service in yaml.get('services', []):
-        for route in service.get('routes', []):
-            for path in route.get('paths', []):
-                validate_route_path(path, errors, perm_route_paths)
-
-    if len(errors) != 0:
-        raise Exception('\n'.join(errors))
-
-
-def validate_route_paths(yaml, ns_attributes, do_validate_route_paths: bool = False):
-    if not do_validate_route_paths:
-        return
-
-    errors = []
-    perm_route_paths = ns_attributes.get('perm-route-paths', [])
-
-    for service in yaml.get('services', []):
         service_name = service.get('name', '<unknown-service>')
 
         for route in service.get('routes', []):
