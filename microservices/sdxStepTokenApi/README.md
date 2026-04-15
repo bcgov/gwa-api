@@ -10,6 +10,8 @@ See [sdx-ca-token-api-spec.md](sdx-ca-token-api-spec.md) for the full specificat
 |--------|-----------|--------------------------------------|
 | POST   | `/token`  | Generate a one-time CA token         |
 | GET    | `/health` | Health / readiness check             |
+| GET    | `/docs`   | Swagger UI for API documentation     |
+| GET    | `/openapi.json`   | OpenAPI specification        |
 
 ## Environment Variables
 
