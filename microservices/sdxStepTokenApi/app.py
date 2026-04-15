@@ -90,7 +90,7 @@ def _pydantic_error_item(error: dict) -> dict:
     return item
 
 
-async def validation_exception_handler(
+def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     return JSONResponse(
@@ -105,7 +105,7 @@ async def validation_exception_handler(
     )
 
 
-async def get_health() -> HealthResponse:
+def get_health() -> HealthResponse:
     return HealthResponse(status="ok")
 
 
