@@ -14,7 +14,7 @@ with patch('clients.step.bootstrap'):
 def test_create_token_success(mock_generate):
     mock_generate.return_value = "eyJhbGciOiJFUzI1NiJ9.payload.sig"
 
-    response = client.post("/token", json={
+    response = client.post("/tokens", json={
         "subject": "my-service.clients.sdx",
         "san": ["alt.clients.sdx", "10.0.0.5"],
     })
@@ -35,7 +35,7 @@ def test_create_token_success(mock_generate):
 def test_create_token_no_san(mock_generate):
     mock_generate.return_value = "token-no-san"
 
-    response = client.post("/token", json={
+    response = client.post("/tokens", json={
         "subject": "my-service.clients.sdx",
     })
 
@@ -57,7 +57,7 @@ def test_create_token_failure(mock_generate):
         "Failed to generate token: error from step CLI"
     )
 
-    response = client.post("/token", json={
+    response = client.post("/tokens", json={
         "subject": "my-service.clients.sdx",
     })
 
@@ -67,13 +67,13 @@ def test_create_token_failure(mock_generate):
 
 
 def test_create_token_missing_subject():
-    response = client.post("/token", json={})
+    response = client.post("/tokens", json={})
 
     assert response.status_code == 422
 
 
 def test_create_token_missing_subject_with_san():
-    response = client.post("/token", json={
+    response = client.post("/tokens", json={
         "san": ["alt.clients.sdx"],
     })
 
@@ -81,7 +81,7 @@ def test_create_token_missing_subject_with_san():
 
 
 def test_create_token_invalid_body():
-    response = client.post("/token", content="not json",
+    response = client.post("/tokens", content="not json",
                            headers={"Content-Type": "application/json"})
 
     assert response.status_code == 422
