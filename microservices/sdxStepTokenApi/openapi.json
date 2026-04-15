@@ -1,0 +1,277 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "title": "SDX CA Token API",
+      "summary": "One-time token generation for Step CA",
+      "description": "Generates one-time-use tokens for the Step CA certificate authority, used by SDX services to obtain X.509 certificates.",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/tokens": {
+        "post": {
+          "tags": [
+            "token"
+          ],
+          "summary": "Create Token",
+          "description": "Generate a one-time token for the Step CA.",
+          "operationId": "createToken",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Token generated successfully.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/TokenResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Request validation failed.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Step CA token management"
+      },
+      "/health": {
+        "get": {
+          "summary": "Get Health",
+          "description": "Returns the health and readiness status of the service.",
+          "operationId": "getHealth",
+          "responses": {
+            "200": {
+              "description": "Service is healthy and ready.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HealthResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Health check endpoint"
+      }
+    },
+    "components": {
+      "schemas": {
+        "HTTPValidationError": {
+          "properties": {
+            "type": {
+              "type": "string",
+              "title": "Type",
+              "description": "A URI reference identifying the problem type."
+            },
+            "title": {
+              "type": "string",
+              "title": "Title",
+              "description": "A short, human-readable summary of the problem type."
+            },
+            "status": {
+              "type": "integer",
+              "title": "Status",
+              "description": "The HTTP status code for this occurrence of the problem."
+            },
+            "detail": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Detail",
+              "description": "A human-readable explanation specific to this occurrence."
+            },
+            "errors": {
+              "items": {
+                "$ref": "#/components/schemas/ValidationError"
+              },
+              "type": "array",
+              "minItems": 1,
+              "title": "Errors",
+              "description": "List of individual validation errors."
+            }
+          },
+          "type": "object",
+          "required": [
+            "type",
+            "title",
+            "status",
+            "errors"
+          ],
+          "title": "HTTPValidationError",
+          "description": "RFC 7807 Problem Details response returned for request validation errors.",
+          "examples": [
+            {
+              "type": "https://tools.ietf.org/html/rfc9110#section-15.5.21",
+              "title": "Validation Error",
+              "status": 422,
+              "detail": "Request body failed validation.",
+              "errors": [
+                {
+                  "type": "ValidationError",
+                  "location": "body",
+                  "code": "missing",
+                  "message": "Field required"
+                }
+              ]
+            }
+          ]
+        },
+        "HealthResponse": {
+          "properties": {
+            "status": {
+              "type": "string",
+              "title": "Status"
+            }
+          },
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "title": "HealthResponse",
+          "description": "Health and readiness status of the service.",
+          "examples": [
+            {
+              "status": "ok"
+            }
+          ]
+        },
+        "TokenRequest": {
+          "properties": {
+            "subject": {
+              "type": "string",
+              "title": "Subject"
+            },
+            "san": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "San"
+            }
+          },
+          "type": "object",
+          "required": [
+            "subject"
+          ],
+          "title": "TokenRequest",
+          "description": "Request body for generating a Step CA one-time token.",
+          "examples": [
+            {
+              "subject": "my-service.clients.sdx",
+              "san": [
+                "alt-name-1.clients.sdx",
+                "10.0.0.5"
+              ]
+            }
+          ]
+        },
+        "TokenResponse": {
+          "properties": {
+            "token": {
+              "type": "string",
+              "title": "Token"
+            }
+          },
+          "type": "object",
+          "required": [
+            "token"
+          ],
+          "title": "TokenResponse",
+          "description": "Response containing the generated one-time Step CA token.",
+          "examples": [
+            {
+              "token": "eyJhbGciOiJFUzI1NiJ9.payload.sig"
+            }
+          ]
+        },
+        "ValidationError": {
+          "properties": {
+            "type": {
+              "type": "string",
+              "title": "Error Type"
+            },
+            "location": {
+              "type": "string",
+              "enum": [
+                "body",
+                "query",
+                "header",
+                "path",
+                "cookie"
+              ],
+              "title": "Location"
+            },
+            "code": {
+              "type": "string",
+              "title": "Error Code"
+            },
+            "message": {
+              "type": "string",
+              "title": "Message"
+            },
+            "input": {
+              "title": "Input"
+            },
+            "ctx": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Context"
+            }
+          },
+          "type": "object",
+          "required": [
+            "type",
+            "location",
+            "code",
+            "message"
+          ],
+          "title": "ValidationError",
+          "description": "Details of a single request validation error.",
+          "examples": [
+            {
+              "type": "ValidationError",
+              "location": "body",
+              "code": "missing",
+              "message": "Field required"
+            }
+          ]
+        }
+      }
+    }
+  }

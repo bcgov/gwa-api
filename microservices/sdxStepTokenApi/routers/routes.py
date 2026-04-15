@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from clients.step import generate_token
 from config import settings
-from routers.models import HTTPValidationError, TokenRequest, TokenResponse
+from models import HTTPValidationError, TokenRequest, TokenResponse
 
 router = APIRouter(
     prefix="",
