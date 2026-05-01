@@ -25,7 +25,7 @@ from clients.ocp_networksecuritypolicy import get_ocp_service_namespaces, check_
 from clients.ocp_routes import get_host_list, get_route_overrides
 from clients.ocp_gateway_secret import prep_submitted_config, prep_and_apply_secret, write_submitted_config
 
-from utils.validators import host_valid, validate_upstream
+from utils.validators import host_valid, validate_upstream, validate_route_paths
 from utils.transforms import plugins_transformations, add_version_if_missing
 from utils.masking import mask
 from utils.deck import deck_cmd_sync_diff, deck_cmd_validate
@@ -305,6 +305,21 @@ def write_config(namespace: str) -> object:
         except Exception as ex:
             traceback.print_exc()
             log.error("%s - %s" % (namespace, " Upstream Validation Errors: %s" % ex))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
+
+        # Validate route paths are valid
+        try:
+
+            dp = get_data_plane(ns_attributes)
+
+            do_enforce_route_paths = app.config['data_planes'][dp].get("enforce-route-paths", False)
+
+            log.debug("Validate route paths %s %s" % (dp, do_enforce_route_paths))
+
+            validate_route_paths(gw_config, ns_attributes, do_enforce_route_paths)
+        except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Route Path Validation Errors: %s" % ex))
             abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
 
         # Validation #3

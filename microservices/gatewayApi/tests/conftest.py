@@ -30,6 +30,10 @@ dictConfig({
 def app(mocker):
     """Create and configure a new app instance for each test."""
 
+    sys.modules.pop("app", None)
+    sys.modules.pop("v1.routes.gateway", None)
+    sys.modules.pop("v2.routes.gateway", None)
+
     mock_auth(mocker)
     mock_keycloak(mocker)
     mock_kong(mocker)
@@ -54,8 +58,9 @@ def mock_auth(mocker):
             return f(*args, **kwargs)
         return decorated_function
 
-    mocker.patch('auth.auth.admin_jwt', return_value=mock_decorator)
-
+    mocker.patch('auth.auth.admin_jwt', side_effect=lambda *a, **k: (lambda f: f))
+    mocker.patch('v1.auth.auth.admin_jwt', return_value=mock_decorator)
+    mocker.patch('v1.auth.auth.enforce_authorization', return_value=None)
     mocker.patch("auth.uma.enforce", return_value=True)
 
 def mock_keycloak(mocker):
@@ -106,11 +111,13 @@ def mock_keycloak(mocker):
                 return {
                     "attributes": {
                         "perm-data-plane": ["sdx-edge"],
-                        "perm-domains": [ "sdx01.servers.sdx" ]
+                        "perm-domains": [ "sdx01.servers.sdx" ],
+                        "perm-route-paths": ["/sdx/0/LAB.MIN.CITZ.DATA-USAGE.v1", "/sdx/0/LAB.MIN.CITZ.DATA-USAGE.v2"]
                     }
                 }
-
+            
     mocker.patch("v2.services.namespaces.admin_api", return_value=mock_kc_admin)
+    mocker.patch("v1.services.namespaces.admin_api", return_value=mock_kc_admin)
 
 def mock_kong(mocker):
 
@@ -134,7 +141,8 @@ def mock_kong(mocker):
         elif (path == 'http://kong/certificates?tags=gwa.ns.mytest' or
               path == 'http://kong/certificates?tags=gwa.ns.sescookie' or
               path == 'http://kong/certificates?tags=gwa.ns.dclass' or
-              path == 'http://kong/certificates?tags=gwa.ns.customcert'):
+              path == 'http://kong/certificates?tags=gwa.ns.customcert' or
+              path == 'http://kong/certificates?tags=ns.sdx01'):
             class Response:
                 def json():
                     return {
@@ -182,20 +190,23 @@ def mock_portal_feeder(mocker):
 
 def mock_deck(mocker):
     class decoded_response:
-        def __init__ (self, output):
+        def __init__(self, output):
             self.output = output
+
         def decode(self, utf):
             return self.output
 
     class mock_popen_instance:
-        def __init__ (self, output):
+        def __init__(self, output):
             self.output = output
+
         def communicate(self):
             return decoded_response(self.output), None
+
         returncode = 0
 
     mock_output = "Deck reported no changes"
-    mocker.patch("v2.routes.gateway.Popen", return_value=mock_popen_instance(mock_output))
+    mocker.patch("subprocess.Popen", return_value=mock_popen_instance(mock_output))
 
 def mock_kubeapi(mocker):
 
@@ -280,6 +291,10 @@ def mock_kubeapi(mocker):
                 status_code = 201
                 # def json():
                 #     return {}
+            return Response
+        elif (url == 'http://kube-api/namespaces/sdx01/routes'):
+            class Response:
+                status_code = 201
             return Response
         else:
             raise Exception(url)
