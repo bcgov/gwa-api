@@ -432,7 +432,7 @@ def write_config(namespace: str) -> object:
         message = "Dry-run.  No changes applied."
 
     if cmd == 'sync':
-        record_gateway_event(event_id, 'published', 'completed', namespace, blob=orig_config)
+        record_gateway_event(event_id, 'publish', 'completed', namespace, blob=orig_config)
 
     results = mask(out.decode('utf-8'))
     
