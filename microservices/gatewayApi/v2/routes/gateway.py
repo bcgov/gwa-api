@@ -163,6 +163,7 @@ def write_config(namespace: str) -> object:
     dp = get_data_plane(ns_attributes)
     kube_api_url = app.config['data_planes'][dp].get("kube-api")
     kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
+    allow_consumers = app.config['data_planes'][dp].get("allow-consumers", False)
 
     # Build a list of existing hosts that are outside this namespace
     # They become reserved and any conflict will return an error
@@ -361,7 +362,7 @@ def write_config(namespace: str) -> object:
         abort_early(event_id, 'validate', namespace, jsonify(
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
-    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override)
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override, allow_consumers)
     
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -477,7 +478,7 @@ def cleanup(dir_path):
         log.error("Error: %s : %s" % (dir_path, e.strerror))
 
 def validate_base_entities(yaml, ns_attributes):
-    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates', 'key_sets', 'keys']
+    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'consumers', 'certificates', 'key_sets', 'keys']
 
     allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
     if allow_protected_ns:
