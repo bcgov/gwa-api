@@ -1,6 +1,6 @@
 from flask import current_app as app
 import requests
-import urllib.parse
+from urllib.parse import quote, quote_plus
 
 # Access the Kong Admin API for details about the Kong configuration
 #
@@ -10,6 +10,9 @@ def get_routes ():
 
 def get_plugins ():
     return recurse_get_records ([], "/plugins")
+
+def get_tagged_resources_by_ns (ns):
+    return recurse_get_records ([], "/tags/" + quote("ns.%s" % ns))
 
 def get_services_by_ns (ns):
     return recurse_get_records ([], "/services?tags=ns.%s" % ns)
