@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, Response, make_response, abort, g
 
 from v2.auth.auth import admin_jwt, uma_enforce
 from clients.kong import get_tagged_resources_by_ns
+from v2.services.namespaces import NamespaceService
 
 gw_resources = Blueprint('gw_resources', 'gw_resources')
 
@@ -15,6 +16,16 @@ def get_resources(namespace: str) -> object:
 
     log.info("Get resources for %s" % namespace)
 
-    resources = get_tagged_resources_by_ns(namespace)
+    ns_svc = NamespaceService()
+    ns_attributes = ns_svc.get_namespace_attributes(namespace)
+
+    dp = get_data_plane(ns_attributes)
+    kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
+
+    resources = get_tagged_resources_by_ns(namespace, kong_addr_override)
 
     return make_response(jsonify(resources))
+
+def get_data_plane(ns_attributes):
+    default_data_plane = app.config['defaultDataPlane']
+    return ns_attributes.get('perm-data-plane', [default_data_plane])[0]
