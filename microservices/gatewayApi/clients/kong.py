@@ -11,8 +11,8 @@ def get_routes ():
 def get_plugins ():
     return recurse_get_records ([], "/plugins")
 
-def get_tagged_resources_by_ns (ns, base_url = None):
-    return recurse_get_records ([], "/tags/" + quote("ns.%s" % ns), base_url=base_url)
+def get_tagged_resources_by_tag (tag, base_url = None):
+    return recurse_get_records ([], "/tags/" + quote(tag), base_url=base_url)
 
 def get_services_by_ns (ns):
     return recurse_get_records ([], "/services?tags=ns.%s" % ns)
