@@ -50,6 +50,7 @@ def delete_config(namespace: str, qualifier="") -> object:
     dp = get_data_plane(ns_attributes)
     kube_api_url = app.config['data_planes'][dp].get("kube-api")
     kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
+    allow_consumers = app.config['data_planes'][dp].get("allow-consumers", False)
 
     log = app.logger
 
@@ -72,7 +73,7 @@ def delete_config(namespace: str, qualifier="") -> object:
     deck_cli = app.config['deckCLI']
 
     log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
-    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override)
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override, allow_consumers)
 
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
