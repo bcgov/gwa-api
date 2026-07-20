@@ -15,18 +15,25 @@ WORKDIR /app
 
 RUN apk add build-base libffi-dev openssl openssl-dev curl
 
-RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
+# TARGETARCH is amd64/arm64 from BuildKit (docker buildx / compose build)
+ARG TARGETARCH
+
+RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/${TARGETARCH}/kubectl" && \
     chmod +x kubectl; mv kubectl /usr/local/bin/.
 
 #COPY --from=build /deck/deck /usr/local/bin
 
-# gwa api (kong 2)
-RUN curl -sL https://github.com/kong/deck/releases/download/v1.5.0/deck_1.5.0_linux_amd64.tar.gz -o deck.tar.gz && \
-   tar -xf deck.tar.gz -C /tmp && \
-   cp /tmp/deck /usr/local/bin/deck_kong2_150
+# gwa api (kong 2) — v1.5.0 has no linux_arm64 release
+RUN if [ "$TARGETARCH" = "amd64" ]; then \
+      curl -sL https://github.com/kong/deck/releases/download/v1.5.0/deck_1.5.0_linux_amd64.tar.gz -o deck.tar.gz && \
+      tar -xf deck.tar.gz -C /tmp && \
+      cp /tmp/deck /usr/local/bin/deck_kong2_150; \
+    else \
+      echo "Skipping deck_kong2_150 on ${TARGETARCH} (no upstream arm64 release for v1.5.0)"; \
+    fi
 
 # gwa api (kong 3)
-RUN curl -sL https://github.com/Kong/deck/releases/download/v1.53.1/deck_1.53.1_linux_amd64.tar.gz -o deck.tar.gz && \
+RUN curl -sL https://github.com/Kong/deck/releases/download/v1.53.1/deck_1.53.1_linux_${TARGETARCH}.tar.gz -o deck.tar.gz && \
    tar -xf deck.tar.gz -C /tmp && \
    cp /tmp/deck /usr/local/bin/deck && \
    cp /tmp/deck /usr/local/bin/deck_kong3_1531
