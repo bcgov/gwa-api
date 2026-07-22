@@ -1,9 +1,11 @@
 
-def deck_cmd_sync_diff(deck_cli, cmd, select_tag, state, kong_addr = None):
+def deck_cmd_sync_diff(deck_cli, cmd, select_tag, state, kong_addr = None, allow_consumers = False):
     if deck_cli == "deck" or deck_cli.startswith("deck_kong3_"):
-        args = [ deck_cli, "gateway", cmd, "--config", "/tmp/deck.yaml", "--skip-consumers", "--select-tag", select_tag]
+        args = [ deck_cli, "gateway", cmd, "--config", "/tmp/deck.yaml", "--select-tag", select_tag]
         if kong_addr:
             args.extend(["--kong-addr", kong_addr])
+        if not allow_consumers:
+            args.extend(["--skip-consumers"])
         args.append(state)
         return args
     else:

@@ -10,7 +10,7 @@ This service runs in the same OpenShift namespace as the Step CA server and is a
 
 ## API Specification
 
-### `POST /token`
+### `POST /tokens`
 
 Generate a one-time token for the Step CA.
 
@@ -126,7 +126,7 @@ Use structured JSON logging to match other services in the platform.
 
 ## Summary Checklist
 
-- FastAPI app with `POST /token` and `GET /health`
+- FastAPI app with `POST /tokens` and `GET /health`
 - Pydantic model: `subject` (required str), `san` (optional list of str)
 - `step ca bootstrap` at startup (lifespan event), fail if unsuccessful
 - Shell out to `step ca token` with constructed args

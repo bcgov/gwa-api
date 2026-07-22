@@ -19,7 +19,7 @@ from v2.services.namespaces import NamespaceService
 from clients.portal import record_gateway_event
 from clients.kong import get_routes, register_kong_certs, get_public_certs_by_ns
 from clients.ocp_gateway_secret import prep_submitted_config
-from utils.validators import host_valid, validate_upstream
+from utils.validators import host_valid, validate_upstream, validate_route_paths
 from utils.transforms import plugins_transformations, add_version_if_missing
 from utils.masking import mask
 from utils.deck import deck_cmd_sync_diff, deck_cmd_validate
@@ -50,6 +50,7 @@ def delete_config(namespace: str, qualifier="") -> object:
     dp = get_data_plane(ns_attributes)
     kube_api_url = app.config['data_planes'][dp].get("kube-api")
     kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
+    allow_consumers = app.config['data_planes'][dp].get("allow-consumers", False)
 
     log = app.logger
 
@@ -72,7 +73,7 @@ def delete_config(namespace: str, qualifier="") -> object:
     deck_cli = app.config['deckCLI']
 
     log.info("[%s] (%s) %s action using %s" % (namespace, deck_cli, cmd, selectTag))
-    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override)
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override, allow_consumers)
 
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -163,6 +164,7 @@ def write_config(namespace: str) -> object:
     dp = get_data_plane(ns_attributes)
     kube_api_url = app.config['data_planes'][dp].get("kube-api")
     kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
+    allow_consumers = app.config['data_planes'][dp].get("allow-consumers", False)
 
     # Build a list of existing hosts that are outside this namespace
     # They become reserved and any conflict will return an error
@@ -310,6 +312,19 @@ def write_config(namespace: str) -> object:
             log.error("%s - %s" % (namespace, " Upstream Validation Errors: %s" % ex))
             abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
 
+        # Validate route paths are valid
+        try:
+
+            do_validate_route_paths = app.config['data_planes'][dp].get("enforce-route-paths", False)
+
+            log.debug("Validate route paths %s %s" % (dp, do_validate_route_paths))
+
+            validate_route_paths(gw_config, ns_attributes, do_validate_route_paths)
+        except Exception as ex:
+            traceback.print_exc()
+            log.error("%s - %s" % (namespace, " Route Path Validation Errors: %s" % ex))
+            abort_early(event_id, 'publish', namespace, jsonify(error="Validation Errors:\n%s" % ex))
+
         # Validation #3
         # Validate that certain plugins are configured (such as the gwa_gov_endpoint) at the right level
 
@@ -348,7 +363,7 @@ def write_config(namespace: str) -> object:
         abort_early(event_id, 'validate', namespace, jsonify(
             error="Validation Failed.", results=mask(out.decode('utf-8'))))
 
-    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override)
+    args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override, allow_consumers)
     
     log.debug("[%s] Running %s" % (namespace, args))
     deck_run = Popen(args, stdout=PIPE, stderr=STDOUT)
@@ -439,7 +454,7 @@ def write_config(namespace: str) -> object:
         message = "Dry-run.  No changes applied."
 
     if cmd == 'sync':
-        record_gateway_event(event_id, 'published', 'completed', namespace, blob=orig_config)
+        record_gateway_event(event_id, 'publish', 'completed', namespace, blob=orig_config)
 
     results = mask(out.decode('utf-8'))
     
@@ -464,7 +479,7 @@ def cleanup(dir_path):
         log.error("Error: %s : %s" % (dir_path, e.strerror))
 
 def validate_base_entities(yaml, ns_attributes):
-    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'certificates', 'key_sets', 'keys']
+    traversables = ['_format_version', '_plugin_configs', 'services', 'upstreams', 'consumers', 'certificates', 'key_sets', 'keys']
 
     allow_protected_ns = ns_attributes.get('perm-protected-ns', ['deny'])[0] == 'allow'
     if allow_protected_ns:

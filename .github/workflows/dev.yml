@@ -141,6 +141,7 @@ jobs:
         with:
           context: microservices/gatewayApi
           file: microservices/gatewayApi/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/bcgov/gwa-api/gwa-gateway-api:${{ steps.tag.outputs.tag }}
           labels: |
@@ -186,6 +187,7 @@ jobs:
         with:
           context: microservices/gatewayJobScheduler
           file: microservices/gatewayJobScheduler/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/bcgov/gwa-api/gwa-scheduler:${{ steps.tag.outputs.tag }}
           labels: |
@@ -231,6 +233,7 @@ jobs:
         with:
           context: microservices/kubeApi
           file: microservices/kubeApi/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/bcgov/gwa-api/gwa-kube-api:${{ steps.tag.outputs.tag }}
           labels: |
@@ -276,6 +279,7 @@ jobs:
         with:
           context: microservices/compatibilityApi
           file: microservices/compatibilityApi/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/bcgov/gwa-api/gwa-compatibility-api:${{ steps.tag.outputs.tag }}
           labels: |
@@ -289,7 +293,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2 
+          fetch-depth: 2
       - name: Check if build needed
         id: check
         run: |
@@ -321,6 +325,7 @@ jobs:
         with:
           context: microservices/csitOasValidationApi
           file: microservices/csitOasValidationApi/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/bcgov/gwa-api/gwa-csit-oas-validation-api:${{ steps.tag.outputs.tag }}
           labels: |
@@ -366,6 +371,7 @@ jobs:
         with:
           context: microservices/sdxStepTokenApi
           file: microservices/sdxStepTokenApi/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/bcgov/gwa-api/gwa-sdx-ca-token-api:${{ steps.tag.outputs.tag }}
           labels: |

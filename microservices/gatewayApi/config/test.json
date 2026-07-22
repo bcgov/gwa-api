@@ -25,7 +25,11 @@
       "kube-ns": "abcd-1234",
       "validate-upstreams": true
     },
-    "sdx-edge": {}
+    "sdx-edge": {
+      "kube-api": "http://kube-api",
+      "kube-ns": "abcd-1234",
+      "enforce-route-paths": true
+    }
   },
   "kubeApiCreds": {
     "kubeApiPass": "password",

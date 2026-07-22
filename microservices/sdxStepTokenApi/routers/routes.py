@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+
 from clients.step import generate_token
 from config import settings
+from models import HTTPValidationError, TokenRequest, TokenResponse
 
 router = APIRouter(
     prefix="",
@@ -9,16 +10,15 @@ router = APIRouter(
 )
 
 
-class TokenRequest(BaseModel):
-    subject: str
-    san: list[str] | None = None
-
-
-class TokenResponse(BaseModel):
-    token: str
-
-
-@router.post("/token", response_model=TokenResponse)
+@router.post(
+    "/tokens",
+    operation_id="createToken",
+    response_model=TokenResponse,
+    responses={
+        200: {"description": "Token generated successfully."},
+        422: {"model": HTTPValidationError, "description": "Request validation failed."},
+    },
+)
 async def create_token(request: TokenRequest) -> TokenResponse:
     """Generate a one-time token for the Step CA."""
     try:

@@ -72,3 +72,62 @@ def validate_upstream_host(_host, errors, allow_protected_ns, protected_kube_nam
             errors.append("service upstream is invalid (e6)")
     elif do_validate_upstreams and (host in perm_upstreams) is False:
         errors.append("service upstream is invalid (e6)")
+
+def validate_route_paths(yaml, ns_attributes, do_validate_route_paths: bool = False):
+    if not do_validate_route_paths:
+        return
+
+    errors = []
+    perm_route_paths = ns_attributes.get('perm-route-paths', [])
+
+    for service in yaml.get('services', []):
+        service_name = service.get('name', '<unknown-service>')
+
+        for route in service.get('routes', []):
+            route_name = route.get('name', '<unknown-route>')
+
+            for path in route.get('paths', []):
+                validate_route_path(
+                    path,
+                    service_name,
+                    route_name,
+                    errors,
+                    perm_route_paths
+                )
+
+    if errors:
+        raise Exception('\n'.join(errors))
+
+
+def validate_route_path(_path, service_name, route_name, errors, perm_route_paths):
+    display_path = _path if _path else "<empty>"
+
+    if not _path:
+        errors.append(
+            f"service.{service_name}.route.{route_name} "
+            f"path '{display_path}' does not match any allowed paths (e7)"
+        )
+        return
+
+    if not perm_route_paths:
+        errors.append(
+            f"service.{service_name}.route.{route_name} "
+            f"path '{display_path}' does not match any allowed paths (e7)"
+        )
+        return
+
+    path = _path if _path.startswith("/") else f"/{_path}"
+
+    for allowed in perm_route_paths:
+        if not allowed:
+            continue
+
+        allowed_path = allowed if allowed.startswith("/") else f"/{allowed}"
+
+        if path == allowed_path or path.startswith(f"{allowed_path}/"):
+            return
+
+    errors.append(
+        f"service.{service_name}.route.{route_name} "
+        f"path '{path}' does not match any allowed paths (e7)"
+    )
