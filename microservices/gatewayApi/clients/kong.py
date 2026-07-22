@@ -1,6 +1,6 @@
 from flask import current_app as app
 import requests
-import urllib.parse
+from urllib.parse import quote, quote_plus
 
 # Access the Kong Admin API for details about the Kong configuration
 #
@@ -10,6 +10,9 @@ def get_routes ():
 
 def get_plugins ():
     return recurse_get_records ([], "/plugins")
+
+def get_tagged_resources_by_tag (tag, base_url = None):
+    return recurse_get_records ([], "/tags/" + quote(tag), base_url=base_url)
 
 def get_services_by_ns (ns):
     return recurse_get_records ([], "/services?tags=ns.%s" % ns)
@@ -38,9 +41,12 @@ def get_acls ():
 def get_consumer (consumer_id):
     return get_record ([], "/consumers/%s" % consumer_id)
 
-def recurse_get_records (result, url):
+def recurse_get_records (result, url, base_url = None):
     log = app.logger
-    admin_url = app.config['kongAdminUrl']
+    if base_url is None:
+        admin_url = app.config['kongAdminUrl']
+    else:
+        admin_url = base_url
 
     log.debug("%s%s" % (admin_url, url))
     r = requests.get("%s%s" % (admin_url, url))
@@ -49,7 +55,7 @@ def recurse_get_records (result, url):
     result.extend(data)
 
     if json['next'] is not None:
-        recurse_get_records (result, json['next'])
+        recurse_get_records (result, json['next'], base_url=admin_url)
     return result
 
 def get_record (result, url):
