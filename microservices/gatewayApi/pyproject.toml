@@ -33,7 +33,7 @@ pytest-mock = "^3.14.0"
 
 [tool.poetry.group.dev.dependencies]
 deptry = "^0.25.0"
-pipdeptree = "^2.25.0"
+pipdeptree = "^3.0.0"
 
 [tool.coverage.run]
 relative_files = true
