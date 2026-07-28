@@ -75,7 +75,9 @@ sudo apt install nodejs npm
 Install Stoplight Spectral
 Requires 6.0.0 or greater
 ```bash
-sudo npm install -g @stoplight/spectral-cli@6.14.2 
+sudo npm install -g \
+  @stoplight/spectral-cli@6.14.2 \
+  @stoplight/spectral-rulesets@1.22.2
 spectral --version
 ```
 
