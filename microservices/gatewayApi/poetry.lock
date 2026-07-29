@@ -363,6 +363,27 @@ files = [
 cffi = ">=1.0.0"
 
 [[package]]
+name = "build"
+version = "1.5.0"
+description = "A simple, correct Python build frontend"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "build-1.5.0-py3-none-any.whl", hash = "sha256:13f3eecb844759ab66efec90ca17639bbf14dc06cb2fdf37a9010322d9c50a6f"},
+    {file = "build-1.5.0.tar.gz", hash = "sha256:302c22c3ba2a0fd5f3911918651341ebb3896176cbdec15bd421f80b1afc7647"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "os_name == \"nt\""}
+packaging = ">=24.0"
+pyproject_hooks = "*"
+
+[package.extras]
+keyring = ["keyring"]
+uv = ["uv (>=0.1.18)"]
+virtualenv = ["virtualenv (>=20.17)", "virtualenv (>=20.31)"]
+
+[[package]]
 name = "certifi"
 version = "2025.1.31"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -1138,6 +1159,17 @@ files = [
 ]
 
 [[package]]
+name = "installer"
+version = "1.0.1"
+description = "A library for installing Python wheels."
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "installer-1.0.1-py3-none-any.whl", hash = "sha256:011d045df8b954ced7dde3a7e42ae4418da40ecda7990f2d11d5ed7c146fd98b"},
+    {file = "installer-1.0.1.tar.gz", hash = "sha256:052c7fc3721d54c696e2dea019be67539d7b144e924f559f54beb3121831c364"},
+]
+
+[[package]]
 name = "isort"
 version = "6.0.1"
 description = "A Python utility / library to sort Python imports."
@@ -1294,6 +1326,61 @@ files = [
 ]
 
 [[package]]
+name = "nab-index"
+version = "0.0.11"
+description = "PyPI Simple-API client and on-disk cache for nab"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "nab_index-0.0.11-py3-none-any.whl", hash = "sha256:34c7f73f02a714aa3774767ebbf278e4560d50863fc81252f1aab148bd3061fd"},
+    {file = "nab_index-0.0.11.tar.gz", hash = "sha256:cdf3d3868c840896bba56bfc180c5ff5e6f6801ab9697def799208e37b4cf23e"},
+]
+
+[package.dependencies]
+packaging = ">=24.0"
+truststore = ">=0.10"
+typing-extensions = ">=4.6"
+urllib3 = ">=2.0"
+
+[package.extras]
+httpx = ["httpx[http2] (>=0.28)"]
+
+[[package]]
+name = "nab-python"
+version = "0.0.11"
+description = "Index-backed provider, lockfile emitter, and downloader for nab"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "nab_python-0.0.11-py3-none-any.whl", hash = "sha256:92caea881a68862e941533f516f2cae2347c5f3f911ac4cb6fe73ab16dc4f352"},
+    {file = "nab_python-0.0.11.tar.gz", hash = "sha256:c034a432228150afe99c7280d64d4ef738f6182b9079532bc04a2fce94daa2f2"},
+]
+
+[package.dependencies]
+build = ">=1.2"
+installer = ">=0.7"
+nab-index = "0.0.11"
+nab-resolver = "0.0.11"
+pyproject-hooks = ">=1.2"
+tomli = ">=2.0"
+tomli-w = ">=1.2"
+typing-extensions = ">=4.6"
+
+[[package]]
+name = "nab-resolver"
+version = "0.0.11"
+description = "Generic PubGrub dependency-resolver core"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "nab_resolver-0.0.11-py3-none-any.whl", hash = "sha256:557862e8414658516ae3b3ae4f660dd40dbe13b9c5a16becaed49916bcdc339d"},
+    {file = "nab_resolver-0.0.11.tar.gz", hash = "sha256:9b32dc5b9936964d00c95e5b5e01ce85a9533b2aa95bd4ed96dd793bac61759c"},
+]
+
+[package.dependencies]
+typing-extensions = ">=4.6"
+
+[[package]]
 name = "packaging"
 version = "26.2"
 description = "Core utilities for Python packages"
@@ -1306,23 +1393,31 @@ files = [
 
 [[package]]
 name = "pipdeptree"
-version = "3.1.1"
+version = "4.1.0"
 description = "Command line utility to show dependency tree of packages."
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "pipdeptree-3.1.1-py3-none-any.whl", hash = "sha256:1873ba077ae8faf656257357dbe88b9e09f85d63891355b48b93600ab819f479"},
-    {file = "pipdeptree-3.1.1.tar.gz", hash = "sha256:a986376399e52c9ec7515ef69df7a2dbda0bae0be1cec90dcae23a4ba6262c89"},
+    {file = "pipdeptree-4.1.0-cp310-abi3-macosx_10_15_x86_64.whl", hash = "sha256:dd43b6af5990fd2d22c9b2d8b51f0fcf75a9019b79c950d62a12629c0c796306"},
+    {file = "pipdeptree-4.1.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:83a812e9fc901e511209b12cc358b73ba9372af0123901f523407c6d6d46f3ca"},
+    {file = "pipdeptree-4.1.0-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:4ac5c99e5305c916c9276689c4a2a00156bf3e72fb6d74da4c7cf9e908034e79"},
+    {file = "pipdeptree-4.1.0-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:0b48a42f22d1588feab62ce50f65d20dc9d6f8daf70105e5f27fc0dfc553b13c"},
+    {file = "pipdeptree-4.1.0-cp310-abi3-win_amd64.whl", hash = "sha256:24a011ed94b4fb3e7a3395e2a705f5b82661263148609704e871a4b820e07cba"},
+    {file = "pipdeptree-4.1.0-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:5e40e45804468faff9208ba89ec8c0b3676039461f0601b47b61d255d18a73c4"},
+    {file = "pipdeptree-4.1.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:05ebc75af76222d4ca1f7e2ddff66edd6574a21b64985aef543347613d6c5625"},
+    {file = "pipdeptree-4.1.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:86c1b67ebcc72c69a0220496d17ccc411ab3742b4629b1b440a549dd41c78fb3"},
+    {file = "pipdeptree-4.1.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:c9d4f500fea6b87fe34b63702258e04d58ed26176bf76e7d4f2b1522d87ef440"},
+    {file = "pipdeptree-4.1.0-cp314-cp314t-win_amd64.whl", hash = "sha256:5c71761b139a65b1999457faabc6b34bff436d489d43d95e21a87b60dc0d2147"},
+    {file = "pipdeptree-4.1.0-pp311-pypy311_pp73-macosx_10_15_x86_64.whl", hash = "sha256:c2a27c09524e55e1b784f9909f69751d2f2a0ae47d81331e73af3475b694ea42"},
+    {file = "pipdeptree-4.1.0-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:6fc39d443718243b90d574467b20196737de2566816b51ef9bab226f24306c7d"},
+    {file = "pipdeptree-4.1.0-pp311-pypy311_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:fe77670fd4452c2c882af7e22554b24a6d8735ffe2317aa242866753370444ef"},
+    {file = "pipdeptree-4.1.0-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:59ad80a10f11ebb6cdb10e1eb23db6100707022ca5948473fc79dc154ca43426"},
+    {file = "pipdeptree-4.1.0.tar.gz", hash = "sha256:6eb7e671ffa06ef597d683680d483a4882a86a2a00494971733bd88a3404c44f"},
 ]
 
 [package.dependencies]
-packaging = ">=26"
-
-[package.extras]
-graphviz = ["graphviz (>=0.21)"]
-index = ["nab-index (>=0.0.4)", "nab-python (>=0.0.4)", "pip-requirements-parser (>=32)"]
-rich = ["rich (>=14.3.3)"]
-test = ["covdefaults (>=2.3)", "diff-cover (>=9.7.1)", "nab-index (>=0.0.4)", "nab-python (>=0.0.4)", "pip-requirements-parser (>=32)", "pytest (>=8.4.2)", "pytest-cov (>=7)", "pytest-mock (>=3.15.1)", "pytest-subprocess (>=1.5)", "virtualenv (>=20.34,<21)"]
+nab-index = ">=0.0.11"
+nab-python = ">=0.0.11"
 
 [[package]]
 name = "platformdirs"
@@ -1417,6 +1512,17 @@ tomlkit = ">=0.10.1"
 [package.extras]
 spelling = ["pyenchant (>=3.2,<4.0)"]
 testutils = ["gitpython (>3)"]
+
+[[package]]
+name = "pyproject-hooks"
+version = "1.2.0"
+description = "Wrappers to call pyproject.toml-based build backend hooks."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pyproject_hooks-1.2.0-py3-none-any.whl", hash = "sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913"},
+    {file = "pyproject_hooks-1.2.0.tar.gz", hash = "sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8"},
+]
 
 [[package]]
 name = "pytest"
@@ -1730,6 +1836,17 @@ files = [
 ]
 
 [[package]]
+name = "tomli-w"
+version = "1.2.0"
+description = "A lil' TOML writer"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "tomli_w-1.2.0-py3-none-any.whl", hash = "sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90"},
+    {file = "tomli_w-1.2.0.tar.gz", hash = "sha256:2dd14fac5a47c27be9cd4c976af5a12d87fb1f0b4512f81d69cce3b35ae25021"},
+]
+
+[[package]]
 name = "tomlkit"
 version = "0.13.2"
 description = "Style preserving TOML library"
@@ -1738,6 +1855,17 @@ python-versions = ">=3.8"
 files = [
     {file = "tomlkit-0.13.2-py3-none-any.whl", hash = "sha256:7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde"},
     {file = "tomlkit-0.13.2.tar.gz", hash = "sha256:fff5fe59a87295b278abd31bec92c15d9bc4a06885ab12bcea52c71119392e79"},
+]
+
+[[package]]
+name = "truststore"
+version = "0.10.4"
+description = "Verify certificates using native system trust stores"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "truststore-0.10.4-py3-none-any.whl", hash = "sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981"},
+    {file = "truststore-0.10.4.tar.gz", hash = "sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301"},
 ]
 
 [[package]]
@@ -1871,4 +1999,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "9d34508cc648d1675a68aa422562c4b9eaa751f3af186129aa0991001d054770"
+content-hash = "6e2390f0eafdd49831edf1453e7d344fad80f27b886f9272d561de5b103eb100"
