@@ -911,13 +911,13 @@ Werkzeug = ">=0.7"
 
 [[package]]
 name = "flask-swagger-ui"
-version = "5.32.9"
+version = "5.32.11"
 description = "Swagger UI blueprint for Flask"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "flask_swagger_ui-5.32.9-py3-none-any.whl", hash = "sha256:649044db1a8e143fe3a086a025d81a5d0f24be848b49dd659f63c87c3dc67deb"},
-    {file = "flask_swagger_ui-5.32.9.tar.gz", hash = "sha256:50fb29e4fb925267184f74e4a56998095da3463bb58528ce4eaccc8adc72e692"},
+    {file = "flask_swagger_ui-5.32.11-py3-none-any.whl", hash = "sha256:930b0450625fc862ceab747f1b4f297c075e87bbc89ef71685578b2e7e476014"},
+    {file = "flask_swagger_ui-5.32.11.tar.gz", hash = "sha256:e00a0c8f925eacfbfdd1e12f1b53d07743f286cd6ccf0c1e0eb074b66b2b9426"},
 ]
 
 [package.dependencies]
@@ -2003,4 +2003,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "cc15345e94ad029ab4f8be0a313ecbb958edbdb8dc4822be40399146b6706501"
+content-hash = "bbac98f5769283e6cd253b7ac25f2ee3e8e6bec9e10fa26ea58206b1652e20fc"
