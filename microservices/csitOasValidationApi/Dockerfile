@@ -8,8 +8,16 @@ RUN apk add --no-cache build-base libffi-dev openssl curl git bash nodejs npm
 
 RUN python -m pip install --upgrade pip
 
-# Install Spectral CLI (required for validation)
-RUN npm install -g @stoplight/spectral-cli@6.14.2
+# Install Spectral CLI (required for validation). Pin the rulesets package
+# separately because spectral-cli declares it as ">=1" and newer transitive
+# releases can change validation behaviour without changing the CLI version.
+ARG SPECTRAL_CLI_VERSION=6.14.2
+ARG SPECTRAL_RULESETS_VERSION=1.22.2
+RUN npm install -g \
+      "@stoplight/spectral-cli@${SPECTRAL_CLI_VERSION}" \
+      "@stoplight/spectral-rulesets@${SPECTRAL_RULESETS_VERSION}" && \
+    test "$(node -p "require('/usr/local/lib/node_modules/@stoplight/spectral-rulesets/package.json').version")" = \
+      "${SPECTRAL_RULESETS_VERSION}"
 
 # Install Poetry
 RUN cd /tmp && \

@@ -78,7 +78,10 @@ jobs:
         run: |
           export PATH=/root/.local/bin:$PATH
           sudo apt install -y nodejs npm
-          sudo npm install -g @stoplight/spectral-cli@6.14.2
+          sudo npm install -g \
+            @stoplight/spectral-cli@6.14.2 \
+            @stoplight/spectral-rulesets@1.22.2
+          test "$(node -p "require('/usr/local/lib/node_modules/@stoplight/spectral-rulesets/package.json').version")" = "1.22.2"
           cd microservices/csitOasValidationApi
           poetry env use python3.14
           poetry install --no-root
