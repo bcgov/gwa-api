@@ -19,7 +19,7 @@ flask-cors = "6.0.5"
 gevent = "26.7.0"
 # greenlet = "2.0.2"
 gunicorn = "26.0.0"
-python-keycloak = "5.12.0"
+python-keycloak = "7.1.1"
 requests = "^2.32"
 
 [tool.poetry.dev-dependencies]
