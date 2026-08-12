@@ -8,7 +8,7 @@ authors = []
 [tool.poetry.dependencies]
 python = "^3.11"
 werkzeug = "3.1.8"
-cryptography = "49.0.0"
+cryptography = "50.0.0"
 authlib = "1.7.2"
 flask-swagger-ui = "5.32.12"
 Jinja2 = "3.1.6"
