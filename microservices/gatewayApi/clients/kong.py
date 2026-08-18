@@ -1,6 +1,11 @@
 from flask import current_app as app
+import copy
+import json
 import requests
 from urllib.parse import quote, quote_plus
+
+# JWK fields that must never leave the control-plane API.
+_JWK_PRIVATE_FIELDS = ('d', 'p', 'q', 'dp', 'dq', 'qi', 'k', 'priv', 'oth')
 
 # Access the Kong Admin API for details about the Kong configuration
 #
@@ -13,6 +18,68 @@ def get_plugins ():
 
 def get_tagged_resources_by_tag (tag, base_url = None):
     return recurse_get_records ([], "/tags/" + quote(tag), base_url=base_url)
+
+def strip_private_key_material(entity):
+    """Return a copy of a Kong key/key-set with private material removed."""
+    if entity is None:
+        return entity
+    cleaned = copy.deepcopy(entity)
+    pem = cleaned.get('pem')
+    if isinstance(pem, dict):
+        pem.pop('private_key', None)
+        pem.pop('private_key_alt', None)
+    jwk = cleaned.get('jwk')
+    if isinstance(jwk, str) and jwk.strip():
+        try:
+            parsed = json.loads(jwk)
+        except (TypeError, ValueError):
+            parsed = None
+        if isinstance(parsed, dict):
+            for field in _JWK_PRIVATE_FIELDS:
+                parsed.pop(field, None)
+            cleaned['jwk'] = json.dumps(parsed, separators=(',', ':'))
+    elif isinstance(jwk, dict):
+        for field in _JWK_PRIVATE_FIELDS:
+            jwk.pop(field, None)
+    nested_keys = cleaned.get('keys')
+    if isinstance(nested_keys, list):
+        cleaned['keys'] = [strip_private_key_material(k) for k in nested_keys]
+    return cleaned
+
+def _key_set_id(key):
+    key_set = key.get('set') if isinstance(key, dict) else None
+    if isinstance(key_set, dict):
+        return key_set.get('id') or key_set.get('name')
+    return key_set
+
+def get_keys_and_key_sets(tag, key_set_name=None, base_url=None):
+    """
+    Return full Kong key and key-set objects tagged for a namespace.
+
+    Private key material is stripped. Optional key_set_name further filters
+    to a single key set and its keys.
+    """
+    keys = recurse_get_records(
+        [], "/keys?tags=%s" % quote(tag), base_url=base_url
+    )
+    key_sets = recurse_get_records(
+        [], "/key-sets?tags=%s" % quote(tag), base_url=base_url
+    )
+
+    if key_set_name:
+        key_sets = [
+            ks for ks in key_sets if ks.get('name') == key_set_name
+        ]
+        allowed_ids = {
+            ks.get('id') for ks in key_sets if ks.get('id')
+        }
+        allowed_ids.add(key_set_name)
+        keys = [k for k in keys if _key_set_id(k) in allowed_ids]
+
+    return {
+        "key_sets": [strip_private_key_material(ks) for ks in key_sets],
+        "keys": [strip_private_key_material(k) for k in keys],
+    }
 
 def get_services_by_ns (ns):
     return recurse_get_records ([], "/services?tags=ns.%s" % ns)
