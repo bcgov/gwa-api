@@ -30,13 +30,38 @@ def _key_payload(include_private=True):
 
 
 def test_strip_private_key_material_removes_pem_and_jwk_secrets():
-    cleaned = strip_private_key_material(_key_payload())
+    original = _key_payload()
+    cleaned = strip_private_key_material(original)
     assert "private_key" not in cleaned["pem"]
     parsed = json.loads(cleaned["jwk"])
     assert "d" not in parsed
     assert parsed["x"] == "public-x"
     # original is not mutated
-    assert "private_key" in _key_payload()["pem"]
+    assert "private_key" in original["pem"]
+    assert "d" in json.loads(original["jwk"])
+
+
+def test_strip_private_key_material_omits_unparseable_jwk():
+    original = _key_payload()
+    original["jwk"] = "not-json{"
+    cleaned = strip_private_key_material(original)
+    assert "jwk" not in cleaned
+    assert original["jwk"] == "not-json{"
+
+
+def test_strip_private_key_material_omits_non_object_jwk():
+    original = _key_payload()
+    original["jwk"] = json.dumps(["not", "an", "object"])
+    cleaned = strip_private_key_material(original)
+    assert "jwk" not in cleaned
+
+
+def test_strip_private_key_material_omits_unexpected_pem():
+    original = _key_payload()
+    original["pem"] = "-----BEGIN PRIVATE KEY-----SECRET"
+    cleaned = strip_private_key_material(original)
+    assert "pem" not in cleaned
+    assert original["pem"] == "-----BEGIN PRIVATE KEY-----SECRET"
 
 
 def test_get_keys_empty(client, mocker):

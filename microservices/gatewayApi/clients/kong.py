@@ -19,28 +19,50 @@ def get_plugins ():
 def get_tagged_resources_by_tag (tag, base_url = None):
     return recurse_get_records ([], "/tags/" + quote(tag), base_url=base_url)
 
+def _public_jwk(jwk):
+    """Return a public-only JWK, or None if the value cannot be sanitized."""
+    parsed = None
+    as_string = isinstance(jwk, str)
+    if as_string:
+        if not jwk.strip():
+            return None
+        try:
+            parsed = json.loads(jwk)
+        except (TypeError, ValueError):
+            return None
+    elif isinstance(jwk, dict):
+        parsed = jwk
+    else:
+        return None
+    if not isinstance(parsed, dict):
+        return None
+    for field in _JWK_PRIVATE_FIELDS:
+        parsed.pop(field, None)
+    if as_string:
+        return json.dumps(parsed, separators=(',', ':'))
+    return parsed
+
+
 def strip_private_key_material(entity):
     """Return a copy of a Kong key/key-set with private material removed."""
     if entity is None:
         return entity
     cleaned = copy.deepcopy(entity)
     pem = cleaned.get('pem')
-    if isinstance(pem, dict):
-        pem.pop('private_key', None)
-        pem.pop('private_key_alt', None)
-    jwk = cleaned.get('jwk')
-    if isinstance(jwk, str) and jwk.strip():
-        try:
-            parsed = json.loads(jwk)
-        except (TypeError, ValueError):
-            parsed = None
-        if isinstance(parsed, dict):
-            for field in _JWK_PRIVATE_FIELDS:
-                parsed.pop(field, None)
-            cleaned['jwk'] = json.dumps(parsed, separators=(',', ':'))
-    elif isinstance(jwk, dict):
-        for field in _JWK_PRIVATE_FIELDS:
-            jwk.pop(field, None)
+    if pem is not None:
+        if isinstance(pem, dict):
+            pem.pop('private_key', None)
+            pem.pop('private_key_alt', None)
+        else:
+            # Unexpected representation — omit rather than risk leaking material.
+            cleaned.pop('pem', None)
+    if 'jwk' in cleaned:
+        public_jwk = _public_jwk(cleaned.get('jwk'))
+        if public_jwk is None:
+            # Unparseable or non-object JWK — omit rather than return unsanitized material.
+            cleaned.pop('jwk', None)
+        else:
+            cleaned['jwk'] = public_jwk
     nested_keys = cleaned.get('keys')
     if isinstance(nested_keys, list):
         cleaned['keys'] = [strip_private_key_material(k) for k in nested_keys]

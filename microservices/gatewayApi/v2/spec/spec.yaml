@@ -156,7 +156,7 @@ paths:
         "401":
           $ref: "#/components/responses/401Unauthorized"
         "403":
-          $ref: "#/components/responses/401Unauthorized"
+          $ref: "#/components/responses/403Forbidden"
         "500":
           $ref: "#/components/responses/500InternalServerError"
 
@@ -200,6 +200,14 @@ components:
   responses:
     401Unauthorized:
       description: Unauthorized
+    403Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          example:
+            error: Not authorized to access namespace mytest with GatewayConfig.Publish
     404NotFound:
       description: Not Found
     400BadRequest:
