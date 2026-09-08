@@ -74,7 +74,7 @@ jobs:
           echo "Got release version ${{ steps.release.outputs.version }}"
 
       - name: Create gwa-api docker image related to the release
-        uses: docker/build-push-action@3e7a4f6646880c6f63758d73ac32392d323eaf8f # v1
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           registry: docker.pkg.github.com
           username: $GITHUB_ACTOR
@@ -87,7 +87,7 @@ jobs:
           tag_with_sha: false
 
       - name: Create gwa-kube-api docker image related to the release
-        uses: docker/build-push-action@3e7a4f6646880c6f63758d73ac32392d323eaf8f # v1
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           registry: docker.pkg.github.com
           username: $GITHUB_ACTOR
@@ -100,7 +100,7 @@ jobs:
           tag_with_sha: false
 
       - name: Create gwa-scheduler docker image related to the release
-        uses: docker/build-push-action@3e7a4f6646880c6f63758d73ac32392d323eaf8f # v1
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           registry: docker.pkg.github.com
           username: $GITHUB_ACTOR
