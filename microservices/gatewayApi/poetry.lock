@@ -884,13 +884,13 @@ dotenv = ["python-dotenv"]
 
 [[package]]
 name = "flask-compress"
-version = "1.24"
+version = "1.25"
 description = "Compress responses in your Flask app with gzip, deflate, brotli or zstandard."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "flask_compress-1.24-py3-none-any.whl", hash = "sha256:1e63668eb6e3242bd4f6ad98825a924e3984409be90c125477893d586007d00c"},
-    {file = "flask_compress-1.24.tar.gz", hash = "sha256:14097cefe59ecb3e466d52a6aeb62f34f125a9f7dadf1f33a53e430ce4a50f31"},
+    {file = "flask_compress-1.25-py3-none-any.whl", hash = "sha256:6ca78e29728525e575a9e76e0e8e7acc6e0bf1421e0cbfd452bca0a68626166f"},
+    {file = "flask_compress-1.25.tar.gz", hash = "sha256:802954fb3af048cf4ca2a3b414393bf2b98466ae8067e6654ea0aa34ba34aff5"},
 ]
 
 [package.dependencies]
@@ -916,13 +916,13 @@ Werkzeug = ">=0.7"
 
 [[package]]
 name = "flask-swagger-ui"
-version = "5.32.14"
+version = "5.32.15"
 description = "Swagger UI blueprint for Flask"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "flask_swagger_ui-5.32.14-py3-none-any.whl", hash = "sha256:8355aa4d612baec45096ff5838a0f3509e6941e0062d82fb4b1099d46dc02865"},
-    {file = "flask_swagger_ui-5.32.14.tar.gz", hash = "sha256:a77954c6332eed0f92682b7bd7ef749f63127f7365a84a9a8a687e26fcc43a0e"},
+    {file = "flask_swagger_ui-5.32.15-py3-none-any.whl", hash = "sha256:23ed3d53bae419c9f0690cadda18f03edc4c95c5b67e2862fb0a4e24f2e60e4b"},
+    {file = "flask_swagger_ui-5.32.15.tar.gz", hash = "sha256:140c580afc8cf0f6e62c49e5884b34c9003d0f125d2afebeab464b8b765668a2"},
 ]
 
 [package.dependencies]
@@ -2006,4 +2006,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "959c9e955866ae3f022a14f9d3710b075a4371f2e7289a69e81c64477a472c25"
+content-hash = "67cf0d884b4f9680c11430fb0ef280015898cde48e1ed70e7073349f69543c98"
