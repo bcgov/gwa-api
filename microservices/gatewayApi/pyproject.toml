@@ -24,7 +24,7 @@ requests = "^2.32"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^2.0.0"
-pycodestyle = "2.14.0"
+pycodestyle = "2.15.0"
 pylint = "4.0.8"
 python-dotenv = "^1.0.0"
 pytest = "^9.0.0"
