@@ -7,7 +7,7 @@ authors = []
 
 [tool.poetry.dependencies]
 python = "^3.11"
-werkzeug = "3.1.8"
+werkzeug = "3.1.9"
 cryptography = "50.0.1"
 authlib = "1.8.0"
 flask-swagger-ui = "5.33.0"
