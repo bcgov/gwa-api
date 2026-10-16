@@ -1,23 +1,19 @@
 FROM python:3.12.15-alpine3.24
 
-WORKDIR /app
+# Install wheels only (no source builds, so no package setup scripts run)
+ENV POETRY_INSTALLER_ONLY_BINARY=":all:"
 
-RUN apk add build-base libffi-dev openssl curl
-
-RUN python -m pip install --upgrade pip
-
-RUN cd /tmp && \
-    curl -sSL https://install.python-poetry.org > get-poetry.py && \
-    POETRY_HOME=/opt/poetry python get-poetry.py --version 2.2.1 && \
-    cd /usr/local/bin && \
-    ln -s /opt/poetry/bin/poetry && \
+RUN apk add --no-cache openssl && \
+    python -m venv /opt/poetry && \
+    /opt/poetry/bin/pip install --no-cache-dir --only-binary :all: poetry==2.2.1 && \
+    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry && \
     poetry config virtualenvs.create false
 
-COPY pyproject.toml /tmp/
+WORKDIR /app
 
-COPY poetry.lock /tmp/
+COPY pyproject.toml poetry.lock ./
 
-RUN cd /tmp && poetry install --no-root --without dev
+RUN poetry install --no-root --without dev --no-cache
 
 COPY . /app
 

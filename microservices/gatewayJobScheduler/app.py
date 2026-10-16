@@ -37,11 +37,8 @@ def _is_host_custom_domain(host):
         '.test'
     ]
     
-    for suffix in non_custom_suffixes:
-        if host == suffix[1:] or host.endswith(suffix):
-            return False
-
-    return True
+    # A leading "." matches both subdomains of a suffix and the bare domain itself
+    return not ('.' + host).endswith(tuple(non_custom_suffixes))
 
 def _get_certificate_for_host(host, namespace, cert_snis, certs):
     """
