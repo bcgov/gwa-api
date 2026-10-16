@@ -1,15 +1,8 @@
-FROM python:3.12.3-alpine3.19
-
-RUN mkdir /.kube
-
-RUN chmod ugo+rw /.kube
+FROM python:3.12.15-alpine3.24
 
 WORKDIR /app
 
 RUN apk add build-base libffi-dev openssl curl
-
-RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
-    chmod +x kubectl; mv kubectl /usr/local/bin/.
 
 RUN python -m pip install --upgrade pip
 
