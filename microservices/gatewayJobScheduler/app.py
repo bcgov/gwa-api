@@ -84,6 +84,15 @@ def _get_certificate_for_host(host, namespace, cert_snis, certs):
             
     raise Exception("Certificate not found for host %s" % host)
 
+def ensure_routes_present(routes):
+    """
+    Refuse to sync when Kong returned no routes. A data plane in service always has
+    routes, so an empty list means the data plane's config was not readable. Syncing
+    it would delete every route in every namespace.
+    """
+    if len(routes) == 0:
+        raise ValueError("Kong returned zero routes - refusing to sync, as it would delete all routes")
+
 def transform_data_by_ns(kc, routes, certs, cert_snis):
     """Transform route data organized by namespace"""
     ns_svc = NamespaceService(kc)

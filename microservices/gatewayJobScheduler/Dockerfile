@@ -6,7 +6,7 @@ RUN chmod ugo+rw /.kube
 
 WORKDIR /app
 
-RUN apk add build-base libffi-dev openssl curl jq
+RUN apk add build-base libffi-dev openssl curl
 
 RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
     chmod +x kubectl; mv kubectl /usr/local/bin/.
