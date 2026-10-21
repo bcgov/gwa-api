@@ -8,4 +8,6 @@ def test_standard_domains():
 
 def test_custom_domains():
     assert _is_host_custom_domain("custom.domain.com")
-    assert _is_host_custom_domain("test.custom.gov.bc.ca") 
+    assert _is_host_custom_domain("test.custom.gov.bc.ca")
+    # Shares a suffix's text but is not a subdomain of it
+    assert _is_host_custom_domain("myapi.gov.bc.ca")
