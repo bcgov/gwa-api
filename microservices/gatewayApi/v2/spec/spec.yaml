@@ -117,6 +117,49 @@ paths:
         "500":
           $ref: "#/components/responses/500InternalServerError"
 
+  /namespaces/{namespace}/keys:
+    get:
+      summary: List Kong keys and key sets
+      description: >
+        Returns full Kong key and key-set objects for the namespace, filtered
+        by an optional qualifier tag and key-set name. Private key material is
+        never returned.
+      tags:
+        - Keys
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tag
+          in: query
+          required: false
+          description: Namespace qualifier tag. Must start with ns.{namespace}.
+          schema:
+            type: string
+        - name: key_set
+          in: query
+          required: false
+          description: Filter to a single Kong key-set name.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/gatewayKeys"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "500":
+          $ref: "#/components/responses/500InternalServerError"
+
   /status:
     get:
       operationId: v1.v1.get_status
@@ -157,6 +200,14 @@ components:
   responses:
     401Unauthorized:
       description: Unauthorized
+    403Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/errorResponse"
+          example:
+            error: Not authorized to access namespace mytest with GatewayConfig.Publish
     404NotFound:
       description: Not Found
     400BadRequest:
@@ -210,6 +261,43 @@ components:
             type: string
           description: Overrides what domain suffixes are valid
           example: ["api.gov.bc.ca"]
+    gatewayKey:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        kid:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        pem:
+          type: object
+          properties:
+            public_key:
+              type: string
+        jwk:
+          type: string
+          description: Public JWK JSON. Private fields are stripped.
+    gatewayKeys:
+      type: object
+      required:
+        - key_sets
+        - keys
+      properties:
+        key_sets:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        keys:
+          type: array
+          items:
+            $ref: "#/components/schemas/gatewayKey"
 
   securitySchemes:
     oauth2:

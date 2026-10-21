@@ -3,7 +3,7 @@ import requests
 from sys import exc_info
 import logging
 import traceback
-from app import transform_data_by_ns, get_namespaces_with_perm_data_plane
+from app import transform_data_by_ns, get_namespaces_with_perm_data_plane, ensure_routes_present
 from clients.keycloak import admin_api
 from clients.kong import get_records
 import schedule
@@ -30,11 +30,12 @@ def sync_routes():
     }
     try:
         routes = get_records('routes')
+        ensure_routes_present(routes)
         certs = get_records('certificates')
         cert_snis = get_records('snis')
     except:
         traceback.print_exc()
-        logger.error('Failed to get existing routes - %s' % (exc_info()[0]))
+        logger.error('Failed to get existing routes - %s' % (exc_info()[1]))
         clear('sync-routes')
         exit(1)
 
