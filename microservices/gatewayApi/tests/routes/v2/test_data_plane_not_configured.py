@@ -3,7 +3,7 @@ import pytest
 # The "unknowndp" namespace's perm-data-plane is not in config/test.json
 
 def assert_data_plane_not_configured(response):
-    assert response.status_code == 409
+    assert response.status_code == 500
     body = response.get_json()
     assert body['error'] == 'Data Plane Not Configured'
     assert body['error_description'] == "Data plane 'not-configured-dp' is not configured"

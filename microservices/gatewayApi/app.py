@@ -112,18 +112,18 @@ def create_app(test_config=None):
         content = jsonify({"error":"Token Expired"})
         return make_response(content, HTTPStatus.UNAUTHORIZED)
 
-    # The gateway is valid but belongs to a data plane this gwa-api does not
-    # serve (e.g. sdx-edge), so the request conflicts with the gateway's state
+    # The gateway belongs to a data plane this gwa-api is not configured for
+    # (e.g. sdx-edge), which is a platform misconfiguration, not a caller error
     @app.errorhandler(DataPlaneNotConfiguredError)
     def data_plane_not_configured(error):
         error_id = str(uuid.uuid4())
-        log.warning("[%s] %s" % (error_id, str(error)))
+        log.error("[%s] %s" % (error_id, str(error)))
         content = jsonify({
             "error": "Data Plane Not Configured",
             "error_description": str(error),
             "error_id": error_id
         })
-        return make_response(content, HTTPStatus.CONFLICT)
+        return make_response(content, HTTPStatus.INTERNAL_SERVER_ERROR)
 
     @app.errorhandler(Exception)
     def other_exception(error):
