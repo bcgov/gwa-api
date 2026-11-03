@@ -30,10 +30,12 @@ def test_get_resources_with_unconfigured_data_plane(client, mocker):
     get_resources.assert_not_called()
 
 def test_get_statuses_with_unconfigured_data_plane(client, mocker):
-    mocker.patch("v2.routes.gw_status.get_services_by_ns", return_value=[])
-    mocker.patch("v2.routes.gw_status.get_routes_by_ns", return_value=[])
+    get_services = mocker.patch("v2.routes.gw_status.get_services_by_ns", return_value=[])
+    get_routes = mocker.patch("v2.routes.gw_status.get_routes_by_ns", return_value=[])
     response = client.get('/v2/namespaces/unknowndp/services')
     assert_data_plane_not_configured(response)
+    get_services.assert_not_called()
+    get_routes.assert_not_called()
 
 def test_unexpected_error_includes_error_id(client, mocker):
     mocker.patch("v2.routes.gw_keys.get_keys_and_key_sets", side_effect=RuntimeError("boom"))

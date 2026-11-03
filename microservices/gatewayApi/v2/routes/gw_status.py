@@ -21,13 +21,13 @@ def get_statuses(namespace: str) -> object:
 
     log.info("Get status for %s" % namespace)
 
-    services = get_services_by_ns(namespace)
-    routes = get_routes_by_ns(namespace)
-
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
     dp = get_data_plane(ns_attributes)
     kube_api_url = get_data_plane_config(dp)["kube-api"]
+
+    services = get_services_by_ns(namespace)
+    routes = get_routes_by_ns(namespace)
 
     res = []
 
