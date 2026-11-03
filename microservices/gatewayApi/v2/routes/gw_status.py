@@ -6,7 +6,7 @@ from werkzeug.exceptions import HTTPException
 
 from v2.auth.auth import admin_jwt, uma_enforce
 from v2.services.namespaces import NamespaceService
-from utils.get_data_plane import get_data_plane
+from utils.get_data_plane import get_data_plane, get_data_plane_config
 from clients.kong import get_services_by_ns, get_routes_by_ns
 
 gw_status = Blueprint('gw_status_v2', 'gw_status')
@@ -27,7 +27,7 @@ def get_statuses(namespace: str) -> object:
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
     dp = get_data_plane(ns_attributes)
-    kube_api_url = app.config['data_planes'][dp]["kube-api"]
+    kube_api_url = get_data_plane_config(dp)["kube-api"]
 
     res = []
 
