@@ -38,7 +38,7 @@ from utils.masking import mask
 
 from v1.services.namespaces import NamespaceService, get_base_group_path
 from utils.cleanup import cleanup
-from utils.get_data_plane import get_data_plane
+from utils.get_data_plane import get_data_plane, get_data_plane_config
 from utils.deck import deck_cmd_sync_diff
 
 ns = Blueprint('namespaces_v2', 'namespaces')
@@ -92,8 +92,9 @@ def delete_namespace(namespace: str) -> object:
     ns_svc = NamespaceService()
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
     dp = get_data_plane(ns_attributes)
-    kube_api_url = app.config['data_planes'][dp].get("kube-api")
-    kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
+    dp_config = get_data_plane_config(dp)
+    kube_api_url = dp_config.get("kube-api")
+    kong_addr_override = dp_config.get("kong-addr")
 
     outFolder = namespace
 

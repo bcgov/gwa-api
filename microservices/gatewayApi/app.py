@@ -5,6 +5,7 @@ except ImportError:
 import logging
 import os
 import time
+import uuid
 import config
 from werkzeug.exceptions import HTTPException
 from authlib.jose.errors import JoseError, ExpiredTokenError
@@ -15,6 +16,7 @@ import threading
 
 import v1.v1 as v1
 import v2.v2 as v2
+from utils.get_data_plane import DataPlaneNotConfiguredError
 
 def create_app(test_config=None):
 
@@ -110,11 +112,25 @@ def create_app(test_config=None):
         content = jsonify({"error":"Token Expired"})
         return make_response(content, HTTPStatus.UNAUTHORIZED)
 
+    # The gateway belongs to a data plane this gwa-api is not configured for
+    # (e.g. sdx-edge), which is a platform misconfiguration, not a caller error
+    @app.errorhandler(DataPlaneNotConfiguredError)
+    def data_plane_not_configured(error):
+        error_id = str(uuid.uuid4())
+        log.error("[%s] %s" % (error_id, str(error)))
+        content = jsonify({
+            "error": "Data Plane Not Configured",
+            "error_description": str(error),
+            "error_id": error_id
+        })
+        return make_response(content, HTTPStatus.INTERNAL_SERVER_ERROR)
+
     @app.errorhandler(Exception)
     def other_exception(error):
-        log.error("Unexpected error %s", type(error))
+        error_id = str(uuid.uuid4())
+        log.error("[%s] Unexpected error %s", error_id, type(error))
         log.exception(error)
-        content = jsonify({"error":"Unexpected Error"})
+        content = jsonify({"error":"Unexpected Error", "error_id": error_id})
         return make_response(content, HTTPStatus.BAD_REQUEST)
 
     @app.route('/', methods=['GET'], strict_slashes=False)
