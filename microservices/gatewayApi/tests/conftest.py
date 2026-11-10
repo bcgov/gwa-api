@@ -76,6 +76,8 @@ def mock_keycloak(mocker):
                 return {"id": "g004"}
             elif path == "/ns/sdx01":
                 return {"id": "grpsdx01"}
+            elif path == "/ns/unknowndp":
+                return {"id": "gunknowndp"}
             else:
                 return {"id": "g001"}
         def get_group(id):
@@ -113,6 +115,12 @@ def mock_keycloak(mocker):
                         "perm-data-plane": ["sdx-edge"],
                         "perm-domains": [ "sdx01.servers.sdx" ],
                         "perm-route-paths": ["/sdx/0/LAB.MIN.CITZ.DATA-USAGE.v1", "/sdx/0/LAB.MIN.CITZ.DATA-USAGE.v2"]
+                    }
+                }
+            elif id == "gunknowndp":
+                return {
+                    "attributes": {
+                        "perm-data-plane": ["not-configured-dp"]
                     }
                 }
             

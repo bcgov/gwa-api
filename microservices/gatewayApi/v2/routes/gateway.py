@@ -23,6 +23,7 @@ from utils.validators import host_valid, validate_upstream, validate_route_paths
 from utils.transforms import plugins_transformations, add_version_if_missing
 from utils.masking import mask
 from utils.deck import deck_cmd_sync_diff, deck_cmd_validate
+from utils.get_data_plane import get_data_plane_config
 from clients.compatibility import check_kong3_compatibility
 
 gw = Blueprint('gwa_v2', 'gateway')
@@ -48,9 +49,10 @@ def delete_config(namespace: str, qualifier="") -> object:
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
     dp = get_data_plane(ns_attributes)
-    kube_api_url = app.config['data_planes'][dp].get("kube-api")
-    kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
-    allow_consumers = app.config['data_planes'][dp].get("allow-consumers", False)
+    dp_config = get_data_plane_config(dp)
+    kube_api_url = dp_config.get("kube-api")
+    kong_addr_override = dp_config.get("kong-addr")
+    allow_consumers = dp_config.get("allow-consumers", False)
 
     log = app.logger
 
@@ -162,15 +164,16 @@ def write_config(namespace: str) -> object:
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
     dp = get_data_plane(ns_attributes)
-    kube_api_url = app.config['data_planes'][dp].get("kube-api")
-    kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
-    allow_consumers = app.config['data_planes'][dp].get("allow-consumers", False)
+    dp_config = get_data_plane_config(dp)
+    kube_api_url = dp_config.get("kube-api")
+    kong_addr_override = dp_config.get("kong-addr")
+    allow_consumers = dp_config.get("allow-consumers", False)
 
     # Build a list of existing hosts that are outside this namespace
     # They become reserved and any conflict will return an error
     reserved_hosts = []
 
-    do_enforce_reserved_hosts = app.config['data_planes'][dp].get("enforce-reserved-hosts", True)
+    do_enforce_reserved_hosts = dp_config.get("enforce-reserved-hosts", True)
     if do_enforce_reserved_hosts:
         all_routes = get_routes()
         tag_match = "ns.%s" % namespace
@@ -303,7 +306,7 @@ def write_config(namespace: str) -> object:
         try:
             protected_kube_namespaces = json.loads(app.config['protectedKubeNamespaces'])
 
-            do_validate_upstreams = app.config['data_planes'][dp].get("validate-upstreams", False)
+            do_validate_upstreams = dp_config.get("validate-upstreams", False)
 
             log.debug("Validate upstreams %s %s" % (dp, do_validate_upstreams))
             validate_upstream(gw_config, ns_attributes, protected_kube_namespaces, do_validate_upstreams)
@@ -315,7 +318,7 @@ def write_config(namespace: str) -> object:
         # Validate route paths are valid
         try:
 
-            do_validate_route_paths = app.config['data_planes'][dp].get("enforce-route-paths", False)
+            do_validate_route_paths = dp_config.get("enforce-route-paths", False)
 
             log.debug("Validate route paths %s %s" % (dp, do_validate_route_paths))
 

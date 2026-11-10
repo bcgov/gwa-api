@@ -20,7 +20,9 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: |
+            3.12
+            3.11
       - name: Install deps
         run: |
           sudo apt update
@@ -61,6 +63,7 @@ jobs:
         run: |
           export PATH=/root/.local/bin:$PATH
           cd microservices/compatibilityApi
+          poetry env use 3.12
           poetry install --no-root
           poetry run coverage run --branch -m pytest -s -v
           poetry run coverage xml

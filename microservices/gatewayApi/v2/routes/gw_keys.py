@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request, make_response, abort, current_app
 from v2.auth.auth import admin_jwt, uma_enforce
 from clients.kong import get_keys_and_key_sets
 from v2.services.namespaces import NamespaceService
+from utils.get_data_plane import get_data_plane_config
 
 gw_keys = Blueprint('gw_keys', 'gw_keys')
 
@@ -26,7 +27,7 @@ def get_keys(namespace: str) -> object:
     ns_attributes = ns_svc.get_namespace_attributes(namespace)
 
     dp = get_data_plane(ns_attributes)
-    kong_addr_override = app.config['data_planes'][dp].get("kong-addr")
+    kong_addr_override = get_data_plane_config(dp).get("kong-addr")
 
     payload = get_keys_and_key_sets(tag, key_set, kong_addr_override)
     return make_response(jsonify(payload))
