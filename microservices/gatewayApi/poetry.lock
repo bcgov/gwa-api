@@ -42,13 +42,13 @@ files = [
 
 [[package]]
 name = "authlib"
-version = "1.9.1"
+version = "1.9.5"
 description = "The ultimate Python library in building OAuth and OpenID Connect servers and clients."
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "authlib-1.9.1-py2.py3-none-any.whl", hash = "sha256:8b9be8b1e5174dcbf5520e984f1a22dc2edae5b6e40a61d4cedbf86b97e9e69b"},
-    {file = "authlib-1.9.1.tar.gz", hash = "sha256:5c7d9848f47cac340f060f76ae0bc09b59f5c8e89cc1bb032d4370a0c55b5974"},
+    {file = "authlib-1.9.5-py2.py3-none-any.whl", hash = "sha256:e32a63e3d869196b61816b2602231862179a2ffc29358c009d1f022c8b86a8b2"},
+    {file = "authlib-1.9.5.tar.gz", hash = "sha256:3f031d5e9b6486089e91e8f7f1b68f36275f3151c66460d650fc90d420545fd7"},
 ]
 
 [package.dependencies]
@@ -960,13 +960,13 @@ dotenv = ["python-dotenv"]
 
 [[package]]
 name = "flask-compress"
-version = "1.25"
+version = "1.26"
 description = "Compress responses in your Flask app with gzip, deflate, brotli or zstandard."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "flask_compress-1.25-py3-none-any.whl", hash = "sha256:6ca78e29728525e575a9e76e0e8e7acc6e0bf1421e0cbfd452bca0a68626166f"},
-    {file = "flask_compress-1.25.tar.gz", hash = "sha256:802954fb3af048cf4ca2a3b414393bf2b98466ae8067e6654ea0aa34ba34aff5"},
+    {file = "flask_compress-1.26-py3-none-any.whl", hash = "sha256:f647364ba9ec10ba830cac041b781083ca68244cfc0810a68a702e687ad4eb42"},
+    {file = "flask_compress-1.26.tar.gz", hash = "sha256:bd5299504e564eac273951811a1c161d893f5d51b8722066fcef1b4da556749f"},
 ]
 
 [package.dependencies]
@@ -992,13 +992,13 @@ Werkzeug = ">=0.7"
 
 [[package]]
 name = "flask-swagger-ui"
-version = "5.34.0"
+version = "5.34.1"
 description = "Swagger UI blueprint for Flask"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "flask_swagger_ui-5.34.0-py3-none-any.whl", hash = "sha256:63e4ecfee6345ca746c11c5341c6f2a1cbe271e518aac1659889cd3905b1110f"},
-    {file = "flask_swagger_ui-5.34.0.tar.gz", hash = "sha256:6ed20671d8037698f46e0cf02774efee366c137beab524b646d31a81638068eb"},
+    {file = "flask_swagger_ui-5.34.1-py3-none-any.whl", hash = "sha256:89814d22c3ee0908f58f7b5213029ed82d5956513124c4192ab4354bb9166676"},
+    {file = "flask_swagger_ui-5.34.1.tar.gz", hash = "sha256:e39c102d3f61b4d5467b73c6a4d2e4084f802da62de073c3e56c0f22eb6a53aa"},
 ]
 
 [package.dependencies]
@@ -2289,4 +2289,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "ab22e11ac3aee895ab5cae59d1887c190935ae97c15993d1c17a4e2e39e9cdfb"
+content-hash = "cb4b50e0251193ce69f4ad1aae7a145ce3fa783a6d0593f8328e2f0c80132dfa"
