@@ -1,4 +1,6 @@
 name: Draft release from master
+permissions:
+  contents: read
 
 on:
   push:
@@ -8,6 +10,9 @@ on:
 jobs:
   release-on-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release tag and GitHub release
+      packages: write # push images to ghcr.io
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

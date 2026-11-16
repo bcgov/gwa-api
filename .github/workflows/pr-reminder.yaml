@@ -3,6 +3,12 @@ on:
   schedule:
     - cron: '30 13 * * 1,2,3,4,5' # Scheduled to run at 5:30 AM PST, weekdays
 
+# Lists PRs and reviewers, then comments on and labels stale PRs
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   remind:
     runs-on: ubuntu-latest

@@ -3,7 +3,6 @@
 name: Build
 permissions:
   contents: read
-  packages: write
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -112,6 +111,9 @@ jobs:
     needs: sonar-scan
     name: Docker Image for gwa-api
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io
     steps:
       - uses: actions/checkout@v4
         with:
@@ -158,6 +160,9 @@ jobs:
     needs: sonar-scan
     name: Docker Image for gwa-scheduler
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io
     steps:
       - uses: actions/checkout@v4
         with:
@@ -204,6 +209,9 @@ jobs:
     needs: sonar-scan
     name: Docker Image for gwa-kube-api
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io
     steps:
       - uses: actions/checkout@v4
         with:
@@ -250,6 +258,9 @@ jobs:
     needs: sonar-scan
     name: Docker Image for gwa-compatibility-api
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io
     steps:
       - uses: actions/checkout@v4
         with:
@@ -296,6 +307,9 @@ jobs:
     needs: sonar-scan
     name: Docker Image for gwa-csit-oas-validation-api
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io
     steps:
       - uses: actions/checkout@v4
         with:
@@ -342,6 +356,9 @@ jobs:
     needs: sonar-scan
     name: Docker Image for gwa-sdx-ca-token-api
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io
     steps:
       - uses: actions/checkout@v4
         with:
