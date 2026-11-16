@@ -13,6 +13,7 @@ jobs:
     permissions:
       contents: write # create the release tag and GitHub release
       packages: write # push images to ghcr.io
+      pull-requests: read # release-on-push reads the merged PR's labels
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
