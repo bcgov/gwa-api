@@ -7,6 +7,9 @@ on:
     branches:
       - master
 name: Main Workflow
+permissions:
+  contents: read
+  pull-requests: read
 jobs:
   sonarcloud:
     runs-on: ubuntu-latest
