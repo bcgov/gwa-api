@@ -34,7 +34,9 @@ class TestDiscoveryApi:
         assert response.status_code == 200
         data = response.json()
         assert "versions" in data
-        assert data["versions"] == ["v1.3.0-beta1","v1.3.0-Beta1","v1.2.3","v1.1.0","v1.0.0"]  # sorted newest first
+        # Sorted newest first. Pre-release labels compare in ASCII order, so uppercase "Beta1" sorts
+        # below lowercase "alpha1".
+        assert data["versions"] == ["v1.3.0-alpha1","v1.3.0-Beta1","v1.2.3","v1.1.0","v1.0.0"]
 
         assert "200" in caplog.text
 
