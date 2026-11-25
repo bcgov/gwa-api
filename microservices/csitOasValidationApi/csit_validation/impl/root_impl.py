@@ -25,6 +25,8 @@ from csit_validation.core.config import (
 
 logger = logging.getLogger(__name__)
 
+NO_RULESET_VERSIONS = "No ruleset versions available"
+
 
 class RootApiImpl(BaseRootApi):
     """
@@ -66,7 +68,7 @@ class RootApiImpl(BaseRootApi):
             if not self._rulesets_service().get_valid_version_tags:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="No ruleset versions available"
+                    detail=NO_RULESET_VERSIONS
                 )
             return "ok"
 
@@ -83,7 +85,7 @@ class RootApiImpl(BaseRootApi):
             "status": "healthy" if versions else "unhealthy",
             "message": (
                 f"{len(versions)} ruleset versions available"
-                if versions else "No ruleset versions available"
+                if versions else NO_RULESET_VERSIONS
             ),
             "versions": {
                 version: {"tag": tag, "commit": fetched_tags.get(tag)}
@@ -167,8 +169,8 @@ class RootApiImpl(BaseRootApi):
         if rulesets["status"] == "unhealthy":
             overall_status = HealthStatus.UNHEALTHY
             overall_message = (
-                overall_message + "; no ruleset versions available"
-                if overall_message != "Service operational" else "No ruleset versions available"
+                f"{overall_message}; {NO_RULESET_VERSIONS}"
+                if overall_message != "Service operational" else NO_RULESET_VERSIONS
             )
 
         # Build components

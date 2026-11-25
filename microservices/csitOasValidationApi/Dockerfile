@@ -40,7 +40,7 @@ WORKDIR /app
 # Install only runtime dependencies
 # nodejs is needed for Spectral CLI to run
 # git is needed to fetch the ruleset tags when the container starts
-RUN apk add --no-cache libffi openssl nodejs git
+RUN apk add --no-cache git libffi nodejs openssl
 
 # Copy Python packages from builder
 COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages

@@ -220,7 +220,7 @@ def run(
             for tag, commit in cached_tags.items():
                 logger.info(f"Ruleset tag {tag} at commit {commit} (cached)")
             return 0
-        logger.error(f"Ruleset fetch failed and no rulesets are cached: {exc}")
+        logger.exception(f"Ruleset fetch failed and no rulesets are cached: {exc}")
         return 1
 
     logger.info(f"Fetched {len(tags)} ruleset tags")
