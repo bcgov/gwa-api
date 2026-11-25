@@ -2,55 +2,71 @@ import re
 import logging
 from pathlib import Path
 from functools import cached_property
-from typing import  Optional, Tuple, Dict
+from typing import Callable, Dict, Optional, Sequence, Tuple
 from csit_validation.util.log_decorator import log_entry_exit
 
 logger = logging.getLogger(__name__)
 
+SEMVER_PATTERN = re.compile(r'^v\d+\.\d+\.\d+(-[\w\-.]+)?$')
+
 
 class CachedRulesetsService:
     """
-    The CachedRulesetsService is a utility class that retrieves published versions of the CSIT API Governance Rules
-    and the rulesets available in each version from a cached version of the CSIT API Governance Rules Git repository.
+    The CachedRulesetsService is a utility class that retrieves published versions of the API Governance rules
+    and the rulesets available in each version from a local cache of the rules repository's tags.
 
-    The CSIT API Governance Rules are maintained in the https://github.com/bcgov/csit-api-governance-spectral-style-guide
-    repository and the versions are identified by commit tags in the repository.  
+    The rules are maintained in the https://github.com/bcgov/itk-api-governance repository and the versions are
+    identified by tags in the repository. ruleset_fetcher fetches the tags into the cache when the service starts.
 
-    The service determines the versions by obtaining a list of the repositories tags and filtering for tags that follow the format
-    ruleset-v<semver> where <semver> is a valid semantic verions.  
+    The service determines the versions by listing the cached tags and keeping the tags that start with one of the
+    configured prefixes followed by a valid semantic version (v<semver>). The version is the tag with its prefix
+    removed.
 
-    Example tags that will be identified as versions are:
-        ruleset-v1.0.0
-        ruleset-v1.2.3
-        ruleset-v1.3.0-Beta1
-        ruleset-v1.1.0
+    With the prefixes ["ruleset-"], example tags that will be identified as versions are:
+        ruleset-v1.0.0      → v1.0.0
+        ruleset-v1.2.3      → v1.2.3
+        ruleset-v1.3.0-Beta1 → v1.3.0-Beta1
 
-    Tags that are not prefixed with 'ruleset-' or do not follow semantic versions will be ignored.  For example:
+    Tags that don't start with a prefix or don't follow semantic versioning are ignored. For example:
         ruleset-junk-tag
         junk-tag
 
-        
-    Rulesets in each version are identified as yaml or yaml files within the 'spectral' directory in the root of the repository.
-    
-    For example:
-        spectral/basic-ruleset.yaml
-        spectral/sdx/ruleset.yml
+    The prefixes are ordered. When two tags give the same version, the tag whose prefix comes first wins.
+    With the prefixes ["ruleset-", "dev-ruleset-"] and the tags ruleset-v1.1.0, dev-ruleset-v1.1.0 and
+    dev-ruleset-v1.2.0:
+        v1.1.0 → ruleset-v1.1.0      (ruleset- is listed before dev-ruleset-)
+        v1.2.0 → dev-ruleset-v1.2.0  (no ruleset-v1.2.0 tag exists)
+
+    Rulesets in each version are the yaml or yml files within the ruleset directory (dist/spectral by default),
+    relative to the root of the tag. For example:
+        dist/spectral/basic-ruleset.yaml → basic-ruleset
+        dist/spectral/sdx/ruleset.yml    → sdx/ruleset
     """
 
     @log_entry_exit(logger)
     def __init__(
             self,
-            github_tag_cache_path: Path,
-            version_tag_prefix: str,
+            github_tag_cache_path: Callable[[], str],
+            version_tag_prefixes: Sequence[str],
             ruleset_dir: str,
     ):
 
         self.github_tag_cache_path = github_tag_cache_path
-        self.version_tag_prefix = version_tag_prefix
-        self.ruleset_dir = ruleset_dir
+        self.version_tag_prefixes = list(version_tag_prefixes)
+        self.ruleset_dir = ruleset_dir.strip("/")
         self.rules_file_extensions = [".yml", ".yaml"]
 
         self._ruleset_files_cache: Dict[str, Dict[str, str]] = {}
+
+    def _version_for_tag(self, tag_name: str) -> Optional[Tuple[int, str]]:
+        """Return (prefix priority, version) for the first prefix that gives a valid version, or None."""
+        for priority, prefix in enumerate(self.version_tag_prefixes):
+            if not tag_name.startswith(prefix):
+                continue
+            version_part = tag_name[len(prefix):]
+            if SEMVER_PATTERN.match(version_part):
+                return priority, version_part
+        return None
 
     @cached_property
     @log_entry_exit(logger)
@@ -60,35 +76,33 @@ class CachedRulesetsService:
         Discovers tags from local filesystem cache only once (cached_property)
         """
         tag_dir = Path(self.github_tag_cache_path()) / "tags"
-        
+
         if not tag_dir.is_dir():
             logger.warning(f"Tag cache directory not found: {tag_dir}")
             return {}
 
-        version_to_tag_map: Dict[str, str] = {}
-        semver_pattern = re.compile(r'^v\d+\.\d+\.\d+(-[\w\-.]+)?$')
+        # version → (prefix priority, tag name)
+        selected: Dict[str, Tuple[int, str]] = {}
 
-        # Look for all directories that could represent tags
-        for entry in tag_dir.iterdir():
+        for entry in sorted(tag_dir.iterdir()):
             if not entry.is_dir():
                 continue
-                
+
             tag_name = entry.name
-            
-            # Skip tags that don't match the expected prefix
-            if not tag_name.startswith(self.version_tag_prefix):
+            match = self._version_for_tag(tag_name)
+            if match is None:
                 continue
+            priority, version_part = match
 
-            version_part = tag_name[len(self.version_tag_prefix):]
-            
-            # Validate semantic version pattern
-            if not semver_pattern.match(version_part):
-                continue
+            current = selected.get(version_part)
+            if current is None or priority < current[0]:
+                if current is not None:
+                    logger.info(f"Version {version_part}: tag {tag_name} takes precedence over {current[1]}")
+                selected[version_part] = (priority, tag_name)
+            else:
+                logger.info(f"Version {version_part}: tag {current[1]} takes precedence over {tag_name}")
 
-            # If we got here → valid version tag
-            version_to_tag_map[version_part] = tag_name
-
-        return version_to_tag_map
+        return {version_part: tag_name for version_part, (_, tag_name) in selected.items()}
 
     @log_entry_exit(logger)
     async def get_ruleset_files_in_tag(self, tag: str) -> Dict[str, str]:

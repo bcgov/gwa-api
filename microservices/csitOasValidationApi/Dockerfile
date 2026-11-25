@@ -4,7 +4,7 @@ FROM python:3.14.2-alpine3.23 AS builder
 WORKDIR /build
 
 # Install build dependencies
-RUN apk add --no-cache build-base libffi-dev openssl curl git bash nodejs npm
+RUN apk add --no-cache build-base libffi-dev openssl curl nodejs npm
 
 RUN python -m pip install --upgrade pip
 
@@ -32,12 +32,6 @@ COPY pyproject.toml /tmp/
 COPY poetry.lock /tmp/
 RUN cd /tmp && poetry install --no-root --no-dev
 
-# Retrieve and cache the ruleset
-COPY checkout-ruleset-tags.sh /build/
-RUN chmod +x /build/checkout-ruleset-tags.sh && \
-    mkdir -p /build/ruleset_tag_cache && \
-    /build/checkout-ruleset-tags.sh /build/ruleset_tag_cache
-
 # RUNTIME STAGE
 FROM python:3.14.2-alpine3.23
 
@@ -45,7 +39,8 @@ WORKDIR /app
 
 # Install only runtime dependencies
 # nodejs is needed for Spectral CLI to run
-RUN apk add --no-cache libffi openssl nodejs
+# git is needed to fetch the ruleset tags when the container starts
+RUN apk add --no-cache libffi openssl nodejs git
 
 # Copy Python packages from builder
 COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
@@ -59,15 +54,14 @@ RUN rm -f /usr/local/bin/poetry 2>/dev/null || true
 COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=builder /usr/local/bin/spectral /usr/local/bin/spectral
 
-# Copy ruleset cache from builder
-COPY --from=builder /build/ruleset_tag_cache /app/ruleset_tag_cache
-
 # Copy application code
 COPY . /app
 
 RUN chmod +x /app/entrypoint.sh
 
-ENV GITHUB_TAG_CACHE_PATH=/app/ruleset_tag_cache
+# The ruleset tags are fetched here when the container starts. The path must be writable by the
+# container user; in OpenShift, mount an emptyDir at /tmp or at this path.
+ENV GITHUB_TAG_CACHE_PATH=/tmp/ruleset_cache
 
 EXPOSE 8080
 

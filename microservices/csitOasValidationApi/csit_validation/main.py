@@ -23,7 +23,7 @@ app = FastAPIOffline(
     description=(
         "A governance API for discovering and using BCGov Spectral rulesets "
         "to validate OpenAPI Specification documents.\n"
-        "Repository: https://github.com/bcgov/csit-api-governance-spectral-style-guide"
+        "Repository: https://github.com/bcgov/itk-api-governance"
     ),
     version="0.1.0",
     openapi_tags=tags_metadata
