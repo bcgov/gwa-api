@@ -85,8 +85,6 @@ jobs:
           cd microservices/csitOasValidationApi
           poetry env use python3.14
           poetry install --no-root
-          ./checkout-ruleset-tags.sh ruleset_tag_cache || true
-          export GITHUB_TAG_CACHE_PATH="$(realpath -m ./ruleset_tag_cache)"
           poetry run coverage run --branch -m pytest -s -v
           poetry run coverage xml
 

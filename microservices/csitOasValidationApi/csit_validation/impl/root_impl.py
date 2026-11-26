@@ -15,8 +15,17 @@ from csit_validation.models.health import (
      HealthStatus,
      HealthResponse,
 )
+from csit_validation.services.cached_rulesets_service import CachedRulesetsService
+from csit_validation.services.ruleset_fetcher import read_manifest
+from csit_validation.core.config import (
+    GITHUB_TAG_CACHE_PATH,
+    VERSION_TAG_PREFIXES,
+    RULESET_DIRECTORY,
+)
 
 logger = logging.getLogger(__name__)
+
+NO_RULESET_VERSIONS = "No ruleset versions available"
 
 
 class RootApiImpl(BaseRootApi):
@@ -47,26 +56,59 @@ class RootApiImpl(BaseRootApi):
     
     async def readyz(self, version: str | None = None) -> str:
             """
-            Default readiness check: confirm at least one implementation is loaded.
+            Readiness check: confirm at least one implementation is loaded and at least one
+            ruleset version is available to validate with.
             """
             logger.debug("<readyz")
-            # Minimal check: if we're here, the app has started and subclasses exist
             if not self.subclasses:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     detail="No root API implementation available"
                 )
+            if not self._rulesets_service().scan_version_tags():
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=NO_RULESET_VERSIONS
+                )
             return "ok"
+
+    def _rulesets_service(self) -> CachedRulesetsService:
+        return CachedRulesetsService(GITHUB_TAG_CACHE_PATH, VERSION_TAG_PREFIXES, RULESET_DIRECTORY)
+
+    def _rulesets_component(self) -> dict:
+        """Describe the cached ruleset versions and the commit each tag was fetched at."""
+        versions = self._rulesets_service().scan_version_tags()
+        manifest = read_manifest(GITHUB_TAG_CACHE_PATH()) or {}
+        fetched_tags = manifest.get("tags") or {}
+
+        component = {
+            "status": "healthy" if versions else "unhealthy",
+            "message": (
+                f"{len(versions)} ruleset versions available"
+                if versions else NO_RULESET_VERSIONS
+            ),
+            "versions": {
+                version: {"tag": tag, "commit": fetched_tags.get(tag)}
+                for version, tag in sorted(versions.items())
+            },
+        }
+        if manifest:
+            component["repository"] = manifest.get("repository")
+            component["fetched_at"] = manifest.get("fetched_at")
+        return component
     
     async def health(self) -> HealthResponse:
         """
-        Detailed health check that verifies Stoplight Spectral is installed and functional.
+        Detailed health check that verifies Stoplight Spectral is installed and functional
+        and that ruleset versions are available.
 
         Checks:
         - Presence of 'spectral' CLI in PATH
         - Successful execution of 'spectral --version'
+        - At least one ruleset version in the tag cache
 
-        Returns HealthResponse with component-level detail for "spectral".
+        Returns HealthResponse with component-level detail for "spectral" and "rulesets".
+        The "rulesets" component lists each version with its tag and the commit it was fetched at.
         """
         logger.debug("<health - checking Spectral availability")
 
@@ -123,13 +165,22 @@ class RootApiImpl(BaseRootApi):
                 overall_status = HealthStatus.DEGRADED
                 overall_message = "Service degraded - Spectral CLI execution issue"
 
+        rulesets = self._rulesets_component()
+        if rulesets["status"] == "unhealthy":
+            overall_status = HealthStatus.UNHEALTHY
+            overall_message = (
+                f"{overall_message}; {NO_RULESET_VERSIONS}"
+                if overall_message != "Service operational" else NO_RULESET_VERSIONS
+            )
+
         # Build components
         components = {
             "spectral": {
                 "status": spectral_status,
                 "message": spectral_message,
                 **spectral_details,
-            }
+            },
+            "rulesets": rulesets,
         }
 
         response = HealthResponse(

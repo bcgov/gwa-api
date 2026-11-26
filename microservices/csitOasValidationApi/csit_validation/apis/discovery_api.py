@@ -37,7 +37,7 @@ for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
 )
 async def list_versions(
 ) -> VersionList:
-    """Returns all Git tags (versions) from the csit-api-governance-spectral-style-guide repository which contain Spectral rulesets."""
+    """Returns all Git tags (versions) from the itk-api-governance repository which contain Spectral rulesets."""
     if not BaseDiscoveryApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseDiscoveryApi.subclasses[0]().list_versions()

@@ -25,7 +25,7 @@ from csit_validation.models.validation_response import (
 from csit_validation.services.cached_rulesets_service import CachedRulesetsService
 from csit_validation.util.log_decorator import log_entry_exit
 from csit_validation.core.config import (
-    VERSION_TAG_PREFIX,
+    VERSION_TAG_PREFIXES,
     RULESET_DIRECTORY,
     GITHUB_TAG_CACHE_PATH,
 )
@@ -49,9 +49,8 @@ class ValidationApiImpl(BaseValidationApi):
     def __init__(self):
 
         self.github_tag_cache_path = GITHUB_TAG_CACHE_PATH
-        self.version_tag_prefix = VERSION_TAG_PREFIX
+        self.version_tag_prefixes = VERSION_TAG_PREFIXES
         self.ruleset_dir = RULESET_DIRECTORY
-        self.tag_prefix = "ruleset-"
         
         spectral_ver = self.get_spectral_version()
 
@@ -68,7 +67,7 @@ class ValidationApiImpl(BaseValidationApi):
         
         self.gh = CachedRulesetsService(
             self.github_tag_cache_path,
-            self.version_tag_prefix,
+            self.version_tag_prefixes,
             self.ruleset_dir,
         )
 

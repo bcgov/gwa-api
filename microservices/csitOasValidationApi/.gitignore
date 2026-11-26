@@ -11,6 +11,8 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+# Test fixtures mirror the dist/spectral layout of the ruleset repository
+!tests/unit/resources/github-cache/tags/*/dist/
 downloads/
 eggs/
 .eggs/
@@ -50,7 +52,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-ruleset_tag_cache/
+ruleset_cache/
 
 # Translations
 *.mo

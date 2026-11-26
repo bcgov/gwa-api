@@ -14,6 +14,7 @@ def test_null_example_does_not_crash_spectral():
         / "github-cache"
         / "tags"
         / "ruleset-v1.1.0"
+        / "dist"
         / "spectral"
         / "sdx"
         / "ruleset.yaml"
