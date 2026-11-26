@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 TAGS_DIR_NAME = "tags"
 MANIFEST_FILE_NAME = "manifest.json"
 _STAGING_PREFIX = ".staging-"
+# The previous tags/ tree while a new one is swapped in. It is deleted only once the new tags/ and
+# manifest.json are both in place, so an interrupted swap can always be rolled back.
+_PREVIOUS_TAGS_DIR_NAME = ".previous-tags"
 _GLOB_CHARACTERS = set("*?[\\")
 
 
@@ -135,9 +138,14 @@ def fetch_ruleset_tags(
     Returns {tag: commit}. Raises RulesetFetchError if the fetch fails or finds no matching tags;
     in that case the existing cache is left as it was.
     """
-    prefixes = validate_prefixes(prefixes)
     cache_path = Path(cache_path)
-    cache_path.mkdir(parents=True, exist_ok=True)
+    try:
+        cache_path.mkdir(parents=True, exist_ok=True)
+        recover_interrupted_swap(cache_path)
+    except OSError as exc:
+        raise RulesetFetchError(f"Could not prepare the ruleset cache {cache_path}: {exc}") from exc
+
+    prefixes = validate_prefixes(prefixes)
 
     # Remove staging folders left behind by a fetch that was killed part way through.
     for leftover in cache_path.glob(f"{_STAGING_PREFIX}*"):
@@ -145,7 +153,10 @@ def fetch_ruleset_tags(
 
     # Build the new cache next to the old one, so a failed fetch never leaves a half-written cache
     # and the swap below is a rename on the same filesystem.
-    staging = Path(tempfile.mkdtemp(prefix=_STAGING_PREFIX, dir=cache_path))
+    try:
+        staging = Path(tempfile.mkdtemp(prefix=_STAGING_PREFIX, dir=cache_path))
+    except OSError as exc:
+        raise RulesetFetchError(f"Could not write to the ruleset cache {cache_path}: {exc}") from exc
     try:
         bare_repo = staging / "repo.git"
         _run_git(["init", "--bare", "--quiet", str(bare_repo)], timeout=timeout)
@@ -180,20 +191,59 @@ def fetch_ruleset_tags(
             "tags": dict(sorted(tags.items())),
         }
 
-        # Swap the new tags in, then write the manifest that describes them.
-        tags_dir = cache_path / TAGS_DIR_NAME
-        old_tags_dir = staging / "old-tags"
-        if tags_dir.exists():
-            tags_dir.rename(old_tags_dir)
-        new_tags_dir.rename(tags_dir)
-
         manifest_tmp = staging / MANIFEST_FILE_NAME
         manifest_tmp.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-        manifest_tmp.replace(cache_path / MANIFEST_FILE_NAME)
 
+        _swap_in(cache_path, new_tags_dir, manifest_tmp)
         return tags
+    except OSError as exc:
+        raise RulesetFetchError(f"Could not write the ruleset cache {cache_path}: {exc}") from exc
     finally:
         shutil.rmtree(staging, ignore_errors=True)
+
+
+def _swap_in(cache_path: Path, new_tags_dir: Path, new_manifest: Path) -> None:
+    """
+    Replace tags/ and manifest.json with the new ones.
+
+    The current tags/ is moved to .previous-tags, outside the staging folder, and deleted only after
+    the new tags/ and manifest.json are both in place. If the swap fails part way, the previous tree
+    is restored here; if the process is killed part way, recover_interrupted_swap restores it on the
+    next start.
+    """
+    tags_dir = cache_path / TAGS_DIR_NAME
+    previous_tags_dir = cache_path / _PREVIOUS_TAGS_DIR_NAME
+
+    if tags_dir.exists():
+        tags_dir.rename(previous_tags_dir)
+    try:
+        new_tags_dir.rename(tags_dir)
+        new_manifest.replace(cache_path / MANIFEST_FILE_NAME)
+    except OSError:
+        # Put the previous tree back so tags/ still matches the manifest.json from the last fetch.
+        if previous_tags_dir.is_dir():
+            if tags_dir.exists():
+                shutil.rmtree(tags_dir)
+            previous_tags_dir.rename(tags_dir)
+        raise
+    shutil.rmtree(previous_tags_dir, ignore_errors=True)
+
+
+def recover_interrupted_swap(cache_path: Path) -> None:
+    """
+    Undo a swap that did not finish. If tags/ is missing and .previous-tags exists, the swap stopped
+    after the previous tree was moved aside, so move it back. If both exist, the new tags/ is in
+    place and .previous-tags is left over, so delete it.
+    """
+    tags_dir = Path(cache_path) / TAGS_DIR_NAME
+    previous_tags_dir = Path(cache_path) / _PREVIOUS_TAGS_DIR_NAME
+    if not previous_tags_dir.is_dir():
+        return
+    if tags_dir.exists():
+        shutil.rmtree(previous_tags_dir, ignore_errors=True)
+    else:
+        logger.warning(f"Restoring the ruleset tags from an interrupted update: {previous_tags_dir}")
+        previous_tags_dir.rename(tags_dir)
 
 
 def run(

@@ -146,6 +146,48 @@ class TestFetchRulesetTags:
         assert not leftover.exists()
 
 
+class TestInterruptedSwap:
+
+    def test_killed_after_previous_tags_moved_aside_restores_them(self, source_repo, tmp_path, cache_path):
+        run(source_repo["url"], ["ruleset-"], cache_path, TIMEOUT)
+        # State left by a process killed between moving tags/ aside and moving the new tree in.
+        (cache_path / "tags").rename(cache_path / ".previous-tags")
+
+        assert run(f"file://{tmp_path / 'missing'}", ["ruleset-"], cache_path, TIMEOUT) == 0
+
+        assert (cache_path / "tags" / "ruleset-v1.0.0" / "dist/spectral/basic-ruleset.yaml").is_file()
+        assert not (cache_path / ".previous-tags").exists()
+
+    def test_leftover_previous_tags_is_deleted_when_new_tags_are_in_place(self, source_repo, cache_path):
+        run(source_repo["url"], ["ruleset-"], cache_path, TIMEOUT)
+        (cache_path / ".previous-tags" / "stale").mkdir(parents=True)
+
+        assert run(source_repo["url"], ["ruleset-"], cache_path, TIMEOUT) == 0
+
+        assert not (cache_path / ".previous-tags").exists()
+        assert [entry.name for entry in (cache_path / "tags").iterdir()] == ["ruleset-v1.0.0"]
+
+    def test_failed_swap_keeps_previous_tags_and_manifest(self, source_repo, cache_path, monkeypatch):
+        run(source_repo["url"], ["ruleset-"], cache_path, TIMEOUT)
+        manifest_before = read_manifest(cache_path)
+
+        real_replace = Path.replace
+
+        def failing_replace(self, target):
+            if Path(target).name == "manifest.json":
+                raise OSError("disk full")
+            return real_replace(self, target)
+
+        monkeypatch.setattr(Path, "replace", failing_replace)
+
+        with pytest.raises(RulesetFetchError, match="disk full"):
+            fetch_ruleset_tags(source_repo["url"], ["ruleset-", "dev-ruleset-"], cache_path, TIMEOUT)
+
+        assert [entry.name for entry in (cache_path / "tags").iterdir()] == ["ruleset-v1.0.0"]
+        assert read_manifest(cache_path) == manifest_before
+        assert not (cache_path / ".previous-tags").exists()
+
+
 class TestValidatePrefixes:
 
     def test_accepts_plain_prefixes(self):
