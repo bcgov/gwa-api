@@ -156,11 +156,9 @@ poetry run python -m csit_validation.services.ruleset_fetcher
 poetry run uvicorn csit_validation.main:app --reload --port 8080
 ```
 
-The unit tests don't need a fetch: they use the fixtures under `tests/unit/resources/github-cache`.
-
 and open your browser at `http://localhost:8080/docs/` to see the docs.
 
-Testing:
+Testing (the unit tests don't need a fetch: they use the fixtures under `tests/unit/resources/github-cache`):
 
 ```sh
 poetry run pytest -v -s --log-cli-level=DEBUG
