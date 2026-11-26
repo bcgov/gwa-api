@@ -43,7 +43,6 @@ class CachedRulesetsService:
         dist/spectral/sdx/ruleset.yml    → sdx/ruleset
     """
 
-    @log_entry_exit(logger)
     def __init__(
             self,
             github_tag_cache_path: Callable[[], str],
@@ -76,9 +75,19 @@ class CachedRulesetsService:
         Discovers tags from local filesystem cache only once (cached_property)
         """
         tag_dir = Path(self.github_tag_cache_path()) / "tags"
-
         if not tag_dir.is_dir():
             logger.warning(f"Tag cache directory not found: {tag_dir}")
+        return self.scan_version_tags()
+
+    def scan_version_tags(self) -> Dict[str, str]:
+        """
+        Returns map: version → full tag name, read from the cache on every call.
+
+        Not decorated with log_entry_exit and logs only at DEBUG, so the readiness probe and the
+        health check can call it on every request without filling the log.
+        """
+        tag_dir = Path(self.github_tag_cache_path()) / "tags"
+        if not tag_dir.is_dir():
             return {}
 
         # version → (prefix priority, tag name)
@@ -97,10 +106,10 @@ class CachedRulesetsService:
             current = selected.get(version_part)
             if current is None or priority < current[0]:
                 if current is not None:
-                    logger.info(f"Version {version_part}: tag {tag_name} takes precedence over {current[1]}")
+                    logger.debug(f"Version {version_part}: tag {tag_name} takes precedence over {current[1]}")
                 selected[version_part] = (priority, tag_name)
             else:
-                logger.info(f"Version {version_part}: tag {current[1]} takes precedence over {tag_name}")
+                logger.debug(f"Version {version_part}: tag {current[1]} takes precedence over {tag_name}")
 
         return {version_part: tag_name for version_part, (_, tag_name) in selected.items()}
 

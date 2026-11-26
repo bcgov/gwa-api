@@ -65,7 +65,7 @@ class RootApiImpl(BaseRootApi):
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     detail="No root API implementation available"
                 )
-            if not self._rulesets_service().get_valid_version_tags:
+            if not self._rulesets_service().scan_version_tags():
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     detail=NO_RULESET_VERSIONS
@@ -77,7 +77,7 @@ class RootApiImpl(BaseRootApi):
 
     def _rulesets_component(self) -> dict:
         """Describe the cached ruleset versions and the commit each tag was fetched at."""
-        versions = self._rulesets_service().get_valid_version_tags
+        versions = self._rulesets_service().scan_version_tags()
         manifest = read_manifest(GITHUB_TAG_CACHE_PATH()) or {}
         fetched_tags = manifest.get("tags") or {}
 

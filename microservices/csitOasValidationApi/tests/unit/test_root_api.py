@@ -3,6 +3,7 @@ API-level unit tests for the readiness and health endpoints.
 """
 
 import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -31,6 +32,14 @@ class TestReadyz:
         response = client.get("/readyz")
 
         assert response.status_code == 200
+
+    def test_probe_does_not_log_at_info(self, client: TestClient, use_cache, caplog):
+        use_cache(FIXTURE_CACHE_DIR)
+        caplog.set_level(logging.INFO, logger="csit_validation")
+
+        client.get("/readyz")
+
+        assert [r for r in caplog.records if r.name.startswith("csit_validation")] == []
 
     def test_not_ready_without_versions(self, client: TestClient, use_cache, tmp_path):
         use_cache(tmp_path / "empty-cache")
