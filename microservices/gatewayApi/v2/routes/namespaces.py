@@ -120,8 +120,9 @@ def delete_namespace(namespace: str) -> object:
     out, err = deck_run.communicate()
     if deck_run.returncode != 0:
         cleanup(tempFolder)
-        log.warn("%s - %s" % (namespace, out.decode('utf-8')))
-        abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
+        deck_output = mask(out.decode('utf-8'))
+        log.warn("%s - %s" % (namespace, deck_output))
+        abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=deck_output))
     elif kube_api_url is None:
         log.debug("[%s] No kube API URL configured, skipping route deletion" % (namespace))
     elif cmd == "sync" and not local_environment:
