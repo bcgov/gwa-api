@@ -82,8 +82,9 @@ def delete_config(namespace: str, qualifier="") -> object:
     out, err = deck_run.communicate()
     if deck_run.returncode != 0:
         cleanup(tempFolder)
-        log.warn("%s - %s" % (namespace, out.decode('utf-8')))
-        abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
+        deck_output = mask(out.decode('utf-8'))
+        log.warn("%s - %s" % (namespace, deck_output))
+        abort_early(event_id, 'delete', namespace, jsonify(error="Sync Failed.", results=deck_output))
 
     elif kube_api_url is None:
         log.debug("[%s] No kube API URL configured, skipping route deletion" % (namespace))
@@ -362,9 +363,10 @@ def write_config(namespace: str) -> object:
     out, err = deck_validate.communicate()
 
     if deck_validate.returncode != 0:
-        log.warning("[%s] - %s" % (namespace, out.decode('utf-8')))
+        deck_output = mask(out.decode('utf-8'))
+        log.warning("[%s] - %s" % (namespace, deck_output))
         abort_early(event_id, 'validate', namespace, jsonify(
-            error="Validation Failed.", results=mask(out.decode('utf-8'))))
+            error="Validation Failed.", results=deck_output))
 
     args = deck_cmd_sync_diff(deck_cli, cmd, selectTag, tempFolder, kong_addr_override, allow_consumers)
     
@@ -373,8 +375,9 @@ def write_config(namespace: str) -> object:
     out, err = deck_run.communicate()
     if deck_run.returncode != 0:
         cleanup(tempFolder)
-        log.warn("[%s] - %s" % (namespace, out.decode('utf-8')))
-        abort_early(event_id, 'publish', namespace, jsonify(error="Sync Failed.", results=mask(out.decode('utf-8'))))
+        deck_output = mask(out.decode('utf-8'))
+        log.warn("[%s] - %s" % (namespace, deck_output))
+        abort_early(event_id, 'publish', namespace, jsonify(error="Sync Failed.", results=deck_output))
     # skip creation of routes in local development environment
     elif kube_api_url is None:
         log.debug("[%s] No kube API URL configured, skipping route creation" % (namespace))

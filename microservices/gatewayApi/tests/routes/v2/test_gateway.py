@@ -202,3 +202,116 @@ def test_success_mtls_reference(client):
 #     assert "route-2" in results
 #     # Routes should only be listed once even if multiple incompatible paths
 #     assert results.count("route-1") == 1
+
+
+CERT_UPDATE_DIFF = """\
+updating certificate 8fc131ef-9752-43a4-ba70-eb10ba442d4e
+-  "key": "-----BEGIN PRIVATE KEY-----\\nOLDPRIVATEKEYDATA\\n-----END PRIVATE KEY-----",
++  "key": "-----BEGIN PRIVATE KEY-----\\nNEWPRIVATEKEYDATA\\n-----END PRIVATE KEY-----",
+-  "key_alt": "-----BEGIN RSA PRIVATE KEY-----\\nOLDALTKEYDATA\\n-----END RSA PRIVATE KEY-----",
++  "key_alt": "-----BEGIN OPENSSH PRIVATE KEY-----\\nNEWALTKEYDATA\\n-----END OPENSSH PRIVATE KEY-----",
+   "cert": "-----BEGIN CERTIFICATE-----\\nMIIBCERTBODY\\n-----END CERTIFICATE-----"
+"""
+
+PUBLISH_CONFIG = '''
+    services:
+    - name: my-service
+      host: myupstream.local
+      tags: ["ns.mytest", "another"]
+      routes:
+      - name: route-1
+        hosts: [ myapi.api.gov.bc.ca ]
+        tags: ["ns.mytest", "another2"]
+        plugins:
+        - name: acl-auth
+          tags: ["ns.mytest"]
+'''
+
+
+class _DeckOutput:
+    def __init__(self, output):
+        self.output = output
+
+    def decode(self, encoding):
+        return self.output
+
+
+class _DeckProcess:
+    def __init__(self, output, returncode):
+        self.output = output
+        self.returncode = returncode
+
+    def communicate(self):
+        return _DeckOutput(self.output), None
+
+
+def _gateway_view(view):
+    seen = set()
+    while view not in seen:
+        seen.add(view)
+        if "Popen" in getattr(view, "__globals__", {}):
+            return view
+        wrapped = getattr(view, "__wrapped__", None)
+        if wrapped is None:
+            break
+        view = wrapped
+    raise AssertionError("gateway view does not bind Popen")
+
+
+def _patch_deck(mocker, app, calls):
+    pending = list(calls)
+
+    def popen(*args, **kwargs):
+        output, returncode = pending.pop(0)
+        return _DeckProcess(output, returncode)
+
+    # Decorators wrap the route, and the app fixture may drop the module from
+    # sys.modules. Patch the Popen name the live function closes over.
+    view = _gateway_view(app.view_functions["gwa_v2.write_config"])
+    mocker.patch.dict(view.__globals__, {"Popen": popen})
+
+
+def _assert_certificate_diff_masked(results):
+    assert "BEGIN PRIVATE KEY" not in results
+    assert "BEGIN RSA PRIVATE KEY" not in results
+    assert "BEGIN OPENSSH PRIVATE KEY" not in results
+    assert "OLDPRIVATEKEYDATA" not in results
+    assert "NEWPRIVATEKEYDATA" not in results
+    assert "OLDALTKEYDATA" not in results
+    assert "NEWALTKEYDATA" not in results
+    assert "BEGIN CERTIFICATE" in results
+    assert "MIIBCERTBODY" in results
+
+
+def test_publish_masks_certificate_update_diff(client, app, mocker):
+    _patch_deck(mocker, app, [(CERT_UPDATE_DIFF, 0)] * 4)
+    warned = mocker.patch.object(app.logger, "warn")
+
+    dry_run = client.put(
+        "/v2/namespaces/mytest/gateway",
+        json={"configFile": PUBLISH_CONFIG, "dryRun": True},
+    )
+    assert dry_run.status_code == 200
+    assert dry_run.json["message"] == "Dry-run.  No changes applied."
+    _assert_certificate_diff_masked(dry_run.json["results"])
+
+    sync = client.put(
+        "/v2/namespaces/mytest/gateway",
+        json={"configFile": PUBLISH_CONFIG, "dryRun": False},
+    )
+    assert sync.status_code == 200
+    assert sync.json["message"] == "Sync successful."
+    _assert_certificate_diff_masked(sync.json["results"])
+    assert warned.call_count == 0
+
+    _patch_deck(mocker, app, [("validate ok", 0), (CERT_UPDATE_DIFF, 1)])
+    failed = client.put(
+        "/v2/namespaces/mytest/gateway",
+        json={"configFile": PUBLISH_CONFIG, "dryRun": False},
+    )
+    assert failed.status_code == 400
+    assert failed.json["error"] == "Sync Failed."
+    _assert_certificate_diff_masked(failed.json["results"])
+    assert warned.call_count == 1
+    _assert_certificate_diff_masked(warned.call_args.args[0])
+
